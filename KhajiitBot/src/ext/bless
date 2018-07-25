@@ -1,0 +1,7 @@
+ "blesses themselves!"
+ "appempts to bless themselves. Unfortunately, thats not how that works."
+ "blesses themselves, placing a blessed_curse."
+ "blesses **#{target}**!"
+ "gives bless to **#{target}**!"
+ "grants blessed_bless to **#{target}**!"
+ "accidentally curses **#{target}**! I can't believe you've done this."
