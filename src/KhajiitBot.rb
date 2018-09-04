@@ -38,8 +38,8 @@ require 'net/https'
 
 #===================Constants======================
 
-CLIENT_ID = PUT ID HERE			# KhajiitBot Client ID
-token = File.read "./ext/token"			# shh secrets
+CLIENT_ID = 023984523094877234			# KhajiitBot Client ID (put it here, this one isn't valid!)
+token = File.read "./ext/token"			# shh secrets (Put your token in this file too...)
 
 #=====================Globals======================
 
@@ -54,16 +54,11 @@ require_relative 'Commands.rb'			# Bot commands
 
 $boottime = Time.now.utc				# save to time the bot was started. used of uptime
 puts('Current time: ' + $boottime.inspect)
-
 puts('KhajiitBot Starting...')
+
 $bot.ready do							
-	$bot.game = 'k.help'			# Set the "playing" text to the help command
+	$bot.game = 'k.help'				# Set the "playing" text to the help command
 end
-
-$bot.mention() do |event|				# when the bot is mentioned, send an angry image
-	event.send_file(File.open('./ext/img/ping.png', 'r'))
-end
-
 
 #==================================================
 
@@ -72,6 +67,11 @@ trap('INT') do							# Graceful violent exit
 end
 
 #==================================================
+
+PList = Permit.new()					# Create a permit list
+BList = Blacklist.new()					# Create a blacklist
+NList = NSFW.new()						# Create a NSFW channels list
+Parser = Parse.new()					# Setup ID parsing class
 
 puts('Bot Active')						# Notify bot being active
 puts('Awaiting user activity...')		

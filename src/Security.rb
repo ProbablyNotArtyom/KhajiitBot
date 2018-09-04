@@ -38,16 +38,9 @@ def update_json(file, data)			# Abstraction for updaating a JSON file
 	File.open(file, 'w+') {|f| f.write(JSON.generate(data)) } 
 end
 
-# unused method for generating true random numbers
-#def trueRNG(max)
-#	uri = URI('https://www.random.org/integers/?num=1&min=0&max=' + max.to_s + '&col=1&base=10&format=plain&rnd=new')
-#	resp = Net::HTTP.get_response(uri)
-#	return resp.body.to_i
-#end
-
-def action(target, event, action)													# ACTION Handler method
-	if Blacklist::new.query(event.user.id, action) then return nil end				# Check the blacklist and return nil if the user is blacklisted from the command
-	target = Parse::new.get_target(target, event)									# Parse the target name and get back a formatted ID
+def action(target, event, action)																			# ACTION Handler method
+	if Blacklist::new.query(event.user.id, action) then return nil end										# Check the blacklist and return nil if the user is blacklisted from the command
+	target = Parse::new.get_target(target, event)															# Parse the target name and get back a formatted ID
 	if target == nil then line = rand(3) else line = rand(IO.readlines("./ext/#{action}").size-3)+3 end		# If the target exists then get the number of lines in the string file
 	event.channel.send_embed do |embed|																		# Send the embedded action
 		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}")[line])		# Pick a random string and return it
@@ -55,11 +48,15 @@ def action(target, event, action)													# ACTION Handler method
 	end
 end
 
-class Permit																					# Permit checking class
-	@@permits = {}																				# Create a new empty array to house out permits
+class Permit																		# Permit checking class
+	def initialize()
+		@@permits = {}																			# Create a new empty array to house out permits	
+		unless valid_json?(IO.read("./ext/sys/permissions")) then  File.open("./ext/sys/permissions", 'w+') {|f| f.write(JSON.generate(@@permits)) } end
 																								# If the Permit file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
-	unless valid_json?(IO.read("./ext/sys/permissions")) then  File.open("./ext/sys/permissions", 'w+') {|f| f.write(JSON.generate(@@permits)) } end
-	@@permits = JSON.load IO.read("./ext/sys/permissions")										# If it is valid, then load the saved permits into the array
+		@@permits = JSON.load IO.read("./ext/sys/permissions")									# If it is valid, then load the saved permits into the array
+		return
+	end
+	
 	def add(user, level)																		# ADD method. Adds a user to the permits 
 		@@permits.store(user.to_s, level.to_i)													# add the ID to the permits array
 		update_json("./ext/sys/permissions", @@permits)											# Update the saved permits
@@ -90,10 +87,13 @@ class Permit																					# Permit checking class
 end
 
 class Blacklist																		# Blacklist class
-	@@blacklist = {}																# Create new empty array to store our blacklist
-																					# If the Blacklist file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
-	unless valid_json?(IO.read("./ext/sys/blacklist")) then  File.open("./ext/sys/blacklist", 'w+') {|f| f.write(JSON.generate(@@blacklist)) } end
-	@@blacklist = JSON.load IO.read("./ext/sys/blacklist")							# If it is valid, then load the saved blacklist into the array
+	def initialize()
+		@@blacklist = {}																		# Create new empty array to store our blacklist
+		unless valid_json?(IO.read("./ext/sys/blacklist")) then  File.open("./ext/sys/blacklist", 'w+') {|f| f.write(JSON.generate(@@blacklist)) } end
+																								# If the Blacklist file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
+		@@blacklist = JSON.load IO.read("./ext/sys/blacklist")									# If it is valid, then load the saved blacklist into the array
+		return
+	end
 	def add(user, command)																		# ADD method. adds a user to the blacklist				
 		unless @@blacklist.key?(command) then @@blacklist[command] = Array.new() end			# If the blacklist doesn't have an entry for this command, add one
 		if @@blacklist[command].include?(user) then return nil end								# If the user is already there than return nil
@@ -125,10 +125,13 @@ class Blacklist																		# Blacklist class
 end
 
 class NSFW																			# NSFW class.
-	@@nsfwlist = {}																	# Create new empty array to store our list
-																					# If the list file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
-	unless valid_json?(IO.read("./ext/sys/nsfw")) then  File.open("./ext/sys/nsfw", 'w+') {|f| f.write(JSON.generate(@@nsfwlist)) } end
-	@@nsfwlist = JSON.load IO.read("./ext/sys/nsfw")								# If it is valid, then load the saved list into the array
+	def initialize()
+		@@nsfwlist = {}																			# Create new empty array to store our list
+		unless valid_json?(IO.read("./ext/sys/nsfw")) then  File.open("./ext/sys/nsfw", 'w+') {|f| f.write(JSON.generate(@@nsfwlist)) } end
+																								# If the list file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
+		@@nsfwlist = JSON.load IO.read("./ext/sys/nsfw")										# If it is valid, then load the saved list into the array
+		return
+	end
 	def add(channel)																			# ADD method. adds a user to the list
 		if @@nsfwlist.key?(channel) then return nil end											# If the channel is in the list already then return nil
 		@@nsfwlist[channel] = 0																	# Set the channel as enabled
@@ -148,6 +151,8 @@ class NSFW																			# NSFW class.
 end
 
 class Parse																			# PARSE class for parsing user names and nicknames 
+	def initialize()
+	end
 	def get_target(user, event)																	# GET_TARGET method. inputs a nickname or username and returns a uID
 		if user[0] == nil then return nil end													# If user is nil then abort
 		if user.length > 1 then return user.join(" ") end										# If the username is longer than 1 word then join them w/ spaces
