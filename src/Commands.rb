@@ -136,7 +136,7 @@ end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 	if BList.query(event.user.id, "rate") then return nil end				# Check the blacklist
-	target = Parse.get_target(target, event)								# Parse the target into a discord markup for IDs
+	target = Parser.get_target(target, event)								# Parse the target into a discord markup for IDs
 	event.channel.send_embed do |embed|										
 		embed.description = "I give " + target + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
 		embed.color = 0xa21a5d
@@ -217,7 +217,7 @@ end
 $bot.command(:blacklist) do |event, func, target, command|						# BLACKLIST Command
 	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator."); return nil end 
 	if func == "list" then BList.list(event, target); return nil end
-	target = Parse.get_uid(target, event)
+	target = Parser.get_uid(target, event)
 	if func == "remove"
 		if BList.purge(target, command) == nil then event.respond "User not on list." end
 	elsif func == "add"
@@ -229,7 +229,7 @@ $bot.command(:blacklist) do |event, func, target, command|						# BLACKLIST Comm
 end
 
 $bot.command(:usermod, max_args: 2, min_args: 2) do |event, target, level|		# USERMOD Command
-	target = Parse.get_uid(target, event)
+	target = Parser.get_uid(target, event)
 	if target == nil then return nil end
 	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.") 
 		return nil
