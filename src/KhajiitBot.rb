@@ -38,67 +38,92 @@ require 'net/https'
 
 #===================Constants======================
 
-CLIENT_ID = 023984523094877234			# KhajiitBot Client ID (put it here, this one isn't valid!)
-token = File.read "./ext/token"			# shh secrets (Put your token in this file too...)
+CLIENT_ID = File.read "./ext/sys/client"	# KhajiitBot Client ID (put it here, this one isn't valid!)
+token = File.read "./ext/sys/token"			# shh secrets (Put your token in this file too...)
 
 #=====================Globals======================
 
-$boottime = 0							# Holds the time of the last boot
+$boottime = 0								# Holds the time of the last boot
 
 #======================Main========================
 
 $bot = Discordrb::Commands::CommandBot.new token: token , client_id: CLIENT_ID , prefix: ['k.', 'K.'], ignore_bots: false
 
-require_relative 'Security.rb'			# Abstractions
-require_relative 'Commands.rb'			# Bot commands
+require_relative 'Security.rb'				# Abstractions
+require_relative 'Commands.rb'				# Bot commands
 
-$boottime = Time.now.utc				# save to time the bot was started. used of uptime
+PList = Permit.new()						# Create a permit list
+Parser = Parse.new()						# Setup ID parsing class
+Config = Setting.new()						# Set up persistence class
+
+$boottime = Time.now.utc					# save to time the bot was started. used of uptime
 puts('Current time: ' + $boottime.inspect)
 puts('KhajiitBot Starting...')
 
 $bot.ready do							
-	$bot.game = 'k.help'				# Set the "playing" text to the help command
+	if Config.get("game") == nil then $bot.game = 'k.help'		# Set the "playing" text to the help command
+	else 
+		$bot.game = Config.get("game") 
+	end
 end
 
 #==================================================
 
-trap('INT') do							# Graceful violent exit
+trap('INT') do								# Graceful violent exit
 	exit
 end
 
 #==================================================
 
-PList = Permit.new()					# Create a permit list
-BList = Blacklist.new()					# Create a blacklist
-NList = NSFW.new()						# Create a NSFW channels list
-Parser = Parse.new()					# Setup ID parsing class
-
-puts('Bot Active')						# Notify bot being active
+$bot.run :async								# Start the bot & run async
+puts('Bot Active')							# Notify bot being active
 puts('Awaiting user activity...')		
-$bot.run :async							# Start the bot & run async
 
-loop do									# MAIN COMMAND PROMPT LOOP
-	print ('KhajiitBot>')					# Print prompt
-	cIn = gets.split(" ")					# Get the user input and turn it into a word array
-	unless cIn[0] == nil						# If the prompt is empty ignore everything
-		if cIn[0].downcase == "say"					# SAY command
-			chan = cIn.delete_at(1)						# Delete the channel ID from the input and put the ID into a buffer
-			if chan != nil && chan.length == 18 		# Make sure the next argument is the right length to be a channel ID
-				cIn.delete_at(0)						# Delete the command from the user input
-				msg = cIn.join(" ")						# Joint the rest of the input, as it is our message
-				puts msg								# Print the message to the CMD prompt
-				$bot.send_message(chan.to_i, msg)		# Send the message
-			else puts("Invalid Channel") end			# Notify invalid channel input
+$cmdChannel = Config.get("channel")			# Reload the last active channel
+
+loop do										# MAIN COMMAND PROMPT LOOP
+	print ("#{$cmdChannel}>")					# Print prompt
+	cIn = gets.split(" ")						# Get the user input and turn it into a word array
+	unless cIn[0] == nil						# Ignore everything if the input is nil	
+		if cIn[0].downcase == "go"					# GO command
+			chan = cIn.delete_at(1)							# Get the channel from the user input
+			if chan != nil && chan.length == 18				# Make sure it's the right length
+				$cmdChannel = chan.to_i  					# Set the current channel
+				Config.save("channel", $cmdChannel)			# Save the current channel across runs
+			else puts("Invalid Channel") end				# Notify channel fuckery
 		elsif cIn[0].downcase == "exit"				# EXIT command
-			exit										# Exit
-		elsif cIn[0].downcase == "embed"			#  EMBED Command
-			chan = cIn.delete_at(1)						# Delete the channel ID from the input and put the ID into a buffer
-			if chan != nil && chan.length == 18 		# Make sure the next argument is the right length to be a channel ID
-				cIn.delete_at(0)						# Delete the command from the user input
-				msg = cIn.join(" ")						# Joint the rest of the input, as it is our message
-				$bot.send_message(chan.to_i, nil, false, {"description" => msg, "color" => 0xa21a5d})
-			else puts("Invalid Channel") end			# Notify invalid channel input
-		else puts("Invalid Command\n") 				# Notify invalid command input
+			exit											# Exit
+		elsif cIn[0].downcase == "status"			# STATUS command
+			stat = cIn.delete_at(1)							# Delete the command
+			if stat == "online"
+				$bot.online									# Set status as online
+			elsif stat == "idle"	
+				$bot.idle									# Set status as idle
+			elsif stat == "invisible"
+				$bot.invisible								# Set status as invisible
+			else puts("Invalid status\n") end
+		elsif cIn[0].downcase == "play"				# PLAY command
+			game = cIn.delete_at(0)							# Remove the command
+			msg = cIn.join(" ")								# Get desired string
+			$bot.game=(msg)									# Set game status
+			Config.save("game", msg)						# Save the current game across runs
+		elsif $cmdChannel == "KhajiitBot"			# Sanity Check
+			puts("You must select a valid channel!")		# Fault if no channel has been selected
+		elsif cIn[0].downcase == "say"				# SAY command	
+			cIn.delete_at(0)								# Delete the command from the user input
+			msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
+			puts msg										# Print the message to the CMD prompt
+			$bot.send_message($cmdChannel, msg)				# Send the message	
+		elsif cIn[0].downcase == "embed"			# EMBED Command	
+			cIn.delete_at(0)								# Delete the command from the user input
+			msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
+			$bot.send_message($cmdChannel, nil, false, {"description" => msg, "color" => 0xa21a5d})
+		elsif cIn[0].downcase == "rm"				# RM command	
+			msg = $bot.channel($cmdChannel).history(10).collect { |x| x.author.id }		# Make id table
+			$i = 0
+			until msg[$i] == CLIENT_ID.to_i || $i == 11; $i += 1 end					# Scan for Bot's ID
+			unless $i == 11; $bot.channel($cmdChannel).history(10)[$i].delete end		# Delete message if its ours
+		else puts("Invalid Command\n") 						# Notify invalid command input
 		end
 	end
 end

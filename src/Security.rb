@@ -39,8 +39,7 @@ def update_json(file, data)			# Abstraction for updaating a JSON file
 end
 
 def action(target, event, action)																			# ACTION Handler method
-	if Blacklist::new.query(event.user.id, action) then return nil end										# Check the blacklist and return nil if the user is blacklisted from the command
-	target = Parse::new.get_target(target, event)															# Parse the target name and get back a formatted ID
+	target = Parser.get_target(target, event)																# Parse the target name and get back a formatted ID
 	if target == nil then line = rand(3) else line = rand(IO.readlines("./ext/#{action}").size-3)+3 end		# If the target exists then get the number of lines in the string file
 	event.channel.send_embed do |embed|																		# Send the embedded action
 		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}")[line])		# Pick a random string and return it
@@ -86,70 +85,6 @@ class Permit																		# Permit checking class
 	end
 end
 
-class Blacklist																		# Blacklist class
-	def initialize()
-		@@blacklist = {}																		# Create new empty array to store our blacklist
-		unless valid_json?(IO.read("./ext/sys/blacklist")) then  File.open("./ext/sys/blacklist", 'w+') {|f| f.write(JSON.generate(@@blacklist)) } end
-																								# If the Blacklist file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
-		@@blacklist = JSON.load IO.read("./ext/sys/blacklist")									# If it is valid, then load the saved blacklist into the array
-		return
-	end
-	def add(user, command)																		# ADD method. adds a user to the blacklist				
-		unless @@blacklist.key?(command) then @@blacklist[command] = Array.new() end			# If the blacklist doesn't have an entry for this command, add one
-		if @@blacklist[command].include?(user) then return nil end								# If the user is already there than return nil
-		@@blacklist[command] << user															# Shift the user into the new entry
-		update_json("./ext/sys/blacklist", @@blacklist)											# Save the blacklist
-		return true
-	end
-	def purge(user, command)																	# PURGE method. removes a user from the blacklist
-		unless @@blacklist.key?(command) then return nil end									# If the command doesn't exist then return nil
-		unless @@blacklist[command].include?(user) then return nil end							# If the user doesn't exist then return nil
-		@@blacklist[command].delete(user)														# Remove the user entry
-		update_json("./ext/sys/blacklist", @@blacklist)											# Update the blacklist
-		return true
-	end
-	def query(user, command)																	# QUERY method. checks if the user is blacklisted from a command
-		unless @@blacklist.key?(command) then return nil end									# If the command doesn't exist then return nil
-		if @@blacklist[command].include?(user) then return true end								# If the user doesn't exist then return true
-		return nil
-	end
-	def list(event, target)																		# LIST method. lists the blacklisted users for a command
-		unless target == nil																	# If the target is nil than ignore everything
-			users = @@blacklist[target].map {|uid| event.server.member(uid).username}			# get an array of all users for a command
-			event.respond "k.#{target}:\n    #{users.join("\n    ")}"							# Return the user array
-			return nil
-		end
-		event.respond "Must specify command."													# Respond if a command is invalid
-		return nil
-	end
-end
-
-class NSFW																			# NSFW class.
-	def initialize()
-		@@nsfwlist = {}																			# Create new empty array to store our list
-		unless valid_json?(IO.read("./ext/sys/nsfw")) then  File.open("./ext/sys/nsfw", 'w+') {|f| f.write(JSON.generate(@@nsfwlist)) } end
-																								# If the list file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
-		@@nsfwlist = JSON.load IO.read("./ext/sys/nsfw")										# If it is valid, then load the saved list into the array
-		return
-	end
-	def add(channel)																			# ADD method. adds a user to the list
-		if @@nsfwlist.key?(channel) then return nil end											# If the channel is in the list already then return nil
-		@@nsfwlist[channel] = 0																	# Set the channel as enabled
-		update_json("./ext/sys/nsfw", @@nsfwlist)												# Save the channel list
-		return true
-	end
-	def purge(channel)																			# PURGE method. removes a channel from the list
-		unless @@nsfwlist.key?(channel) then return nil end										# If the channel isn't there then return nil
-		@@nsfwlist.delete(channel)																# Purge the channel
-		update_json("./ext/sys/nsfw", @@nsfwlist)												# Save the channel list
-		return true
-	end
-	def query(channel)																			# QUERY method. checks if a channel is on the allowed list
-		unless @@nsfwlist.key?(channel) then return nil end										# Check if its there and return nil of not
-		return true
-	end
-end
-
 class Parse																			# PARSE class for parsing user names and nicknames 
 	def initialize()
 	end
@@ -183,6 +118,24 @@ class Parse																			# PARSE class for parsing user names and nicknames
 			return tmp.id
 		end
 		return user.delete('^0-9').to_i															# If the input is a ID w/ markup then strip the markup and return
+	end
+end
+
+class Setting																		# SETTING class for storing persistent data
+	def initialize()
+		@@persistent = {}																		# Create a new empty array to house the settings	
+		unless valid_json?(IO.read("./ext/sys/persistent")) then  File.open("./ext/sys/persistent", 'w+') {|f| f.write(JSON.generate(@@persistent)) } end
+																								# If the persistence file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
+		@@persistent = JSON.load IO.read("./ext/sys/persistent")
+	end
+	def save(name, val)																			# SAVE method. saves a piece of data with a name 
+		@@persistent.store(name, val)															# Store the data itself
+		update_json("./ext/sys/persistent", @@persistent)										# Update the JSON file
+		return true																				# Return the all-good
+	end
+	def get(name)																				# GET method. returns the data piece associated with a name, or nil if DNE
+		ret = @@persistent.fetch(name, nil)														# Attempt to fetch the value
+		unless ret == nil; return ret end														# if its nil, then return nil
 	end
 end
 

@@ -58,7 +58,6 @@ k.bless @[user]   :  blesses another user.```")
 end
 
 $bot.command(:trade) do |event|												# TRADE Command
-	if BList.query(event.user.id, "trade") then return nil end				# Check the blacklist
 	if event.message.attachments.empty? then								# If there are no images attached then respond accordingly
 		event.respond("This one is displeased with your lack of wares...")
 		return nil
@@ -79,16 +78,13 @@ $bot.command(:trade) do |event|												# TRADE Command
 end
 
 $bot.command(:image) do |event|												# IMAGE command
-	if BList.query(event.user.id, "image") then return nil end				# Check the blacklist
 	oname = File.read("./ext/meme/max").to_i								# See what the current number of images is
 	event.send_file(File.open(Dir.glob("./ext/meme/#{rand(oname).to_s}.*")[0], 'r'))	# Pick a random image and send it back
 	return nil
 end
 
 $bot.command :lewd do |event|												# LEWD command
-	if BList.query(event.user.id, "lewd") then return nil end				# Check the blacklist
-	puts(event.channel.id)
-	unless NList.query(event.channel.id.to_s) then 							# If the channel isn't marked NSFW in our configs, then respond accordingly
+	unless event.channel.nsfw? then 										# Make sure the channel is marked as NSFW
 		event.channel.send_embed do |embed|
 			embed.title = "```Use this command in an NSFW marked channel.```"
 			embed.color = 0xa21a5d
@@ -115,7 +111,6 @@ $bot.command :lewd do |event|												# LEWD command
 end
 
 $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Command
-	if BList.query(event.user.id, "random") then return nil end	# Check the blacklist
 	if max == nil then max = 10 end											# If the max is not specified, then use 10
 	event.channel.send_embed do |embed|										# Send the message as embedded
 		embed.title = rand(max)												# Generate a random number
@@ -125,7 +120,6 @@ $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Comm
 end
 
 $bot.command(:'8ball') do |event|											# 8BALL Command
-	if BList.query(event.user.id, "8ball") then return nil end				# Check the blacklist
 	lines = IO.readlines("./ext/8ball").size 								# Get the number of lines
 	event.channel.send_embed do |embed|										# Return the message
 		embed.title = IO.readlines("./ext/8ball")[rand(lines)] + event.user.name
@@ -135,7 +129,6 @@ $bot.command(:'8ball') do |event|											# 8BALL Command
 end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
-	if BList.query(event.user.id, "rate") then return nil end				# Check the blacklist
 	target = Parser.get_target(target, event)								# Parse the target into a discord markup for IDs
 	event.channel.send_embed do |embed|										
 		embed.description = "I give " + target + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
@@ -145,13 +138,11 @@ $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 end
 
 $bot.command(:katia) do |event|												# KATIA Command
-	if BList.query(event.user.id, "katia") then return nil end				# Check the blacklist
 	event.send_file(File.open(Dir.glob("./ext/kat/#{rand(1033).to_s}.*")[0], 'r'))	# Pick a random image and send it. The MAX is hard-coded here because you probably wont add images much
 	return nil
 end
 
 $bot.command(:chance, min_args: 1) do |event, *query|											# CHANCE Command
-	if BList.query(event.user.id, "chance") then return nil end									# Check the blacklist
 	event.channel.send_embed do |embed|															# Return the message
 		embed.title = "I give the chance " + query.join(" ") + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
 		embed.color = 0xa21a5d
@@ -196,32 +187,14 @@ end
 
 #=================INTERNAL PROMPT==================
 
-$bot.command(:nsfwadd, max_args:1, min_args:1)  do |event, channel|				# NSFWADD Command
-	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.") 
-		return nil
-	end
-	if NList.add(channel[2..-2]) == nil then event.respond "Channel is already on list." 
-	else event.respond "NSFW Channels updated." end
-	return nil
-end
-
-$bot.command(:nsfwpurge, max_args:1, min_args:1)  do |event, channel|			# NSFWPURGE Command
-	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.") 
-		return nil
-	end
-	if NList.purge(channel[2..-2]) == nil then event.respond "Channel not on list." 
-	else event.respond "NSFW Channels updated." end
-	return nil
-end
-
-$bot.command(:blacklist) do |event, func, target, command|						# BLACKLIST Command
+$bot.command(:blacklist) do |event, func, target|								# BLACKLIST Command
 	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator."); return nil end 
 	if func == "list" then BList.list(event, target); return nil end
 	target = Parser.get_uid(target, event)
 	if func == "remove"
-		if BList.purge(target, command) == nil then event.respond "User not on list." end
+		$bot.unignore_user(target)
 	elsif func == "add"
-		if BList.add(target, command) == nil then event.respond "User is already on list." end
+		$bot.ignore_user(target)
 	else event.respond "Invalid operation. valid operations are: remove add list"; return nil 
 	end
 	event.respond "Blacklist updated." 
