@@ -48,7 +48,7 @@ $bot.command :help do |event|					# Help command
 		embed.add_field(name: 'Interaction commands:', value: "`k.yiff @[user]`  :  sends a yiffy message.
 `k.hug @[user]`  :  hugs another user.
 `k.kiss @[user]`  :  kisses another user.
-`k.stab @[user]`  :  stabbes another user.
+`k.stab @[user]`  :  stabs another user.
 `k.shoot @[user]`  :  shoots another user.
 `k.pet @[user]`  :  pets another user.
 `k.bless @[user]`  :  blesses another user.")
