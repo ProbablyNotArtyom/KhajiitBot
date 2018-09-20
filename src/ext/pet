@@ -5,3 +5,5 @@
  "gives **#{target}** pets!"
  "sneaks up behind **#{target}** and suprizes them with a swarm of petting!"
  "fuzzily pets **#{target}**!"
+ "pets **#{target}**'s warm fuzzy fluff!"
+ "pets **#{target}** like the animal they are."

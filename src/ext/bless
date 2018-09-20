@@ -5,3 +5,4 @@
  "gives bless to **#{target}**!"
  "grants blessed_bless to **#{target}**!"
  "accidentally curses **#{target}**! I can't believe you've done this."
+ "declares **#{target}**! a truly blessed entity!"
