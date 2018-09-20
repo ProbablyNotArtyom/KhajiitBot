@@ -39,7 +39,7 @@ $bot.command :help do |event|					# Help command
 `k.trade  [image]`  :  adds user image to meme pool and sends a random meme back.
 `k.image`  :  gets a random image from the k.trade pool.
 `k.lewd <image>`  :  adds user image to lewd pool and sends a random lewd back.
-`k.peruse`  :  returns a random lewd from the pool.
+`k.arouse`  :  returns a random lewd from the pool.
 `k.random <max>`  :  generates a truly random number with max value. default max is 10.
 `k.8ball [question]`  :  answers any question with true randomness.
 `k.rate @[user]`  :  rates another user on a scale from 0 to 10. slightly less random...
@@ -111,7 +111,7 @@ $bot.command(:lewd) do |event|												# LEWD command
 	return nil
 end
 
-$bot.command(:peruse) do |event|
+$bot.command(:arouse) do |event|
 	unless event.channel.nsfw? then
 		event.channel.send_embed do |embed|
 			embed.title = "```Use this command in an NSFW marked channel.```"
