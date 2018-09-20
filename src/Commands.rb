@@ -35,23 +35,23 @@ $bot.command :help do |event|					# Help command
 	event.channel.send_embed do |embed|			# Send embedded help message
 		embed.thumbnail = Discordrb::Webhooks::EmbedImage.new(url: 'http://i.imgur.com/pG3L2RP.png')
 		embed.description = 'Written by NotArtyom'
-		embed.add_field(name: 'General commands:', value: "```k.help                :  shows this help page.
-k.trade [image]       :  adds user image to meme pool and sends a random meme back.
-k.image               :  gets a random image from the k.trade pool.
-k.lewd <image>        :  adds user image to lewd pool and sends a random lewd back.
-k.peruse              :  returns a random lewd from the pool.
-k.random <max value>  :  generates a truly random number with max value. default max is 10.
-k.8ball [question]    :  answeres any question with true randomness.
-k.rate @[user]        :  rates another user on a scale from 0 to 10. slightly less random...
-k.katia               :  returns a random katia image.```")
+		embed.add_field(name: 'General commands:', value: "`k.help`  :  shows this help page.
+`k.trade  [image]`  :  adds user image to meme pool and sends a random meme back.
+`k.image`  :  gets a random image from the k.trade pool.
+`k.lewd <image>`  :  adds user image to lewd pool and sends a random lewd back.
+`k.peruse`  :  returns a random lewd from the pool.
+`k.random <max>`  :  generates a truly random number with max value. default max is 10.
+`k.8ball [question]`  :  answeres any question with true randomness.
+`k.rate @[user]`  :  rates another user on a scale from 0 to 10. slightly less random...
+`k.katia`  :  returns a random katia image.")
 
-		embed.add_field(name: 'Interaction commands:', value: "```k.yiff @[user]    :  sends a yiffy message.
-k.hug @[user]     :  hugs another user.
-k.kiss @[user]    :  kisses another user.
-k.stab @[user]    :  stabbes another user.
-k.shoot @[user]   :  shoots another user.
-k.pet @[user]     :  pets another user.
-k.bless @[user]   :  blesses another user.```")
+		embed.add_field(name: 'Interaction commands:', value: "`k.yiff @[user]`  :  sends a yiffy message.
+`k.hug @[user]`  :  hugs another user.
+`k.kiss @[user]`  :  kisses another user.
+`k.stab @[user]`  :  stabbes another user.
+`k.shoot @[user]`  :  shoots another user.
+`k.pet @[user]`  :  pets another user.
+`k.bless @[user]`  :  blesses another user.")
 
 		embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: 'KhajiitBot', url: 'https://discordapp.com/oauth2/authorize?client_id=452660556990644225&scope=bot&permissions=0', icon_url: 'http://i.imgur.com/pG3L2RP.png')
 		embed.color = 0xa21a5d
