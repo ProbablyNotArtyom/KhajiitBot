@@ -41,7 +41,7 @@ $bot.command :help do |event|					# Help command
 `k.lewd <image>`  :  adds user image to lewd pool and sends a random lewd back.
 `k.peruse`  :  returns a random lewd from the pool.
 `k.random <max>`  :  generates a truly random number with max value. default max is 10.
-`k.8ball [question]`  :  answeres any question with true randomness.
+`k.8ball [question]`  :  answers any question with true randomness.
 `k.rate @[user]`  :  rates another user on a scale from 0 to 10. slightly less random...
 `k.katia`  :  returns a random katia image.")
 
