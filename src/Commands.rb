@@ -39,6 +39,7 @@ $bot.command :help do |event|					# Help command
 k.trade [image]       :  adds user image to meme pool and sends a random meme back.
 k.image               :  gets a random image from the k.trade pool.
 k.lewd <image>        :  adds user image to lewd pool and sends a random lewd back.
+k.peruse              :  returns a random lewd from the pool.
 k.random <max value>  :  generates a truly random number with max value. default max is 10.
 k.8ball [question]    :  answeres any question with true randomness.
 k.rate @[user]        :  rates another user on a scale from 0 to 10. slightly less random...
@@ -83,7 +84,7 @@ $bot.command(:image) do |event|												# IMAGE command
 	return nil
 end
 
-$bot.command :lewd do |event|												# LEWD command
+$bot.command(:lewd) do |event|												# LEWD command
 	unless event.channel.nsfw? then 										# Make sure the channel is marked as NSFW
 		event.channel.send_embed do |embed|
 			embed.title = "```Use this command in an NSFW marked channel.```"
@@ -107,6 +108,19 @@ $bot.command :lewd do |event|												# LEWD command
 	File.open("./ext/lewd/max", 'w') { |f| f << oname.to_s }				# Open a new image
 	oname = "./ext/lewd/" + oname.to_s + files[0].filename.slice!(/\..*/)	# Create a new file with the new max number as its name, saving the extension
 	IO.copy_stream(download, oname)											# Output the image to the opened file
+	return nil
+end
+
+$bot.command(:peruse) do |event|
+	unless event.channel.nsfw? then
+		event.channel.send_embed do |embed|
+			embed.title = "```Use this command in an NSFW marked channel.```"
+			embed.color = 0xa21a5d
+		end
+		return nil
+	end
+	oname = File.read("./ext/lewd/max").to_i                                		  	# See what the current number of images is
+    event.send_file(File.open(Dir.glob("./ext/lewd/#{rand(oname).to_s}.*")[0], 'r'))    # Pick a random image and send it back
 	return nil
 end
 
