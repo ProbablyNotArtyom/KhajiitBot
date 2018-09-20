@@ -75,44 +75,72 @@ end
 
 #==================================================
 
+$cmdChannel = Config.get("channel")			# Reload the last active channel
+$inBuffer = ""
+
+$bot.message(in: $cmdChannel) do |event|
+  puts("\r\033[K#{event.message.author.display_name} : #{event.message.content}\r\n")
+  print ("#{$cmdChannel}>")
+  print ($inBuffer)
+end
+
+def read_char
+ system "stty raw -echo"
+ char = STDIN.getc
+ putc char
+ return char
+ensure
+ system "stty -raw echo"
+end
+
+#==================================================
+
 $bot.run :async								# Start the bot & run async
 puts('Bot Active')							# Notify bot being active
 puts('Awaiting user activity...')		
 
-$cmdChannel = Config.get("channel")			# Reload the last active channel
-
 loop do										# MAIN COMMAND PROMPT LOOP
 	print ("#{$cmdChannel}>")					# Print prompt
-	cIn = gets.split(" ")						# Get the user input and turn it into a word array
+	$inBuffer = ""								# Get the user input and turn it into a word array
+	index = 0
+	until $inBuffer.end_with?("\r")
+		$inBuffer << read_char
+		index += 1
+	end
+	cIn = $inBuffer.split(" ")
 	unless cIn[0] == nil						# Ignore everything if the input is nil	
 		if cIn[0].downcase == "go"					# GO command
 			chan = cIn.delete_at(1)							# Get the channel from the user input
 			if chan != nil && chan.length == 18				# Make sure it's the right length
 				$cmdChannel = chan.to_i  					# Set the current channel
 				Config.save("channel", $cmdChannel)			# Save the current channel across runs
-			else puts("Invalid Channel") end				# Notify channel fuckery
+				puts "\r\n"
+			else puts("\r\nInvalid Channel") end				# Notify channel fuckery
 		elsif cIn[0].downcase == "exit"				# EXIT command
 			exit											# Exit
 		elsif cIn[0].downcase == "status"			# STATUS command
 			stat = cIn.delete_at(1)							# Delete the command
 			if stat == "online"
 				$bot.online									# Set status as online
+				puts "\r\nKhajiitBot now online"
 			elsif stat == "idle"	
 				$bot.idle									# Set status as idle
+				puts "\r\nKhajiitBot now idle"
 			elsif stat == "invisible"
 				$bot.invisible								# Set status as invisible
-			else puts("Invalid status\n") end
+				puts "\r\nKhajiitBot now invisible"
+			else puts("\r\nInvalid status") end
 		elsif cIn[0].downcase == "play"				# PLAY command
 			game = cIn.delete_at(0)							# Remove the command
 			msg = cIn.join(" ")								# Get desired string
 			$bot.game=(msg)									# Set game status
 			Config.save("game", msg)						# Save the current game across runs
 		elsif $cmdChannel == "KhajiitBot"			# Sanity Check
-			puts("You must select a valid channel!")		# Fault if no channel has been selected
+			puts("\r\nYou must select a valid channel!")		# Fault if no channel has been selected
 		elsif cIn[0].downcase == "say"				# SAY command	
 			cIn.delete_at(0)								# Delete the command from the user input
 			msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
-			puts msg										# Print the message to the CMD prompt
+			puts "#{msg}\r\n"										# Print the message to the CMD prompt
 			$bot.send_message($cmdChannel, msg)				# Send the message	
 		elsif cIn[0].downcase == "embed"			# EMBED Command	
 			cIn.delete_at(0)								# Delete the command from the user input
@@ -123,10 +151,9 @@ loop do										# MAIN COMMAND PROMPT LOOP
 			$i = 0
 			until msg[$i] == CLIENT_ID.to_i || $i == 11; $i += 1 end					# Scan for Bot's ID
 			unless $i == 11; $bot.channel($cmdChannel).history(10)[$i].delete end		# Delete message if its ours
-		else puts("Invalid Command\n") 						# Notify invalid command input
+		else puts("\r\nInvalid Command") 						# Notify invalid command input
 		end
 	end
 end
 
 #==================================================
-
