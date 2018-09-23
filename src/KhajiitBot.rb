@@ -78,19 +78,17 @@ end
 $cmdChannel = Config.get("channel")			# Reload the last active channel
 $inBuffer = ""
 
-$bot.message(in: $cmdChannel) do |event|
-  puts("\r\033[K#{event.message.author.display_name} : #{event.message.content}\r\n")
+$bot.message(in: $cmdChannel) do |event|	# Print out any messages from the current channel
+  puts("\r\033[K#{event.message.author.display_name} : #{event.message.content.gsub('\n', "\r\n").inspect}\r\n")
   print ("#{$cmdChannel}>")
   print ($inBuffer)
 end
 
-def read_char
- system "stty raw -echo"
- char = STDIN.getc
- putc char
- return char
+def read_char								# ***BIG BODGE ALERT***
+ system "stty raw -echo"					# Here we disable automatic-echo and set our terminal to give us the RAW input data
+ return STDIN.getc							# so that we can completely control what gets printed
 ensure
- system "stty -raw echo"
+ system "stty -raw echo"					# Make sure we set it back to normal on exit
 end
 
 #==================================================
@@ -103,9 +101,19 @@ loop do										# MAIN COMMAND PROMPT LOOP
 	print ("#{$cmdChannel}>")					# Print prompt
 	$inBuffer = ""								# Get the user input and turn it into a word array
 	index = 0
-	until $inBuffer.end_with?("\r")
-		$inBuffer << read_char
-		index += 1
+	until $inBuffer.end_with?("\r")				# MAIN CHARACTER INPUT LOOP
+		char = read_char							# Get a char from the input
+		if char == ("\u007F")						# If its a DELETE, then handle it
+			unless index == 0 							# Ignore the DELETE if we're at index 0
+				print "\033[1D \033[1D"					# Remove the last char from the prompt
+				$inBuffer[index-1] = ""					# Remove it from the buffer
+				index -= 1								# Decrease index
+			end
+		else										# Anything else
+			putc char									# Output the char to the prompt
+			$inBuffer << char							# Tag it onto the end of the buffer
+			index += 1									# Increase index
+		end
 	end
 	cIn = $inBuffer.split(" ")
 	unless cIn[0] == nil						# Ignore everything if the input is nil	
@@ -115,7 +123,7 @@ loop do										# MAIN COMMAND PROMPT LOOP
 				$cmdChannel = chan.to_i  					# Set the current channel
 				Config.save("channel", $cmdChannel)			# Save the current channel across runs
 				puts "\r\n"
-			else puts("\r\033[KInvalid Channel\r\n") end				# Notify channel fuckery
+			else puts("\r\033[KInvalid Channel\r\n") end	# Notify channel fuckery
 		elsif cIn[0].downcase == "exit"				# EXIT command
 			exit											# Exit
 		elsif cIn[0].downcase == "status"			# STATUS command
@@ -140,10 +148,9 @@ loop do										# MAIN COMMAND PROMPT LOOP
 		elsif cIn[0].downcase == "say"				# SAY command	
 			cIn.delete_at(0)								# Delete the command from the user input
 			msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
-			puts "\r\033[KKhajiitBot : #{msg}\r\n"										# Print the message to the CMD prompt
-			
+			puts "\r\033[KKhajiitBot : #{msg}\r\n"			# Print the message to the CMD prompt
             $bot.send_message($cmdChannel, msg)				# Send the message	
-		elsif cIn[0].downcase == "embed"			# EMBED Command	
+		elsif cIn[0].downcase == "embed"			# EMBED command	
 			cIn.delete_at(0)								# Delete the command from the user input
 			msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
 			$bot.send_message($cmdChannel, nil, false, {"description" => msg, "color" => 0xa21a5d})
@@ -152,7 +159,20 @@ loop do										# MAIN COMMAND PROMPT LOOP
 			$i = 0
 			until msg[$i] == CLIENT_ID.to_i || $i == 11; $i += 1 end					# Scan for Bot's ID
 			unless $i == 11; $bot.channel($cmdChannel).history(10)[$i].delete end		# Delete message if its ours
-		else puts("\r\033[KInvalid Command\r\n") 						# Notify invalid command input
+		elsif cIn[0].downcase == "leave"			# LEAVE command
+			id = cIn.delete_at(1).to_i						# Delete the channel ID into id
+			$bot.servers.each_value {|x| 					# Scan the list of servers to find a match, then leave that server
+				if x.id == id
+					puts "\r\033[KLeft #{x.name}\r\n"
+					x.leave
+					break 2
+				end
+				}
+		elsif cIn[0].downcase == "list"				# LIST command
+			servers = $bot.servers.each_value {|x| 			# For each server, print out its name and ID
+				printf("%s : %d\r\n", x.name, x.id)
+			}
+		else puts("\r\033[KInvalid Command\r\n") 			# Notify invalid command input
 		end
 	end
 end
