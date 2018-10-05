@@ -79,7 +79,7 @@ $cmdChannel = Config.get("channel")			# Reload the last active channel
 $inBuffer = ""
 
 $bot.message(in: $cmdChannel) do |event|	# Print out any messages from the current channel
-  puts("\r\033[K#{event.message.author.display_name} : #{event.message.content.gsub('\n', "\r\n").inspect}\r\n")
+  puts("\r\033[K#{event.message.author.display_name} : #{event.message.content.gsub('\n', "\r\n")}\r\n")
   print ("#{$cmdChannel}>")
   print ($inBuffer)
 end
@@ -93,6 +93,7 @@ end
 
 #==================================================
 
+$bot.mode = :silent
 $bot.run :async								# Start the bot & run async
 puts('Bot Active')							# Notify bot being active
 puts('Awaiting user activity...')		
