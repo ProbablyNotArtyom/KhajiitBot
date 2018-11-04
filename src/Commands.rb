@@ -151,12 +151,17 @@ $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 	return nil
 end
 
-$bot.command(:katia) do |event|												# KATIA Command
-	event.send_file(File.open(Dir.glob("./ext/kat/#{rand(1033).to_s}.*")[0], 'r'))	# Pick a random image and send it. The MAX is hard-coded here because you probably wont add images much
+$bot.command(:katia) do |event, num|										# KATIA Command
+	if num == nil
+		index = rand(1034).to_s
+	else
+		index = num
+	end
+	event.send_file(File.open(Dir.glob("./ext/kat/#{index}.*")[0], 'r'))	# Pick a random image and send it. The MAX is hard-coded here because you probably wont add images much
 	return nil
 end
 
-$bot.command(:chance, min_args: 1) do |event, *query|											# CHANCE Command
+$bot.command(:chance, min_args: 1) do |event, *query|						# CHANCE Command
 	event.channel.send_embed do |embed|															# Return the message
 		embed.title = "I give the chance " + query.join(" ") + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
 		embed.color = 0xa21a5d
@@ -197,6 +202,15 @@ end
 $bot.command :bless do |event, *target|		# BLESS Command
 	action(target, event, "bless")			# Execute command handler using the proper stringset
 	return nil
+end
+
+$bot.command :test do |event|
+	event.channel.send_embed do |embed|
+		embed.title = "Title Test!"										
+		#embed.description = "Description Test!"
+		embed.thumbnail = Discordrb::Webhooks::EmbedImage.new(url: 'http://i.imgur.com/pG3L2RP.png')
+		embed.color = 0xa21a5d
+	end
 end
 
 #=================INTERNAL PROMPT==================
