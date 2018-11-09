@@ -155,7 +155,7 @@ $bot.command(:katia) do |event, num|										# KATIA Command
 	if num == nil
 		index = rand(1035).to_s
 	else
-		index = num.to_i
+		index = Integer(num) rescue index = "hitler"
 	end
 	event.send_file(File.open(Dir.glob("./ext/kat/#{index}.*")[0], 'r'))	# Pick a random image and send it. The MAX is hard-coded here because you probably wont add images much
 	return nil
