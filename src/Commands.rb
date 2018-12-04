@@ -133,11 +133,18 @@ $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Comm
 	return nil
 end
 
-$bot.command(:'8ball') do |event|											# 8BALL Command
+$bot.command(:'8ball') do |event, *rest|									# 8BALL Command
 	lines = IO.readlines("./ext/8ball").size 								# Get the number of lines
-	event.channel.send_embed do |embed|										# Return the message
-		embed.title = IO.readlines("./ext/8ball")[rand(lines)] + event.user.name
-		embed.color = 0xa21a5d
+	if rest.include? "sleep"
+		event.channel.send_embed do |embed|                                     # Return the message
+        	embed.title = "I dont think so," + event.user.name
+        	embed.color = 0xa21a5d
+		end
+	else
+		event.channel.send_embed do |embed|										# Return the message
+			embed.title = IO.readlines("./ext/8ball")[rand(lines)] + event.user.name
+			embed.color = 0xa21a5d
+		end
 	end
 	return nil
 end
