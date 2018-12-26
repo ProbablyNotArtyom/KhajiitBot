@@ -40,7 +40,7 @@ end
 
 def action(target, event, action)																			# ACTION Handler method
 	target = Parser.get_target(target, event)																# Parse the target name and get back a formatted ID
-	if target == nil then line = rand(3) else line = rand(IO.readlines("./ext/#{action}").size-3)+3 end		# If the target exists then get the number of lines in the string file
+	if (target == nil || target == event.user.id) then line = rand(3) else line = rand(IO.readlines("./ext/#{action}").size-3)+3 end		# If the target exists then get the number of lines in the string file
 	event.channel.send_embed do |embed|																		# Send the embedded action
 		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}")[line])		# Pick a random string and return it
 		embed.color = 0xa21a5d
