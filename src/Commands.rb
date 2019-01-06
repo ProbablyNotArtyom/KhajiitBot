@@ -6,19 +6,19 @@
 #==================================================
 #
 # MIT License
-# 
+#
 # Copyright (c) 2018 Carson Herrington
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -128,7 +128,7 @@ $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Comm
 	if max == nil then max = 10 end											# If the max is not specified, then use 10
 	event.channel.send_embed do |embed|										# Send the message as embedded
 		embed.title = rand(max)												# Generate a random number
-		embed.color = 0xa21a5d				
+		embed.color = 0xa21a5d
 	end
 	return nil
 end
@@ -151,7 +151,7 @@ end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 	target = Parser.get_target(target, event)								# Parse the target into a discord markup for IDs
-	event.channel.send_embed do |embed|										
+	event.channel.send_embed do |embed|
 		embed.description = "I give " + target + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
 		embed.color = 0xa21a5d
 	end
@@ -211,9 +211,14 @@ $bot.command :bless do |event, *target|		# BLESS Command
 	return nil
 end
 
+$bot.command :f do |event, *target|			# RESPECTS Command
+	action(target, event, "respects")		# Execute command handler using the proper stringset
+	return nil
+end
+
 $bot.command :test do |event|
 	event.channel.send_embed do |embed|
-		embed.title = "Title Test!"										
+		embed.title = "Title Test!"
 		#embed.description = "Description Test!"
 		embed.thumbnail = Discordrb::Webhooks::EmbedImage.new(url: 'http://i.imgur.com/pG3L2RP.png')
 		embed.color = 0xa21a5d
@@ -223,39 +228,39 @@ end
 #=================INTERNAL PROMPT==================
 
 $bot.command(:blacklist) do |event, func, target|								# BLACKLIST Command
-	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator."); return nil end 
+	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator."); return nil end
 	if func == "list" then BList.list(event, target); return nil end
 	target = Parser.get_uid(target, event)
 	if func == "remove"
 		$bot.unignore_user(target)
 	elsif func == "add"
 		$bot.ignore_user(target)
-	else event.respond "Invalid operation. valid operations are: remove add list"; return nil 
+	else event.respond "Invalid operation. valid operations are: remove add list"; return nil
 	end
-	event.respond "Blacklist updated." 
+	event.respond "Blacklist updated."
 	return nil
 end
 
 $bot.command(:usermod, max_args: 2, min_args: 2) do |event, target, level|		# USERMOD Command
 	target = Parser.get_uid(target, event)
 	if target == nil then return nil end
-	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.") 
+	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.")
 		return nil
 	end
-	if PList.add(target, level) == nil then event.respond "User is already on list." 
+	if PList.add(target, level) == nil then event.respond "User is already on list."
 	else event.respond "User permissions updated." end
 	return nil
 end
 
 $bot.command(:servermod, max_args: 0, min_args: 0) do |event|					# SERVERMOD Command
-	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.") 
+	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.")
 		return nil
 	end
 	i = 0
 	while event.server.members[i] != nil do
 		unless PList.is_exist(event.server.members[i].id) then PList.add(event.server.members[i].id, 1) end
 		i += 1
-	end 
+	end
 	event.respond "User permissions updated."
 end
 
