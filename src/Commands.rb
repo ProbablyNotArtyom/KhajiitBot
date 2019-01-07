@@ -52,6 +52,7 @@ $bot.command :help do |event|					# Help command
 `k.shoot @[user]`  :  shoots another user.
 `k.pet @[user]`  :  pets another user.
 `k.bless @[user]`  :  blesses another user.
+`k.nuke @[user]`  :  nukes another user.
 `k.f @[user]`  :  pays respects, optionally to another user.")
 
 		embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: 'KhajiitBot', url: 'https://discordapp.com/oauth2/authorize?client_id=452660556990644225&scope=bot&permissions=0', icon_url: 'http://i.imgur.com/pG3L2RP.png')
