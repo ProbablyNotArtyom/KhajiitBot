@@ -223,6 +223,11 @@ $bot.command :nuke do |event, *target|		# NUKE Command
 	return nil
 end
 
+$bot.command :grope do |event, *target|		# NUKE Command
+	action(target, event, "grope")			# Execute command handler using the proper stringset
+	return nil
+end
+
 $bot.command :test do |event|
 	event.channel.send_embed do |embed|
 		embed.title = "Title Test!"
