@@ -1,0 +1,5 @@
+ "pays their respects. :regional_indicator_f:"
+ "pays their respects."
+ "pays their respects."
+ "pays their respects to **#{target}**."
+ "lays down a fat F for **#{target}**."
