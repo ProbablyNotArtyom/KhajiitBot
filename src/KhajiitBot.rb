@@ -1,4 +1,4 @@
-
+#!/usr/bin/env ruby
 #==================================================
 #     KhajiitBot  --  NotArtyom  --  07/24/18
 #==================================================
@@ -6,19 +6,19 @@
 #==================================================
 #
 # MIT License
-# 
+#
 # Copyright (c) 2018 Carson Herrington
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -56,14 +56,17 @@ PList = Permit.new()						# Create a permit list
 Parser = Parse.new()						# Setup ID parsing class
 Config = Setting.new()						# Set up persistence class
 
-$boottime = Time.now.utc					# save to time the bot was started. used of uptime
-puts('Current time: ' + $boottime.inspect)
+$boottime = Time.new						# Save to time the bot was started. used of uptime
+puts('Current time: ' + $boottime.ctime)
 puts('KhajiitBot Starting...')
 
-$bot.ready do							
-	if Config.get("game") == nil then $bot.game = 'k.help'		# Set the "playing" text to the help command
-	else 
-		$bot.game = Config.get("game") 
+$bot.ready do
+	if Config.get("game") != nil
+		$bot.game = Config.get("game")
+	elsif Config.get("watching") != nil
+		$bot.watching = Config.get("watching")
+	else
+		 $bot.game = 'k.help'		# Set the "playing" text to the help command
 	end
 end
 
@@ -80,7 +83,7 @@ $inBuffer = ""
 
 $bot.message(in: $cmdChannel) do |event|	# Print out any messages from the current channel
   puts("\r\033[K#{event.message.author.display_name} : #{event.message.content.gsub('\n', "\r\n")}\r\n")
-  print ("#{$cmdChannel}>")
+  print ("#{$bot.channel($cmdChannel.to_i).name}>")
   print ($inBuffer)
 end
 
@@ -96,10 +99,10 @@ end
 $bot.mode = :silent
 $bot.run :async								# Start the bot & run async
 puts('Bot Active')							# Notify bot being active
-puts('Awaiting user activity...')		
+puts('Awaiting user activity...')
 
 loop do										# MAIN COMMAND PROMPT LOOP
-	print ("#{$cmdChannel}>")					# Print prompt
+	print ("#{$bot.channel($cmdChannel.to_i).name}>")					# Print prompt
 	$inBuffer = ""								# Get the user input and turn it into a word array
 	index = 0
 	until $inBuffer.end_with?("\r")				# MAIN CHARACTER INPUT LOOP
@@ -117,64 +120,93 @@ loop do										# MAIN COMMAND PROMPT LOOP
 		end
 	end
 	cIn = $inBuffer.split(" ")
-	unless cIn[0] == nil						# Ignore everything if the input is nil	
-		if cIn[0].downcase == "go"					# GO command
+	unless cIn[0] == nil						# Ignore everything if the input is nil
+		if cIn[0].downcase == "go"						# GO command
 			chan = cIn.delete_at(1)							# Get the channel from the user input
 			if chan != nil && chan.length == 18				# Make sure it's the right length
 				$cmdChannel = chan.to_i  					# Set the current channel
 				Config.save("channel", $cmdChannel)			# Save the current channel across runs
-				puts "\r\n"
-			else puts("\r\033[KInvalid Channel\r\n") end	# Notify channel fuckery
-		elsif cIn[0].downcase == "exit"				# EXIT command
+			else printf("\033[KInvalid Channel") end		# Notify channel fuckery
+		elsif cIn[0].downcase == "exit"					# EXIT command
+			$bot.stop()										# Stop the bot
 			exit											# Exit
-		elsif cIn[0].downcase == "status"			# STATUS command
+		elsif cIn[0].downcase == "status"				# STATUS command
 			stat = cIn.delete_at(1)							# Delete the command
 			if stat == "online"
 				$bot.online									# Set status as online
-				puts "\r\033[KKhajiitBot now online\r\n"
-			elsif stat == "idle"	
+				printf ("\033[KKhajiitBot now online")
+			elsif stat == "idle"
 				$bot.idle									# Set status as idle
-				puts "\r\033[KKhajiitBot now idle\r\n"
+				printf("\033[KKhajiitBot now idle")
 			elsif stat == "invisible"
 				$bot.invisible								# Set status as invisible
-				puts "\r\033[KKhajiitBot now invisible\r\n"
-			else puts("\r\033[KInvalid status\r\n") end
-		elsif cIn[0].downcase == "play"				# PLAY command
-			game = cIn.delete_at(0)							# Remove the command
+				printf("\033[KKhajiitBot now invisible")
+			else printf("\033[KInvalid status") end
+		elsif cIn[0].downcase == "play"					# PLAY command
+			cIn.delete_at(0)								# Remove the command
 			msg = cIn.join(" ")								# Get desired string
 			$bot.game=(msg)									# Set game status
 			Config.save("game", msg)						# Save the current game across runs
-		elsif $cmdChannel == "KhajiitBot"			# Sanity Check
-			puts("\r\033[KYou must select a valid channel!\r\n")		# Fault if no channel has been selected
-		elsif cIn[0].downcase == "say"				# SAY command	
+			Config.save("watching", nil)
+		elsif cIn[0].downcase == "watch"				# WATCH command
+			cIn.delete_at(0)								# Remove the command
+			msg = cIn.join(" ")								# Get desired string
+			$bot.watching=(msg)								# Set watching status
+			Config.save("watching", msg)					# Save the current vid name across runs
+			Config.save("game", nil)
+		elsif $cmdChannel == "KhajiitBot"					# Sanity Check
+			printf("\033[KYou must select a valid channel!")# Fault if no channel has been selected
+		elsif cIn[0].downcase == "say"					# SAY command
 			cIn.delete_at(0)								# Delete the command from the user input
 			msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
-			puts "\r\033[KKhajiitBot : #{msg}\r\n"			# Print the message to the CMD prompt
-            $bot.send_message($cmdChannel, msg)				# Send the message	
-		elsif cIn[0].downcase == "embed"			# EMBED command	
+			printf("\033[KKhajiitBot : #{msg}")				# Print the message to the CMD prompt
+            $bot.send_message($cmdChannel, msg)				# Send the message
+		elsif cIn[0].downcase == "embed"				# EMBED command
 			cIn.delete_at(0)								# Delete the command from the user input
 			msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
 			$bot.send_message($cmdChannel, nil, false, {"description" => msg, "color" => 0xa21a5d})
-		elsif cIn[0].downcase == "rm"				# RM command	
+		elsif cIn[0].downcase == "rm"					# RM command
 			msg = $bot.channel($cmdChannel).history(10).collect { |x| x.author.id }		# Make id table
 			$i = 0
 			until msg[$i] == CLIENT_ID.to_i || $i == 11; $i += 1 end					# Scan for Bot's ID
 			unless $i == 11; $bot.channel($cmdChannel).history(10)[$i].delete end		# Delete message if its ours
-		elsif cIn[0].downcase == "leave"			# LEAVE command
+		elsif cIn[0].downcase == "leave"				# LEAVE command
 			id = cIn.delete_at(1).to_i						# Delete the channel ID into id
 			$bot.servers.each_value {|x| 					# Scan the list of servers to find a match, then leave that server
 				if x.id == id
-					puts "\r\033[KLeft #{x.name}\r\n"
+					printf("\033[KLeft #{x.name}")
 					x.leave
 					break 2
 				end
-				}
-		elsif cIn[0].downcase == "list"				# LIST command
-			servers = $bot.servers.each_value {|x| 			# For each server, print out its name and ID
-				printf("%s : %d\r\n", x.name, x.id)
 			}
-		else puts("\r\033[KInvalid Command\r\n") 			# Notify invalid command input
+		elsif cIn[0].downcase == "dm"					# DM command
+			cIn.delete_at(0)								# Delete the command from the user input
+			uid = cIn.delete_at(0)							# get the recipient uid
+			msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
+			$bot.user(uid.to_i).pm(msg)
+		elsif cIn[0].downcase == "uid"					# UID command
+			cIn.delete_at(0)								# Remove the command
+			uname = Parser.get_user(cIn.join(" "))			# Get the username
+			if uname != nil
+				printf("%s", uname.id.to_s)
+			else
+				printf("\033[KInvalid User")
+			end
+		elsif cIn[0].downcase == "sid"					# SID command
+			cIn.delete_at(0)								# Remove the command
+			sname = Parser.get_server(cIn.join(" "))			# Get the server name
+			if sname != nil
+				printf("%s", sname.id.to_s)
+			else
+				printf("\033[KInvalid Server")
+			end
+		elsif cIn[0].downcase == "list"					# LIST command
+			servers = $bot.servers.each_value {|x| 			# For each server, print out its name and ID
+				printf("\n%s : %d", x.name, x.id)
+			}
+		else printf("\033[KInvalid Command") 			# Notify invalid command input
 		end
+		puts("")
 	end
 end
 

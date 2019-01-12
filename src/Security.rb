@@ -6,19 +6,19 @@
 #==================================================
 #
 # MIT License
-# 
+#
 # Copyright (c) 2018 Carson Herrington
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,7 @@ def valid_json?(json)				# Detect if a file is valid JSON
 end
 
 def update_json(file, data)			# Abstraction for updaating a JSON file
-	File.open(file, 'w+') {|f| f.write(JSON.generate(data)) } 
+	File.open(file, 'w+') {|f| f.write(JSON.generate(data)) }
 end
 
 def action(target, event, action)																			# ACTION Handler method
@@ -49,14 +49,14 @@ end
 
 class Permit																		# Permit checking class
 	def initialize()
-		@@permits = {}																			# Create a new empty array to house out permits	
+		@@permits = {}																			# Create a new empty array to house out permits
 		unless valid_json?(IO.read("./ext/sys/permissions")) then  File.open("./ext/sys/permissions", 'w+') {|f| f.write(JSON.generate(@@permits)) } end
 																								# If the Permit file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
 		@@permits = JSON.load IO.read("./ext/sys/permissions")									# If it is valid, then load the saved permits into the array
 		return
 	end
-	
-	def add(user, level)																		# ADD method. Adds a user to the permits 
+
+	def add(user, level)																		# ADD method. Adds a user to the permits
 		@@permits.store(user.to_s, level.to_i)													# add the ID to the permits array
 		update_json("./ext/sys/permissions", @@permits)											# Update the saved permits
 		return true
@@ -79,14 +79,43 @@ class Permit																		# Permit checking class
 			mempt = svevent.server.member(@@permits.keys[i])									# Get the member's method
 			out << mempt.username + "  -  " + @@permits.fetch(mempt.id.to_s, 0).to_s + "\n"		# Shift their username into the output buffer
 			i += 1																				# Repeat
-		end 
+		end
 		svevent.respond out																		# Respond with the buffer
 		return nil
 	end
 end
 
-class Parse																			# PARSE class for parsing user names and nicknames 
+class Parse																			# PARSE class for parsing user names and nicknames
 	def initialize()
+	end
+	def get_user(user)																		# GET_USER method. inputs a nickname or username and returns a user object
+		if user == nil then return nil end													# If user is nil then abort
+		unless user[0] == "<"																# As long as the username isn't an ID then loop
+			serverList = $bot.servers
+			serverList.each_value {|srv|
+				tmp = srv.members.detect{|member| member.display_name.include?(user)}											# Return the ID string if the user matches a nickname in the server
+				if tmp == nil then tmp = srv.members.detect{|member| member.display_name.downcase.include?(user.downcase)}		# Return the ID string if the user matches a nickname in the server. Case insensetive
+					if tmp == nil then tmp = srv.members.detect{|member| member.username.include?(user)}						# Return the ID string if the user matches a username in the server
+						if tmp == nil then tmp = srv.members.detect{|member| member.username.downcase.include?(user.downcase)}	# Return the ID string if the user matches a username in the server. Case insensetive															# Return nil if no matches
+						end
+					end
+				end
+				if tmp != nil then return tmp end
+			}
+			return nil
+		end
+		return nil
+	end
+	def get_server(server)
+		if server[0] == nil then return nil end													# If user is nil then abort
+		unless server[0][0] == "<"																# As long as the username isn't an ID then loop
+			serverList = $bot.servers
+			serverList.each_value {|srv|
+				if srv.name.include?(server) then return srv end
+			}
+			return nil
+		end
+		return server[0]
 	end
 	def get_target(user, event)																	# GET_TARGET method. inputs a nickname or username and returns a uID
 		if user[0] == nil then return nil end													# If user is nil then abort
@@ -108,7 +137,7 @@ class Parse																			# PARSE class for parsing user names and nicknames
 		return user[0]
 	end
 	def get_uid(user, event) 																	# GET_UID method. Inputs a mention and returns an ID
-		unless user[0] == "<"																	
+		unless user[0] == "<"
 			tmp = event.server.members.detect{|member| member.display_name.include?(user)}
 			if tmp == nil then tmp = event.server.members.detect{|member| member.username.include?(user)}								# Return the ID int if the nickname exists
 				if tmp == nil then tmp = event.server.members.detect{|member| member.username.downcase.include?(user.downcase)}			# Return the ID int if the username exists
@@ -123,12 +152,12 @@ end
 
 class Setting																		# SETTING class for storing persistent data
 	def initialize()
-		@@persistent = {}																		# Create a new empty array to house the settings	
+		@@persistent = {}																		# Create a new empty array to house the settings
 		unless valid_json?(IO.read("./ext/sys/persistent")) then  File.open("./ext/sys/persistent", 'w+') {|f| f.write(JSON.generate(@@persistent)) } end
 																								# If the persistence file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
 		@@persistent = JSON.load IO.read("./ext/sys/persistent")
 	end
-	def save(name, val)																			# SAVE method. saves a piece of data with a name 
+	def save(name, val)																			# SAVE method. saves a piece of data with a name
 		@@persistent.store(name, val)															# Store the data itself
 		update_json("./ext/sys/persistent", @@persistent)										# Update the JSON file
 		return true																				# Return the all-good

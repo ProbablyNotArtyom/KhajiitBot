@@ -228,11 +228,11 @@ $bot.command :grope do |event, *target|		# NUKE Command
 	return nil
 end
 
-$bot.command :test do |event|
+$bot.command :uptime do |event|
+	uptime_seconds = Time.now.to_i - $boottime.to_i
+	uptime_hours = uptime_seconds/1440 % 1
 	event.channel.send_embed do |embed|
-		embed.title = "Title Test!"
-		#embed.description = "Description Test!"
-		embed.thumbnail = Discordrb::Webhooks::EmbedImage.new(url: 'http://i.imgur.com/pG3L2RP.png')
+		embed.title = uptime_hours.to_s + " hours, " + (uptime_seconds - uptime_hours*1440).to_s + " seconds."
 		embed.color = 0xa21a5d
 	end
 end
