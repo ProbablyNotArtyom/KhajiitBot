@@ -127,7 +127,8 @@ $bot.command(:arouse) do |event|
 end
 
 $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Command
-	if max == nil then max = 10 end											# If the max is not specified, then use 10
+	if max == nil then max = 10 											# If the max is not specified, then use 10
+	else max = max.to_i end
 	event.channel.send_embed do |embed|										# Send the message as embedded
 		embed.title = rand(max)												# Generate a random number
 		embed.color = 0xa21a5d
@@ -220,6 +221,11 @@ end
 
 $bot.command :nuke do |event, *target|		# NUKE Command
 	action(target, event, "nuke")			# Execute command handler using the proper stringset
+	return nil
+end
+
+$bot.command :meow do |event, *target|		# MEOW Command
+	action(target, event, "meow")			# Execute command handler using the proper stringset
 	return nil
 end
 

@@ -35,6 +35,7 @@ require 'openssl'
 require 'json'
 require 'open-uri'
 require 'net/https'
+#require 'rubyhexagon'
 
 #===================Constants======================
 
@@ -44,6 +45,11 @@ token = File.read "./ext/sys/token"			# shh secrets (Put your token in this file
 #=====================Globals======================
 
 $boottime = 0								# Holds the time of the last boot
+
+#==================rubyhexagon=====================
+
+#e621_api = E621::API.new()
+# GOTTA FIGURE THIS OUT ONE DAY
 
 #======================Main========================
 
