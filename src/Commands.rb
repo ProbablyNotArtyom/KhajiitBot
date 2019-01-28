@@ -53,6 +53,7 @@ $bot.command :help do |event|					# Help command
 `k.pet @[user]`  :  pets another user.
 `k.bless @[user]`  :  blesses another user.
 `k.nuke @[user]`  :  nukes another user.
+`k.meow @[user]`  :  meow at another user.
 `k.f @[user]`  :  pays respects, optionally to another user.")
 
 		embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: 'KhajiitBot', url: 'https://discordapp.com/oauth2/authorize?client_id=452660556990644225&scope=bot&permissions=0', icon_url: 'http://i.imgur.com/pG3L2RP.png')
@@ -239,6 +240,32 @@ $bot.command :uptime do |event|
 	uptime_hours = uptime_seconds/1440 % 1
 	event.channel.send_embed do |embed|
 		embed.title = uptime_hours.to_s + " hours, " + (uptime_seconds - uptime_hours*1440).to_s + " seconds."
+		embed.color = 0xa21a5d
+	end
+end
+
+$bot.command :e6 do |event, *tags|
+	if tags[0] != nil then
+		tags = "post?tags=" + tags.join("%20")
+	else
+		tags = ""
+	end
+	event.channel.send_embed do |embed|
+		embed.title = "Go there yourself you lazy fuck."
+		embed.description = "https://e621.net/" + tags
+		embed.color = 0xa21a5d
+	end
+end
+
+$bot.command :e9 do |event, *tags|
+	if tags[0] != nil then
+		tags = "post?tags=" + tags.join("%20")
+	else
+		tags = ""
+	end
+	event.channel.send_embed do |embed|
+		embed.title = "Go there yourself you lazy fuck."
+		embed.description = "https://e926.net/" + tags
 		embed.color = 0xa21a5d
 	end
 end
