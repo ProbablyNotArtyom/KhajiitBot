@@ -53,7 +53,8 @@ $boottime = 0								# Holds the time of the last boot
 
 #======================Main========================
 
-$bot = Discordrb::Commands::CommandBot.new token: token , client_id: CLIENT_ID , prefix: ['k.', 'K.'], ignore_bots: false
+$bot = Discordrb::Commands::CommandBot.new token: token , client_id: CLIENT_ID , prefix: ['k.', 'K.'], ignore_bots: false, advanced_functionality: true
+$bot.should_parse_self = true
 
 require_relative 'Security.rb'				# Abstractions
 require_relative 'Commands.rb'				# Bot commands
