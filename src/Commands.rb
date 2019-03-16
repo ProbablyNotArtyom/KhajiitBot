@@ -164,7 +164,7 @@ end
 
 $bot.command(:katia) do |event, num|										# KATIA Command
 	if num == nil
-		index = rand(1035).to_s
+		index = rand(1036).to_s
 	else
 		index = Integer(num) rescue index = "hitler"
 	end

@@ -1,0 +1,7 @@
+ "meows softly into the void."
+ "meows loudly in everyone's face!"
+ "unleashes a fierce meow into the air!"
+ "meows in **#{target}**'s face!"
+ "meows in **#{target}**'s general direction!"
+ "gets all up in **#{target}**'s face and lets out a distinct meow!"
+ "shows **#{target}** their mewful mewsic!"
