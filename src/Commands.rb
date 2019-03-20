@@ -235,6 +235,11 @@ $bot.command :grope do |event, *target|		# NUKE Command
 	return nil
 end
 
+$bot.command :vore do |event, *target|		# VORE Command
+	action(target, event, "vore")			# Execute command handler using the proper stringset
+	return nil
+end
+
 $bot.command :uptime do |event|
 	uptime_seconds = Time.now.to_i - $boottime.to_i
 	uptime_hours = uptime_seconds/1440 % 1
