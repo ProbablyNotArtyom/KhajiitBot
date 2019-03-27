@@ -180,6 +180,22 @@ $bot.command(:chance, min_args: 1) do |event, *query|						# CHANCE Command
 	return nil
 end
 
+$bot.command(:scp) do |event, query|						# SCP Command
+	query = query.to_i
+	if query <= 0 || query >= 5000 then
+		event.channel.send_embed do |embed|
+			embed.title = "Invalid SCP!"
+			embed.color = 0xa21a5d
+		end
+	else
+		event.channel.send_embed do |embed|
+			embed.title = "http://www.scp-wiki.net/scp-#{query.to_s}"
+			embed.color = 0xa21a5d
+		end
+	end
+	return nil
+end
+
 $bot.command :yiff do |event, *target|		# YIFF Command
 	action(target, event, "yiff")			# Execute command handler using the proper stringset
 	return nil
