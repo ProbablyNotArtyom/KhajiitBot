@@ -188,8 +188,13 @@ $bot.command(:scp) do |event, query|						# SCP Command
 			embed.color = 0xa21a5d
 		end
 	else
+		if query < 1000 then
+			query = query.to_s.rjust(3, "0")
+		else
+			query = query.to_s
+		end
 		event.channel.send_embed do |embed|
-			embed.title = "http://www.scp-wiki.net/scp-#{query.to_s}"
+			embed.title = "http://www.scp-wiki.net/scp-#{query}"
 			embed.color = 0xa21a5d
 		end
 	end
