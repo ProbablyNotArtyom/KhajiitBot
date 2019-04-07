@@ -1,0 +1,8 @@
+ "rips da boof hella hard"
+ "smonks da boof :)"
+ "gets da boof passed to them. yap"
+ "passes da boof to **#{target}**"
+ "drops da boof while passing it to **#{target}**. :("
+ "gives da boof to **#{target}**"
+ "rips da boof with **#{target}**"
+ "shares da boof with **#{target}**"

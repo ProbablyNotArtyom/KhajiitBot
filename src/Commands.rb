@@ -27,38 +27,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-$bot.command :help do |event|					# Help command
+$bot.command :help do |event, *type|			# Help command
+	type = type.join(" ")
 	begin
 		event.message.delete					# Delete the help in case somthing implodes
 	rescue
 	end
 	event.channel.send_embed do |embed|			# Send embedded help message
 		embed.thumbnail = Discordrb::Webhooks::EmbedImage.new(url: 'http://i.imgur.com/pG3L2RP.png')
-		embed.description = 'Written by NotArtyom'
-		embed.add_field(name: 'General commands:', value: "`k.help`  :  shows this help page.
-`k.trade  [image]`  :  adds user image to meme pool and sends a random meme back.
-`k.image`  :  gets a random image from the k.trade pool.
-`k.lewd [image]`  :  adds user image to lewd pool and sends a random lewd back.
-`k.arouse`  :  returns a random lewd from the pool.
-`k.random <max>`  :  generates a truly random number with max value. default max is 10.
-`k.8ball <question>`  :  answers any question with true randomness.
-`k.rate @[user]`  :  rates another user on a scale from 0 to 10. slightly less random...
-`k.katia`  :  returns a random katia image.")
-
-		embed.add_field(name: 'Interaction commands:', value: "`k.yiff @[user]`  :  sends a yiffy message.
-`k.hug @[user]`  :  hugs another user.
-`k.kiss @[user]`  :  kisses another user.
-`k.stab @[user]`  :  stabs another user.
-`k.shoot @[user]`  :  shoots another user.
-`k.pet @[user]`  :  pets another user.
-`k.bless @[user]`  :  blesses another user.
-`k.nuke @[user]`  :  nukes another user.
-`k.meow @[user]`  :  meow at another user.
-`k.f @[user]`  :  pays respects, optionally to another user.")
-
 		embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: 'KhajiitBot', url: 'https://discordapp.com/oauth2/authorize?client_id=452660556990644225&scope=bot&permissions=0', icon_url: 'http://i.imgur.com/pG3L2RP.png')
+		if type.empty? then
+			embed.add_field(name: 'k.help usage:', value: IO.read("./ext/help/meta").force_encoding("utf-8"))
+		else
+			if File.file?("./ext/help/#{type}") then
+				embed.add_field(name: "#{type.slice(0, 1).capitalize + type.slice(1..-1)} Commands:", value: IO.read("./ext/help/#{type}").force_encoding("utf-8"))
+			else
+				embed.add_field(name: 'Error!', value: 'Invalid help type. Please use on option from the list')
+			end
+		end
 		embed.color = 0xa21a5d
 	end
+	return nil
 end
 
 $bot.command(:trade) do |event|												# TRADE Command
@@ -258,6 +247,11 @@ end
 
 $bot.command :vore do |event, *target|		# VORE Command
 	action(target, event, "vore")			# Execute command handler using the proper stringset
+	return nil
+end
+
+$bot.command :boof do |event, *target|		# BOOF Command
+	action(target, event, "boof")			# Execute command handler using the proper stringset
 	return nil
 end
 

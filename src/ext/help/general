@@ -1,0 +1,8 @@
+**`k.help`**
+ ​ ​ ​ ​ ​ ​ ​ ​ shows this help page.
+**`k.random [max]`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ generates a truly random number with max value. (default 10)
+**`k.8ball [question]`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ answers any question with true randomness.
+**`k.rate @[user]`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ rates another user on a scale from 0 to 10.

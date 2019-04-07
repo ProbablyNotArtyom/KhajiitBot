@@ -1,0 +1,10 @@
+**`k.trade  [image]`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ adds user image to meme pool and returns a random meme.
+**`k.image`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ gets a random image from the k.trade pool.
+**`k.lewd [image]`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ adds user image to lewd pool and returns a random lewd.
+**`k.arouse`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ returns a random lewd from the pool.
+**`k.katia`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ returns a random katia image.
