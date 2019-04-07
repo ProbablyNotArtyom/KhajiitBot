@@ -1,6 +1,6 @@
 # KhajiitBot
 
-KhajiitBot is a discord bot written in ruby for use on the Khajiit_IRL discord server. It has a lot of functions that essentially clone the ones provided by furbot and the like, as well as some extras. The most interesting feature is probably the trade function, which allows users to trade images with the bot. 
+KhajiitBot is a discord bot written in ruby for use on the Khajiit_IRL discord server. It has a lot of functions that essentially clone the ones provided by furbot and the like, as well as some extras. The most interesting feature is probably the trade function, which allows users to trade images with the bot.
 
 ## Summary of content
 
@@ -23,7 +23,7 @@ There are also functions based on image sharing:
   * k.image               :  gets a random image from the k.trade pool.
   * k.lewd <image>        :  adds user image to lewd pool and sends a random lewd back.
 
-The Trade function is the most interesting. The bot has a pool of images saved in a folder in the project directory. 
+The Trade function is the most interesting. The bot has a pool of images saved in a folder in the project directory.
 When a user uses the Trade command, they supply an image to trade with the Bot.
 The bot will then take that image and add it to its own pool, while also returning a random image from the pool back to the user.
 The Image function just returns a random image without modifying the pool.
@@ -53,6 +53,7 @@ You will need ruby installed on the host machine in order to run the bot. Here i
 
   * discordrb
   * openssl
+  * rmagick
 
 Once all required gems are installed, simply run KhajiitBot.rb using ruby
 
@@ -71,7 +72,7 @@ To move the bot onto another system, such as a server, just copy the entire proj
 
 * [DiscordRB](https://rubygems.org/gems/discordrb) - Discord API interface for ruby
 * [openSSL](https://rubygems.org/gems/openssl) - OpenSSL GEM for ruby
-* [ruby](https://www.ruby-lang.org/en/downloads/) - Ruby runtime environment 
+* [ruby](https://www.ruby-lang.org/en/downloads/) - Ruby runtime environment
 
 ## Contributing
 
@@ -90,4 +91,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 * Thanks to the people behind DiscordRB for making their wonderful API implementation for ruby
 * Thanks the the Khajiit_IRL discord for helping with suggestions and strings
-

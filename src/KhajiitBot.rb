@@ -36,6 +36,7 @@ require 'json'
 require 'open-uri'
 require 'net/https'
 #require 'rubyhexagon'
+require 'rmagick'
 
 #===================Constants======================
 

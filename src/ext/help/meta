@@ -6,3 +6,5 @@
 ​ ​ ​ ​ ​ ​ ​ ​ ​ commands that use the image pools, such as k.image
 **`k.help misc`**
 ​ ​ ​ ​ ​ ​ ​ ​ ​ miscellaneous commands, external website interfaces
+**`k.help image`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ commands that modify attached images
