@@ -1,5 +1,7 @@
 **`k.help`**
  ​ ​ ​ ​ ​ ​ ​ ​ shows this help page.
+**`k.uptime`**
+ ​ ​ ​ ​ ​ ​ ​ ​ displays the current uptime.
 **`k.random [max]`**
 ​ ​ ​ ​ ​ ​ ​ ​ ​ generates a truly random number with max value. (default 10)
 **`k.8ball [question]`**
