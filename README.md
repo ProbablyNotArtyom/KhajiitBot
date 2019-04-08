@@ -54,6 +54,7 @@ You will need ruby installed on the host machine in order to run the bot. Here i
   * discordrb
   * openssl
   * rmagick
+  * rutui
 
 Once all required gems are installed, simply run KhajiitBot.rb using ruby
 

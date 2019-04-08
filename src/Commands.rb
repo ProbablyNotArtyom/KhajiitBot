@@ -290,66 +290,6 @@ $bot.command :e9 do |event, *tags|
 	end
 end
 
-$bot.command :contrast do |event, *level|
-	ImageMod.contrast(event, level.join("").to_f)
-	return nil
-end
-
-$bot.command :saturation do |event, *level|
-	ImageMod.modulate(event, level.join("").to_f, "saturation")
-	return nil
-end
-
-$bot.command :sharpen do |event, *level|
-	ImageMod.sharpen(event, level.join("").to_f)
-	return nil
-end
-
-$bot.command :hue do |event, *level|
-	ImageMod.modulate(event, level.join("").to_f, "hue")
-	return nil
-end
-
-$bot.command :bright do |event, *level|
-	ImageMod.modulate(event, level.join("").to_f, "brightness")
-	return nil
-end
-
-$bot.command :rotate do |event, *level|
-	ImageMod.rotate(event, level.join("").to_f)
-	return nil
-end
-
-$bot.command :bw do |event|
-	ImageMod.bw(event)
-	return nil
-end
-
-$bot.command :i do |event|
-	ImageMod.invert(event)
-	return nil
-end
-
-$bot.command :enhance do |event|
-	ImageMod.enhance(event)
-	return nil
-end
-
-$bot.command :fuzz do |event, *level|
-	ImageMod.spread(event, level.join("").to_f)
-	return nil
-end
-
-$bot.command :dither do |event, *level|
-	ImageMod.dither(event, level.join("").to_i)
-	return nil
-end
-
-$bot.command :noise do |event|
-	ImageMod.noise(event)
-	return nil
-end
-
 #=================INTERNAL PROMPT==================
 
 $bot.command(:blacklist) do |event, func, target|								# BLACKLIST Command
