@@ -31,7 +31,7 @@ HEAD_HEIGHT		= 1
 PROMPT_HEIGHT	= 3
 CHAT_OFFSET		= HEAD_HEIGHT + PROMPT_HEIGHT
 
-def new_textarray(array, diff)
+def new_textarray(array, diff, size)
 	if diff < 0 then
 		(0..(diff.abs-1)).each do |x|
 			$kbcli.delete(array[x])
@@ -43,7 +43,7 @@ def new_textarray(array, diff)
 	else
 		(0..(diff-1)).each do |x|
 			array.insert(x, RuTui::Text.new({ :x => 0, :y => HEAD_HEIGHT+x, :text => " ", :foreground => 15 }))
-			array[x].max_width = RuTui::Screen.size[1]
+			array[x].max_width = size[1]
 			array[x].pixel = $pixel_chat
 		end
 		((diff)..(array.length-1)).each do |x|
@@ -135,15 +135,16 @@ end
 size = RuTui::Screen.size
 
 Signal.trap("SIGWINCH") do
-	$line_head.length = RuTui::Screen.size[1]
-	$box_chat.width = RuTui::Screen.size[1]
-	$box_chat.height = RuTui::Screen.size[0]-CHAT_OFFSET
-	$text_head.max_width = RuTui::Screen.size[1]
-	$cli_field.width = RuTui::Screen.size[1]-2
-	$cli_field.move(0, RuTui::Screen.size[0] - size[0])
-	$box_cli.width = RuTui::Screen.size[1]
-	$box_cli.move(0, RuTui::Screen.size[0] - size[0])
-	$fat_text_array = new_textarray($fat_text_array, RuTui::Screen.size[0] - size[0])
+	new_size = RuTui::Screen.size
+	$line_head.length = new_size[1]
+	$box_chat.width = new_size[1]
+	$box_chat.height = new_size[0]-CHAT_OFFSET
+	$text_head.max_width = new_size[1]
+	$cli_field.width = new_size[1]-2
+	$cli_field.move(0, new_size[0] - size[0])
+	$box_cli.width = new_size[1]
+	$box_cli.move(0, new_size[0] - size[0])
+	$fat_text_array = new_textarray($fat_text_array, new_size[0] - size[0], size)
 
 	$line_head.create
 	$box_chat.create
@@ -151,7 +152,7 @@ Signal.trap("SIGWINCH") do
 
 	RuTui::ScreenManager.refit
 	RuTui::ScreenManager.draw
-	size = RuTui::Screen.size
+	size = new_size
 end
 
 RuTui::ScreenManager.add(:default, $kbcli)
