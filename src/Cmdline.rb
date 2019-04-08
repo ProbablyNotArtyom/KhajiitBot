@@ -31,18 +31,29 @@ HEAD_HEIGHT		= 1
 PROMPT_HEIGHT	= 3
 CHAT_OFFSET		= HEAD_HEIGHT + PROMPT_HEIGHT
 
-def new_textarray(array, size_x)
-	new_array = Array.new(size_x)
-	new_array.replace(array)
-	if size_x < array.length then
-		new_array.shift(array.length - size_x)
+def new_textarray(array, diff)
+	if diff < 0 then
+		(0..(diff.abs-1)).each do |x|
+			$kbcli.delete(array[x])
+		end
+		array.shift(diff.abs)
+		array.each do |line|
+			line.move(0, diff)
+		end
 	else
-		(array.length..size_x).each do |x|
-			new_array.push(RuTui::Text.new({ :x => 0, :y => HEAD_HEIGHT, :text => " ", :foreground => 15 }))
-			new_array[x].max_width = RuTui::Screen.size[1]
-			new_array[x].pixel = $pixel_chat
+		(0..(diff-1)).each do |x|
+			array.insert(x, RuTui::Text.new({ :x => 0, :y => HEAD_HEIGHT+x, :text => " ", :foreground => 15 }))
+			array[x].max_width = RuTui::Screen.size[1]
+			array[x].pixel = $pixel_chat
+		end
+		((diff)..(array.length-1)).each do |x|
+			array[x].move(0, diff)
 		end
 	end
+	array.each do |line|
+		line.create
+	end
+	return array
 end
 
 def init_chat(screen)
@@ -58,15 +69,17 @@ def init_chat(screen)
 	return array
 end
 
-def chat_scroll(screen, array, string)
+def chat_scroll(screen, array, string, color=nil)
 	screen.delete(array[0])
-	array.shift
+	array.shift(1)
 	array.each do |index|
 		if index != nil then index.move(0,-1) end
 	end
-	array.push(RuTui::Text.new({ :x => 0, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT-1, :text => string, :foreground => 15 }))
+	if color == nil then color = 15 end
+	array.push(RuTui::Text.new({ :x => 0, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT-1, :text => string, :foreground => color }))
 	array.last.max_width = RuTui::Screen.size[1]
 	array.last.pixel = $pixel_chat
+	array.last.create
 	screen.add(array.last)
 	RuTui::ScreenManager.draw
 end
@@ -117,6 +130,28 @@ $bot.message() do |event|	# Print out any messages from the current channel
 	if event.message.channel == $cmdChannel then
 		chat_scroll($kbcli, $fat_text_array, "#{event.message.author.display_name} : #{event.message.content}")
 	end
+end
+
+size = RuTui::Screen.size
+
+Signal.trap("SIGWINCH") do
+	$line_head.length = RuTui::Screen.size[1]
+	$box_chat.width = RuTui::Screen.size[1]
+	$box_chat.height = RuTui::Screen.size[0]-CHAT_OFFSET
+	$text_head.max_width = RuTui::Screen.size[1]
+	$cli_field.width = RuTui::Screen.size[1]-2
+	$cli_field.move(0, RuTui::Screen.size[0] - size[0])
+	$box_cli.width = RuTui::Screen.size[1]
+	$box_cli.move(0, RuTui::Screen.size[0] - size[0])
+	$fat_text_array = new_textarray($fat_text_array, RuTui::Screen.size[0] - size[0])
+
+	$line_head.create
+	$box_chat.create
+	$box_cli.create
+
+	RuTui::ScreenManager.refit
+	RuTui::ScreenManager.draw
+	size = RuTui::Screen.size
 end
 
 RuTui::ScreenManager.add(:default, $kbcli)
@@ -210,7 +245,7 @@ RuTui::ScreenManager.loop({ :autodraw => true }) do |key|
 				servers = $bot.servers.each_value {|x| 			# For each server, print out its name and ID
 					chat_scroll($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
 				}
-			else chat_scroll($kbcli, $fat_text_array, "Invalid Command") 			# Notify invalid command input
+			else chat_scroll($kbcli, $fat_text_array, "Invalid Command", 1) 			# Notify invalid command input
 			end
 			puts("")
 		end
