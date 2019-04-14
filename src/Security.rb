@@ -47,6 +47,11 @@ def action(target, event, action)																			# ACTION Handler method
 	end
 end
 
+def channel_get_name(chan)
+	if $bot.channel(chan.to_i).nil? then return "" end
+	return $bot.channel(chan.to_i).name
+end
+
 class Permit																		# Permit checking class
 	def initialize()
 		@@permits = {}																			# Create a new empty array to house out permits

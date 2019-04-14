@@ -70,17 +70,22 @@ def init_chat(screen)
 end
 
 def chat_scroll(screen, array, string, color=nil)
-	screen.delete(array[0])
-	array.shift(1)
-	array.each do |index|
-		if index != nil then index.move(0,-1) end
-	end
 	if color == nil then color = 15 end
-	array.push(RuTui::Text.new({ :x => 0, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT-1, :text => string, :foreground => color }))
-	array.last.max_width = RuTui::Screen.size[1]
-	array.last.pixel = $pixel_chat
-	array.last.create
-	screen.add(array.last)
+	numLines = (string.length / RuTui::Screen.size[1])
+
+	numLines.downto(0) do |x|
+		screen.delete(array[x])
+		array.push(RuTui::Text.new({ :x => 0, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT-1-x, :text => string[0..RuTui::Screen.size[1]], :foreground => color }))
+		string = string[RuTui::Screen.size[1]-1..-1]
+		array.last.max_width = RuTui::Screen.size[1]
+		array.last.pixel = $pixel_chat
+		array.last.create
+		screen.add(array.last)
+	end
+	array.shift(numLines+1)
+	(0..(array.length-numLines-2)).each do |index|
+		array[index].move(0, -(numLines+1))
+	end
 	RuTui::ScreenManager.draw
 end
 
@@ -112,7 +117,7 @@ $line_head.pixel = $pixel_head
 $line_head.endpixel = $pixel_head
 $line_head.create
 $kbcli.add($line_head)
-$text_head = RuTui::Text.new({ :x => 0, :y => 0, :text => "Current channel: #{$bot.channel($cmdChannel.to_i).name}", :foreground => 15 })
+$text_head = RuTui::Text.new({ :x => 0, :y => 0, :text => "Current channel: #{channel_get_name($cmdChannel)}", :foreground => 15 })
 $text_head.pixel = $pixel_head
 $kbcli.add($text_head)
 
@@ -156,10 +161,9 @@ Signal.trap("SIGWINCH") do
 end
 
 RuTui::ScreenManager.add(:default, $kbcli)
-RuTui::ScreenManager.loop({ :autodraw => true }) do |key|
+RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 	break if key == :ctrl_c
 	$cli_field.set_focus
-	$cli_field.write(key)
 	if key == :enter then
 		cIn = $cli_field.get_text.split(" ")
 		unless cIn[0] == nil						# Ignore everything if the input is nil
@@ -168,7 +172,7 @@ RuTui::ScreenManager.loop({ :autodraw => true }) do |key|
 				if chan != nil && chan.length == 18				# Make sure it's the right length
 					$cmdChannel = chan.to_i  					# Set the current channel
 					Config.save("channel", $cmdChannel)			# Save the current channel across runs
-					$text_head.set_text("Current channel: #{$bot.channel($cmdChannel.to_i).name}")
+					$text_head.set_text("Current channel: #{channel_get_name($cmdChannel)}")
 				else chat_scroll($kbcli, $fat_text_array, "Invalid Channel") end	# Notify channel fuckery
 			elsif cIn[0].downcase == "exit"					# EXIT command
 				$bot.stop()										# Stop the bot
@@ -251,6 +255,10 @@ RuTui::ScreenManager.loop({ :autodraw => true }) do |key|
 			puts("")
 		end
 		$cli_field.set_text("")
+		RuTui::ScreenManager.draw
+	else
+		$cli_field.write(key)
+		RuTui::ScreenManager.draw
 	end
 end
 RuTui::Screen.hide_cursor
