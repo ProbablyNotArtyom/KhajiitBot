@@ -291,7 +291,7 @@ $bot.command :e9 do |event, *tags|
 end
 
 $bot.command :hydrate do |event|
-	$bot.send_message(435864572377825280, arty have a drink u nerd)
+	$bot.send_message(435864572377825280, "arty have a drink u nerd")
 	end
 end
 
