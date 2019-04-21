@@ -290,6 +290,11 @@ $bot.command :e9 do |event, *tags|
 	end
 end
 
+$bot.command :hydrate do |event|
+	$bot.send_message(435864572377825280, arty have a drink u nerd)
+	end
+end
+
 #=================INTERNAL PROMPT==================
 
 $bot.command(:blacklist) do |event, func, target|								# BLACKLIST Command
