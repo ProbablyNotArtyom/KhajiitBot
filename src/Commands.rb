@@ -292,7 +292,6 @@ end
 
 $bot.command :hydrate do |event|
 	$bot.send_message(435864572377825280, "arty have a drink u nerd")
-	end
 end
 
 #=================INTERNAL PROMPT==================
