@@ -259,7 +259,6 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 	else
 		$cli_field.write(key)
 		RuTui::ScreenManager.draw
-		$bot.channel($cmdChannel).start_typing
 	end
 end
 RuTui::Screen.hide_cursor
