@@ -265,33 +265,126 @@ $bot.command :uptime do |event|
 end
 
 $bot.command :e6 do |event, *tags|
-	if tags[0] != nil then
-		tags = "post?tags=" + tags.join("%20")
-	else
-		tags = ""
+	url = URI.parse("https://e621.net/post/index.json")
+	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
+	request.body = {
+		limit:	1,
+		tags:	"order:random " + tags.join(" ")
+	}.to_json
+
+	request.add_field('User-Agent', 'Ruby')
+	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') do |http|
+		http.request(request)
 	end
-	event.channel.send_embed do |embed|
-		embed.title = "Go there yourself you lazy fuck."
-		embed.description = "https://e621.net/" + tags
-		embed.color = 0xa21a5d
+
+	if (result.body != "[]") then
+		# Check the blacklist
+		black_tags = JSON.parse(result.body)[0]['tags'].split(" ")
+		if (Blacklist.e621_screen_tags(black_tags) == false) then
+			event.channel.send_embed do |embed|
+				embed.title = "Error"
+				embed.description = "Post contained one or more blacklisted tags."
+				embed.color = 0xa21a5d
+			end
+			return nil
+		end
+
+		file = JSON.parse(result.body)[0]['file_url']
+		artist = JSON.parse(result.body)[0]['author']
+		event.channel.send_embed do |embed|
+			embed.title = "Tags: " + tags.join(" ")
+			embed.description = "Score: **" + JSON.parse(result.body)[0]['score'].to_s + "**" +
+				" # Favourites: **" + JSON.parse(result.body)[0]['fav_count'].to_s + "**" +
+				" # [Post](https://e621.net/post/show/#{JSON.parse(result.body)[0]['id'].to_s})"
+			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
+			embed.color = 0xa21a5d
+		end
+	else
+		event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "No posts matched your search:
+				**" + tags.join(" ") + "**"
+			embed.color = 0xa21a5d
+		end
 	end
 end
 
 $bot.command :e9 do |event, *tags|
-	if tags[0] != nil then
-		tags = "post?tags=" + tags.join("%20")
-	else
-		tags = ""
+	url = URI.parse("https://e926.net/post/index.json")
+	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
+	request.body = {
+		limit:	1,
+		tags:	"order:random " + tags.join(" ")
+	}.to_json
+
+	request.add_field('User-Agent', 'Ruby')
+	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') do |http|
+		http.request(request)
 	end
-	event.channel.send_embed do |embed|
-		embed.title = "Go there yourself you lazy fuck."
-		embed.description = "https://e926.net/" + tags
-		embed.color = 0xa21a5d
+
+	if (result.body != "[]") then
+		# Check the blacklist
+		black_tags = JSON.parse(result.body)[0]['tags'].split(" ")
+		if (Blacklist.e621_screen_tags(black_tags) == false) then
+			event.channel.send_embed do |embed|
+				embed.title = "Error"
+				embed.description = "Post contained one or more blacklisted tags."
+				embed.color = 0xa21a5d
+			end
+			return nil
+		end
+
+		file = JSON.parse(result.body)[0]['file_url']
+		artist = JSON.parse(result.body)[0]['author']
+		event.channel.send_embed do |embed|
+			embed.title = "Tags: " + tags.join(" ")
+			embed.description = "Score: **" + JSON.parse(result.body)[0]['score'].to_s + "**" +
+				" # Favourites: **" + JSON.parse(result.body)[0]['fav_count'].to_s + "**" +
+				" # [Post](https://e926.net/post/show/#{JSON.parse(result.body)[0]['id'].to_s})"
+			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
+			embed.color = 0xa21a5d
+		end
+	else
+		event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "No posts matched your search:
+				**" + tags.join(" ") + "**"
+			embed.color = 0xa21a5d
+		end
 	end
 end
 
-$bot.command :hydrate do |event|
-	$bot.send_message(435864572377825280, "arty have a drink u nerd")
+$bot.command :'e6.blacklist' do |event, action, *tags|
+	if (action == "get") then
+		event.channel.send_embed do |embed|
+			embed.title = "Tag Blacklist"
+			embed.description = Blacklist.e621_get_blacklist().join(" ")
+			embed.color = 0xa21a5d
+		end
+		return nil;
+	end
+
+	if (tags[0] == nil) then
+		event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "No tags were specified for this action."
+			embed.color = 0xa21a5d
+		end
+		return nil;
+	end
+	if (action == "add") then
+		Blacklist.e621_append_blacklist(tags)
+	elsif (action == "remove")
+		Blacklist.e621_purge_blacklist(tags)
+	else
+		return nil
+	end
+	event.channel.send_embed do |embed|
+		embed.title = "Tag Blacklist"
+		embed.description = "Blacklist modified."
+		embed.color = 0xa21a5d
+	end
+	return nil
 end
 
 #=================INTERNAL PROMPT==================

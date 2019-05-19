@@ -44,19 +44,15 @@ require 'io/console'
 
 CLIENT_ID = File.read "./ext/sys/client"	# KhajiitBot Client ID (put it here, this one isn't valid!)
 token = File.read "./ext/sys/token"			# shh secrets (Put your token in this file too...)
+$e621_key = File.read "./ext/sys/e621"		# ssh more secrets (Put your e621 account's API key here)
 
 #=====================Globals======================
 
 $boottime = 0								# Holds the time of the last boot
 
-#==================rubyhexagon=====================
-
-#e621_api = E621::API.new()
-# GOTTA FIGURE THIS OUT ONE DAY
-
 #======================Main========================
 
-$bot = Discordrb::Commands::CommandBot.new token: token , client_id: CLIENT_ID , prefix: ['k.', 'K.'], ignore_bots: false, advanced_functionality: true
+$bot = Discordrb::Commands::CommandBot.new token: token , client_id: CLIENT_ID , prefix: ['k.', 'K.'], ignore_bots: false, advanced_functionality: false
 $bot.should_parse_self = true
 
 require_relative 'Security.rb'				# Abstractions
@@ -66,6 +62,7 @@ require_relative 'Image.rb'					# Image manipulation
 PList = Permit.new()						# Create a permit list
 Parser = Parse.new()						# Setup ID parsing class
 Config = Setting.new()						# Set up persistence class
+Blacklist = E621_blacklist.new(Config)		# Set up e621 blacklist handler
 
 $boottime = Time.new						# Save to time the bot was started. used of uptime
 puts('Current time: ' + $boottime.ctime)

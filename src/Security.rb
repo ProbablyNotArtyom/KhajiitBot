@@ -201,4 +201,43 @@ class ImageMod
 	end
 end
 
+class E621_blacklist
+	def initialize(sys_config)
+		@@e621_black_tags = []
+		if (sys_config.get("e621_blacklist") != nil) then
+			@@e621_black_tags = sys_config.get("e621_blacklist")
+		end
+	end
+	def e621_get_blacklist()
+		return @@e621_black_tags
+	end
+
+	def e621_append_blacklist(tags)
+		tags.each do |tag|
+			if (!@@e621_black_tags.include?(tag)) then
+				@@e621_black_tags.push(tag)
+			end
+		end
+		Config.save("e621_blacklist", @@e621_black_tags)
+	end
+
+	def e621_purge_blacklist(tags)
+		tags.each do |tag|
+			if (@@e621_black_tags.include?(tag)) then
+				@@e621_black_tags.delete(tag)
+			end
+		end
+		Config.save("e621_blacklist", @@e621_black_tags)
+	end
+
+	def e621_screen_tags(tags)
+		tags.each do |tag|
+			if (@@e621_black_tags.include?(tag)) then
+				return false
+			end
+		end
+		return true
+	end
+end
+
 #==================================================
