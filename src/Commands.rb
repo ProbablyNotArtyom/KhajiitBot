@@ -265,6 +265,14 @@ $bot.command :uptime do |event|
 end
 
 $bot.command :e6 do |event, *tags|
+	unless event.channel.nsfw? then 										# Make sure the channel is marked as NSFW
+		event.channel.send_embed do |embed|
+			embed.title = "```Use this command in an NSFW marked channel.```"
+			embed.color = 0xa21a5d
+		end
+		return nil
+	end
+
 	url = URI.parse("https://e621.net/post/index.json")
 	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
 	request.body = {
