@@ -84,6 +84,10 @@ trap('INT') do								# Graceful violent exit
 	exit
 end
 
+$bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
+	event.respond("j.duel jbot")
+end
+
 #==================================================
 
 $cmdChannel = Config.get("channel")			# Reload the last active channel
