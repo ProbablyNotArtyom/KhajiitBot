@@ -215,14 +215,16 @@ class ImageMod
 		tmp = "./tmp" + File.basename(uri.path).slice!(/\..*/)
 		IO.copy_stream(download, tmp)
 		img = Magick::Image::read(tmp)[0]
+		img = img.quantize(256, Magick::HSLColorspace)
 		return img
 	end
 	def self.return_img(event, image)
 		if File.file?("./" + image.filename) then
-			image.write("./" + image.filename)
-			tmp = File.open("./" + image.filename)
+			image.write("./tmp.png")
+			tmp = File.open("./tmp.png")
 			event.send_file(tmp)
 			File.delete("./" + image.filename)
+			File.delete("./tmp.png")
 			tmp.close unless tmp.nil? or tmp.closed?
 			return true
 		else

@@ -192,10 +192,11 @@ end
 
 $bot.command(:e) do |event|
 	if (event.message.emoji?) then
-		event.channel.send_embed do |embed|
-			embed.image = Discordrb::Webhooks::EmbedImage.new(url: event.message.emoji[0].icon_url)
-			embed.color = 0xa21a5d
-		end
+		#event.channel.send_embed do |embed|
+		#	embed.image = Discordrb::Webhooks::EmbedImage.new(url: event.message.emoji[0].icon_url)
+		#	embed.color = 0xa21a5d
+		event.channel.send_message(event.message.emoji[0].icon_url)
+		#end
 	else
 		event.channel.send_embed do |embed|
 			embed.title = "Error"
@@ -209,10 +210,11 @@ end
 $bot.command(:a) do |event, user|
 	user = Parser.get_user_obj(user, event)
 	if (user != nil) then
-		event.channel.send_embed do |embed|
-			embed.image = Discordrb::Webhooks::EmbedImage.new(url: user.avatar_url)
-			embed.color = 0xa21a5d
-		end
+		#event.channel.send_embed do |embed|
+		#	embed.image = Discordrb::Webhooks::EmbedImage.new(url: user.avatar_url)
+		#	embed.color = 0xa21a5d
+		event.channel.send_message(user.avatar_url)
+		#end
 	else
 		event.channel.send_embed do |embed|
 			embed.title = "Error"
