@@ -1,10 +1,10 @@
 **`k.help general`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ basic commands
+​ ​ ​ ​ ​ ​ ​ ​ ​ basic commands.
 **`k.help action`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ commands for peer interaction
+​ ​ ​ ​ ​ ​ ​ ​ ​ commands for peer interaction.
 **`k.help pool`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ commands that use the image pools, such as k.image
+​ ​ ​ ​ ​ ​ ​ ​ ​ commands that use the image pools, such as k.image.
 **`k.help misc`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ miscellaneous commands, external website interfaces
+​ ​ ​ ​ ​ ​ ​ ​ ​ miscellaneous commands, external website interfaces.
 **`k.help image`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ commands that modify attached images
+​ ​ ​ ​ ​ ​ ​ ​ ​ commands that modify attached images.

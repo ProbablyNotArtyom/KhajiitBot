@@ -57,12 +57,13 @@ def get_file_input(event)
 		chan_hist = event.channel.history(50)
 		chan_hist.each do |msg|
 			if (!msg.attachments.empty?) then
-				return msg.attachments
+				return msg.attachments[0].url
+			elsif (!msg.embeds.empty?)
+				return msg.embeds[0].url
 			end
 		end
-		return nil
 	else
-		return event.message.attachments
+		return event.message.attachments[0].url
 	end
 end
 
@@ -109,6 +110,7 @@ class Parse																			# PARSE class for parsing user names and nicknames
 	end
 	def get_user(user)																		# GET_USER method. inputs a nickname or username and returns a user object
 		if user == nil then return nil end													# If user is nil then abort
+		if user.length > 1 then return user.join(" ") end
 		unless user[0] == "<"																# As long as the username isn't an ID then loop
 			serverList = $bot.servers
 			serverList.each_value {|srv|
@@ -167,6 +169,20 @@ class Parse																			# PARSE class for parsing user names and nicknames
 		end
 		return user.delete('^0-9').to_i															# If the input is a ID w/ markup then strip the markup and return
 	end
+	def get_user_obj(user, event)
+		if user == nil then return nil end
+		unless user[0] == "<"
+			tmp = event.server.members.detect{|member| member.display_name.include?(user)}
+			if tmp == nil then tmp = event.server.members.detect{|member| member.username.include?(user)}
+				if tmp == nil then tmp = event.server.members.detect{|member| member.username.downcase.include?(user.downcase)}
+					if tmp == nil then return nil end
+					end
+			end
+			return tmp
+		else
+			return $bot.parse_mention(user, event.server)
+		end
+	end
 end
 
 class Setting																		# SETTING class for storing persistent data
@@ -194,8 +210,9 @@ class ImageMod
 			return nil
 		end
 		files = get_file_input(event)
-		download = open(files[0].url)
-		tmp = "./tmp" + files[0].filename.slice!(/\..*/)
+		download = open(files)
+		uri = URI.parse(files)
+		tmp = "./tmp" + File.basename(uri.path).slice!(/\..*/)
 		IO.copy_stream(download, tmp)
 		img = Magick::Image::read(tmp)[0]
 		return img
@@ -204,6 +221,20 @@ class ImageMod
 		if File.file?("./" + image.filename) then
 			image.write("./" + image.filename)
 			tmp = File.open("./" + image.filename)
+			event.send_file(tmp)
+			File.delete("./" + image.filename)
+			tmp.close unless tmp.nil? or tmp.closed?
+			return true
+		else
+			puts "[!!!] Fault. TMP image file not found before return."
+			return nil
+		end
+	end
+	def self.compose_gif(event, images, image, frameTime)
+		if File.file?("./" + image.filename) then
+			images.delay = frameTime
+			images.write("./tmp.gif")
+			tmp = File.open("./tmp.gif")
 			event.send_file(tmp)
 			File.delete("./" + image.filename)
 			tmp.close unless tmp.nil? or tmp.closed?

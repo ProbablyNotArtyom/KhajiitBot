@@ -133,4 +133,14 @@ $bot.command :noise do |event|
 	return nil
 end
 
+$bot.command :pc do |event|
+	image = ImageMod.load_tmp(event)
+	tmpList = Magick::ImageList.new
+	90.times do |i|
+		tmpList << image.modulate(1, 1, 0.022*i)
+	end
+	ImageMod.compose_gif(event, tmpList, image, 3)
+	return nil
+end
+
 #==================================================

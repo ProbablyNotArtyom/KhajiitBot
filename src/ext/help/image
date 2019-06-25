@@ -1,20 +1,22 @@
 **`k.contrast [percent]`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ modifies the contrast of the image
+​ ​ ​ ​ ​ ​ ​ ​ ​ modifies the contrast of the image.
 **`k.saturation [percent]`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ modifies the saturation of the image
+​ ​ ​ ​ ​ ​ ​ ​ ​ modifies the saturation of the image.
 **`k.sharpen [ammount]`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ sharpens the image
+​ ​ ​ ​ ​ ​ ​ ​ ​ sharpens the image.
 **`k.bright [percent]`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ adjusts the brightness of the image
+​ ​ ​ ​ ​ ​ ​ ​ ​ adjusts the brightness of the image.
 **`k.hue [0-360]`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ changes the hue of the image
+​ ​ ​ ​ ​ ​ ​ ​ ​ changes the hue of the image.
 **`k.rotate [0-360]`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ rotates the image a number of degrees
+​ ​ ​ ​ ​ ​ ​ ​ ​ rotates the image a number of degrees.
 **`k.bw`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ converts the image to grayscale
+​ ​ ​ ​ ​ ​ ​ ​ ​ converts the image to grayscale.
 **`k.i`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ inverts the colors of the image
+​ ​ ​ ​ ​ ​ ​ ​ ​ inverts the colors of the image.
 **`k.fuzz [ammount]`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ adds chroma fuzz to the image
+​ ​ ​ ​ ​ ​ ​ ​ ​ adds chroma fuzz to the image.
 **`k.noise`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ adds HSV noise to the image
+​ ​ ​ ​ ​ ​ ​ ​ ​ adds HSV noise to the image.
+**`k.pc`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ creates a GIF from color cycling the image.
