@@ -52,7 +52,7 @@ $boottime = 0								# Holds the time of the last boot
 
 #======================Main========================
 
-$bot = Discordrb::Commands::CommandBot.new token: token , client_id: CLIENT_ID , prefix: ['k.', 'K.'], ignore_bots: false, advanced_functionality: false
+$bot = Discordrb::Commands::CommandBot.new token: token , client_id: CLIENT_ID , prefix: ['k.', 'K.'], log_mode: :verbose, fancy_log: true, ignore_bots: false, advanced_functionality: false
 $bot.should_parse_self = true
 
 require_relative 'Security.rb'				# Abstractions
@@ -92,14 +92,6 @@ end
 
 $cmdChannel = Config.get("channel")			# Reload the last active channel
 $inBuffer = ""
-
-def read_char								# ***BIG BODGE ALERT***
-	state = `stty -g`
-	`stty raw -echo -icanon isig`			# Here we disable automatic-echo and set our terminal to give us the RAW input data
-	return STDIN.getc						# so that we can completely control what gets printed
-ensure
-	`stty #{state}`							# Make sure we set it back to normal on exit
-end
 
 #==================================================
 

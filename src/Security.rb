@@ -52,6 +52,20 @@ def channel_get_name(chan)
 	return $bot.channel(chan.to_i).name
 end
 
+def get_file_input(event)
+	if (event.message.attachments.empty?) then
+		chan_hist = event.channel.history(50)
+		chan_hist.each do |msg|
+			if (!msg.attachments.empty?) then
+				return msg.attachments
+			end
+		end
+		return nil
+	else
+		return event.message.attachments
+	end
+end
+
 class Permit																		# Permit checking class
 	def initialize()
 		@@permits = {}																			# Create a new empty array to house out permits
@@ -179,7 +193,7 @@ class ImageMod
 			puts "[!!!] Fault. TMP image file already exists."
 			return nil
 		end
-		files = event.message.attachments
+		files = get_file_input(event)
 		download = open(files[0].url)
 		tmp = "./tmp" + files[0].filename.slice!(/\..*/)
 		IO.copy_stream(download, tmp)
