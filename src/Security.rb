@@ -162,7 +162,9 @@ class Parse																			# PARSE class for parsing user names and nicknames
 			tmp = event.server.members.detect{|member| member.display_name.include?(user)}
 			if tmp == nil then tmp = event.server.members.detect{|member| member.username.include?(user)}								# Return the ID int if the nickname exists
 				if tmp == nil then tmp = event.server.members.detect{|member| member.username.downcase.include?(user.downcase)}			# Return the ID int if the username exists
-					if tmp == nil then event.respond "Could not find user."; return nil end												# Return the ID int if the username exists. case insensetive
+					if tmp == nil then tmp = event.server.members.detect{|member| member.display_name.downcase.include?(user.downcase)}	# Return the ID int if the username exists. case insensetive
+						if tmp == nil then return nil end
+					end
 				end
 			end
 			return tmp.id
@@ -175,8 +177,10 @@ class Parse																			# PARSE class for parsing user names and nicknames
 			tmp = event.server.members.detect{|member| member.display_name.include?(user)}
 			if tmp == nil then tmp = event.server.members.detect{|member| member.username.include?(user)}
 				if tmp == nil then tmp = event.server.members.detect{|member| member.username.downcase.include?(user.downcase)}
-					if tmp == nil then return nil end
+					if tmp == nil then tmp = event.server.members.detect{|member| member.display_name.downcase.include?(user.downcase)}
+						if tmp == nil then return nil end
 					end
+				end
 			end
 			return tmp
 		else
