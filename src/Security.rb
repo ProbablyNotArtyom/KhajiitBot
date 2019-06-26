@@ -155,7 +155,7 @@ class Parse																			# PARSE class for parsing user names and nicknames
 			if tmp.id == event.user.id then return nil end
 			return "<@!" + tmp.id.to_s + ">"													# Nickname markup
 		end
-		return user[0] + ">"	# im sorry
+		return user[0]
 	end
 	def get_uid(user, event) 																	# GET_UID method. Inputs a mention and returns an ID
 		unless user[0] == "<"
