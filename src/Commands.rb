@@ -430,6 +430,27 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 	return nil
 end
 
+$bot.command :'define' do |event, *words|
+	result = open("https://wordsapiv1.p.mashape.com/words/#{words[0]}",
+		"User-Agent" => "Ruby/#{RUBY_VERSION}",
+		"X-Mashape-Key" => $wordsapi_key).read
+	result = JSON.parse(result)
+
+	if (result['results'][0].has_key?('partOfSpeech') == true) then pOS=result['results'][0]['partOfSpeech'] else pOS="none" end
+	if (result['results'][0].has_key?('synonyms') == true) then synonyms=result['results'][0]['synonyms'].join(", ") else synonyms="none" end
+	if (result['results'][0].has_key?('definition') == true) then definition=result['results'][0]['definition'] else definition="none" end
+	if (result['pronunciation'].has_key?(pOS) == true) then pnunce=result['pronunciation'][pOS]
+	elsif (result['pronunciation'].has_key?('all') == true) then pnunce=result['pronunciation']['all']
+	else pnunce="none" end
+
+	event.channel.send_embed do |embed|
+		embed.title = "**#{words.join(" ")}** | #{pnunce} | #{pOS}"
+		embed.description = "**Definition**: #{definition}
+			**Synonyms**: #{synonyms}"
+		embed.color = 0xa21a5d
+	end
+end
+
 #=================INTERNAL PROMPT==================
 
 $bot.command(:blacklist) do |event, func, target|								# BLACKLIST Command

@@ -45,7 +45,7 @@ require 'io/console'
 CLIENT_ID = File.read "./ext/sys/client"	# KhajiitBot Client ID (put it here, this one isn't valid!)
 token = File.read "./ext/sys/token"			# shh secrets (Put your token in this file too...)
 $e621_key = File.read "./ext/sys/e621"		# ssh more secrets (Put your e621 account's API key here)
-
+$wordsapi_key = File.read "./ext/sys/words" # WORDSAPI key goes here
 #=====================Globals======================
 
 $boottime = 0								# Holds the time of the last boot

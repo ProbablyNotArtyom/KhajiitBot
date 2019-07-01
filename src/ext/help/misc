@@ -4,3 +4,5 @@
 ​ ​ ​ ​ ​ ​ ​ ​ ​ sets up a search for the specified tags on e926.
 **`k.scp [number]`**
 ​ ​ ​ ​ ​ ​ ​ ​ ​ links the SCP wiki entry for the requested SCP number.
+**`k.define [word]`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ reports the definition, along with any possible synonyms of a word
