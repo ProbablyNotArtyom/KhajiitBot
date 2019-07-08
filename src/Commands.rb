@@ -430,18 +430,54 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 	return nil
 end
 
-$bot.command :'define' do |event, *words|
-	result = open("https://wordsapiv1.p.mashape.com/words/#{words[0]}",
-		"User-Agent" => "Ruby/#{RUBY_VERSION}",
-		"X-Mashape-Key" => $wordsapi_key).read
-	result = JSON.parse(result)
+module Urban
+  module_function
 
-	if (result['results'][0].has_key?('partOfSpeech') == true) then pOS=result['results'][0]['partOfSpeech'] else pOS="none" end
-	if (result['results'][0].has_key?('synonyms') == true) then synonyms=result['results'][0]['synonyms'].join(", ") else synonyms="none" end
-	if (result['results'][0].has_key?('definition') == true) then definition=result['results'][0]['definition'] else definition="none" end
-	if (result['pronunciation'].has_key?(pOS) == true) then pnunce=result['pronunciation'][pOS]
-	elsif (result['pronunciation'].has_key?('all') == true) then pnunce=result['pronunciation']['all']
-	else pnunce="none" end
+  URL = 'http://api.urbandictionary.com/v0/define'
+
+  # Gets the definitions for the word.
+  # @param word [String] The word to define.
+  # @return [Array<Slang>] An array of #{Slang} objects.
+  def define(word)
+    params = {
+      term: word
+    }
+    @client = HTTPClient.new if @client.nil?
+    response = JSON.parse(@client.get(URI.parse(URL), params).body)
+    ret = []
+    response['list'].each do |hash|
+      ret << Slang.new(hash)
+    end
+    ret
+  end
+end
+
+$bot.command :'define' do |event, *words|
+	pOS = ""
+	synonyms = ""
+	definition = ""
+	pnunce = ""
+	begin
+		result = open("https://wordsapiv1.p.mashape.com/words/#{words[0]}",
+			"User-Agent" => "Ruby/#{RUBY_VERSION}",
+			"X-Mashape-Key" => $wordsapi_key)
+	rescue
+		result = open("http://api.urbandictionary.com/v0/define?term=#{words[0]}").read
+		result = JSON.parse(result)
+
+		synonyms = "none"
+		pOS = "none"
+		pnunce = "none"
+		definition = result['list'].sample['definition']
+	else
+		result = JSON.parse(result.read)
+		if (result['results'][0].has_key?('partOfSpeech') == true) then pOS=result['results'][0]['partOfSpeech'] else pOS="none" end
+		if (result['results'][0].has_key?('synonyms') == true) then synonyms=result['results'][0]['synonyms'].join(", ") else synonyms="none" end
+		if (result['results'][0].has_key?('definition') == true) then definition=result['results'][0]['definition'] else definition="none" end
+		if (result['pronunciation'].has_key?(pOS) == true) then pnunce=result['pronunciation'][pOS]
+		elsif (result['pronunciation'].has_key?('all') == true) then pnunce=result['pronunciation']['all']
+		else pnunce="none" end
+	end
 
 	event.channel.send_embed do |embed|
 		embed.title = "**#{words.join(" ")}** | #{pnunce} | #{pOS}"

@@ -246,8 +246,12 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 				else
 					chat_scroll($kbcli, $fat_text_array, "Invalid Server")
 				end
-			elsif cIn[0].downcase == "list"					# LIST command
+			elsif cIn[0].downcase == "servers"				# SERVERS command
 				servers = $bot.servers.each_value {|x| 			# For each server, print out its name and ID
+					chat_scroll($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
+				}
+			elsif cIn[0].downcase == "channels"				# CHANNELS command
+				channels = $bot.channel($cmdChannel).server.channels.each {|x| 			# For the current server, print out the name of each channel
 					chat_scroll($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
 				}
 			else chat_scroll($kbcli, $fat_text_array, "Invalid Command", 1) 			# Notify invalid command input
