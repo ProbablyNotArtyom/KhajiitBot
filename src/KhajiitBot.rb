@@ -33,6 +33,7 @@ ENV['SSL_CERT_FILE'] = '/etc/ssl/certs/cacert.pem'
 require 'discordrb'
 require 'openssl'
 require 'json'
+require 'resolv-replace'
 require 'open-uri'
 require 'net/https'
 require 'tempfile'
@@ -43,16 +44,20 @@ require 'io/console'
 #===================Constants======================
 
 CLIENT_ID = File.read "./ext/sys/client"	# KhajiitBot Client ID (put it here, this one isn't valid!)
-token = File.read "./ext/sys/token"			# shh secrets (Put your token in this file too...)
-$e621_key = File.read "./ext/sys/e621"		# ssh more secrets (Put your e621 account's API key here)
-$wordsapi_key = File.read "./ext/sys/words" # WORDSAPI key goes here
+TOKEN = File.read "./ext/sys/token"			# shh secrets (Put your token in this file too...)
+E621_KEY = File.read "./ext/sys/e621"		# ssh more secrets (Put your e621 account's API key here)
+WORDSAPI_KEY = File.read "./ext/sys/words" 	# WORDSAPI key goes here
+
+# enable to display debug info for commands that write to the debug stream
+DEBUG = false
+
 #=====================Globals======================
 
 $boottime = 0								# Holds the time of the last boot
 
 #======================Main========================
 
-$bot = Discordrb::Commands::CommandBot.new token: token , client_id: CLIENT_ID , prefix: ['k.', 'K.'], log_mode: :verbose, fancy_log: true, ignore_bots: false, advanced_functionality: false
+$bot = Discordrb::Commands::CommandBot.new token: TOKEN , client_id: CLIENT_ID , prefix: ['k.', 'K.'], log_mode: :verbose, fancy_log: true, ignore_bots: false, advanced_functionality: false
 $bot.should_parse_self = true
 
 require_relative 'Security.rb'				# Abstractions
@@ -88,6 +93,19 @@ $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
 	event.respond("j.duel jbot")
 end
 
+def debug_loop()
+	if (DEBUG == true)
+		while 1 == 1 do
+		end
+	end
+end
+
+def debug_puts(str)
+	if (DEBUG == true)
+		puts(str)
+	end
+end
+
 #==================================================
 
 $cmdChannel = Config.get("channel")			# Reload the last active channel
@@ -95,10 +113,16 @@ $inBuffer = ""
 
 #==================================================
 
-$bot.mode = :silent
+if (DEBUG == true)
+	$bot.mode = :normal
+else
+	$bot.mode = :silent
+end
+
 $bot.run :async								# Start the bot & run async
 puts('Bot Active')							# Notify bot being active
 puts('Awaiting user activity...')
+debug_loop()
 
 require_relative 'Cmdline.rb'				# Start executing the internal shell
 

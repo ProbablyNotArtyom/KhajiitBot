@@ -300,6 +300,7 @@ $bot.command :uptime do |event|
 end
 
 $bot.command :e6 do |event, *tags|
+	debug_puts("k.e6 command begin")
 	unless event.channel.nsfw? then 										# Make sure the channel is marked as NSFW
 		event.channel.send_embed do |embed|
 			embed.title = "```Use this command in an NSFW marked channel.```"
@@ -316,9 +317,12 @@ $bot.command :e6 do |event, *tags|
 	}.to_json
 
 	request.add_field('User-Agent', 'Ruby')
+
+	debug_puts("starting http request")
 	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') do |http|
 		http.request(request)
 	end
+	debug_puts("http response recieved")
 
 	if (result.body != "[]") then
 		# Check the blacklist
@@ -350,6 +354,7 @@ $bot.command :e6 do |event, *tags|
 			embed.color = 0xa21a5d
 		end
 	end
+	debug_puts("k.e6 command end")
 end
 
 $bot.command :e9 do |event, *tags|
@@ -460,7 +465,7 @@ $bot.command :'define' do |event, *words|
 	begin
 		result = open("https://wordsapiv1.p.mashape.com/words/#{words[0]}",
 			"User-Agent" => "Ruby/#{RUBY_VERSION}",
-			"X-Mashape-Key" => $wordsapi_key)
+			"X-Mashape-Key" => WORDSAPI_KEY)
 	rescue
 		result = open("http://api.urbandictionary.com/v0/define?term=#{words[0]}").read
 		result = JSON.parse(result)

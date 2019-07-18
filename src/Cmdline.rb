@@ -31,6 +31,19 @@ HEAD_HEIGHT		= 1
 PROMPT_HEIGHT	= 3
 CHAT_OFFSET		= HEAD_HEIGHT + PROMPT_HEIGHT
 
+def clense(str)							# Cleans any unicode characters longer than 1 byte
+	if (str.ascii_only?) then return str end
+	newstr = ""
+	str.each_char.with_index do |char, index|
+		if /[\x00-\x7F]/ =~ char
+			newstr[index] = str[index]
+		else
+			newstr[index] = '?'
+		end
+	end
+	return newstr
+end
+
 def new_textarray(array, diff, size)
 	if diff < 0 then
 		(0..(diff.abs-1)).each do |x|
@@ -71,7 +84,7 @@ end
 
 def chat_scroll(screen, array, string, color=nil)
 	if color == nil then color = 15 end
-	numLines = (string.length / RuTui::Screen.size[1])
+	numLines = (string.size / RuTui::Screen.size[1])
 
 	numLines.downto(0) do |x|
 		screen.delete(array[x])
@@ -87,6 +100,38 @@ def chat_scroll(screen, array, string, color=nil)
 		array[index].move(0, -(numLines+1))
 	end
 	RuTui::ScreenManager.draw
+end
+
+def chat_puts(screen, array, string, color=nil)
+	buffer = (' ' * string[/^.+?(?=:)/].size)
+	string.each_line.with_index { |str, index|
+		str = str.strip
+		if (index > 0)
+			str = buffer + ": " + str
+		end
+		chat_scroll(screen, array, str, color)
+	}
+end
+
+def tui_redraw()
+	new_size = RuTui::Screen.size
+	$line_head.length = new_size[1]
+	$box_chat.width = new_size[1]
+	$box_chat.height = new_size[0]-CHAT_OFFSET
+	$text_head.max_width = new_size[1]
+	$cli_field.width = new_size[1]-2
+	$cli_field.move(0, new_size[0] - $size[0])
+	$box_cli.width = new_size[1]
+	$box_cli.move(0, new_size[0] - $size[0])
+	$fat_text_array = new_textarray($fat_text_array, new_size[0] - $size[0], $size)
+
+	$line_head.create
+	$box_chat.create
+	$box_cli.create
+
+	RuTui::ScreenManager.refit
+	RuTui::ScreenManager.draw
+	$size = new_size
 end
 
 $pixel_chat = RuTui::Pixel.new(15, 0, " ")
@@ -133,31 +178,14 @@ $fat_text_array = init_chat($kbcli)
 
 $bot.message() do |event|	# Print out any messages from the current channel
 	if event.message.channel == $cmdChannel then
-		chat_scroll($kbcli, $fat_text_array, "#{event.message.author.display_name} : #{event.message.content}")
+		chat_puts($kbcli, $fat_text_array, clense("#{event.message.author.display_name} : #{event.message.content}"))
 	end
 end
 
-size = RuTui::Screen.size
+$size = RuTui::Screen.size
 
 Signal.trap("SIGWINCH") do
-	new_size = RuTui::Screen.size
-	$line_head.length = new_size[1]
-	$box_chat.width = new_size[1]
-	$box_chat.height = new_size[0]-CHAT_OFFSET
-	$text_head.max_width = new_size[1]
-	$cli_field.width = new_size[1]-2
-	$cli_field.move(0, new_size[0] - size[0])
-	$box_cli.width = new_size[1]
-	$box_cli.move(0, new_size[0] - size[0])
-	$fat_text_array = new_textarray($fat_text_array, new_size[0] - size[0], size)
-
-	$line_head.create
-	$box_chat.create
-	$box_cli.create
-
-	RuTui::ScreenManager.refit
-	RuTui::ScreenManager.draw
-	size = new_size
+	tui_redraw()
 end
 
 RuTui::ScreenManager.add(:default, $kbcli)
@@ -167,28 +195,32 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 	if key == :enter then
 		cIn = $cli_field.get_text.split(" ")
 		unless cIn[0] == nil						# Ignore everything if the input is nil
-			if cIn[0].downcase == "go"						# GO command
+			if $cmdChannel == "KhajiitBot"					# Sanity Check
+				chat_puts($kbcli, $fat_text_array,
+					"You must select a valid channel!")			# Fault if no channel has been selected
+			elsif cIn[0].downcase == "go"					# GO command
 				chan = cIn.delete_at(1)							# Get the channel from the user input
 				if chan != nil && chan.length == 18				# Make sure it's the right length
 					$cmdChannel = chan.to_i  					# Set the current channel
 					Config.save("channel", $cmdChannel)			# Save the current channel across runs
 					$text_head.set_text("Current channel: #{channel_get_name($cmdChannel)}")
-				else chat_scroll($kbcli, $fat_text_array, "Invalid Channel") end	# Notify channel fuckery
+				else chat_puts($kbcli, $fat_text_array, "Invalid Channel") end	# Notify channel fuckery
 			elsif cIn[0].downcase == "exit"					# EXIT command
 				$bot.stop()										# Stop the bot
 				exit											# Exit
 			elsif cIn[0].downcase == "status"				# STATUS command
 				stat = cIn.delete_at(1)							# Delete the command
 				if stat == "online"
-					$bot.online									# Set status as online
-					chat_scroll($kbcli, $fat_text_array, "KhajiitBot now online")
+					$bot.online
+					chat_puts($kbcli, $fat_text_array, "KhajiitBot now online")
 				elsif stat == "idle"
-					$bot.idle									# Set status as idle
-					chat_scroll($kbcli, $fat_text_array, "KhajiitBot now idle")
+					$bot.idle
+					chat_puts($kbcli, $fat_text_array, "KhajiitBot now idle")
 				elsif stat == "invisible"
-					$bot.invisible								# Set status as invisible
-					chat_scroll($kbcli, $fat_text_array, "KhajiitBot now invisible")
-				else chat_scroll($kbcli, $fat_text_array, "Invalid status") end
+					$bot.invisible
+					chat_puts($kbcli, $fat_text_array, "KhajiitBot now invisible")
+				else chat_puts($kbcli, $fat_text_array, "Invalid status")
+				end
 			elsif cIn[0].downcase == "play"					# PLAY command
 				cIn.delete_at(0)								# Remove the command
 				msg = cIn.join(" ")								# Get desired string
@@ -201,8 +233,6 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 				$bot.watching=(msg)								# Set watching status
 				Config.save("watching", msg)					# Save the current vid name across runs
 				Config.save("game", nil)
-			elsif $cmdChannel == "KhajiitBot"					# Sanity Check
-				chat_scroll($kbcli, $fat_text_array, "You must select a valid channel!")# Fault if no channel has been selected
 			elsif cIn[0].downcase == "say"					# SAY command
 				cIn.delete_at(0)								# Delete the command from the user input
 				msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
@@ -210,51 +240,54 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 			elsif cIn[0].downcase == "embed"				# EMBED command
 				cIn.delete_at(0)								# Delete the command from the user input
 				msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
-				$bot.send_message($cmdChannel, nil, false, {"description" => msg, "color" => 0xa21a5d})
-			elsif cIn[0].downcase == "rm"					# RM command
+				$bot.send_message($cmdChannel, nil, false,
+					{"description" => msg, "color" => 0xa21a5d})
+			elsif cIn[0].downcase == "rm"												# RM command
 				msg = $bot.channel($cmdChannel).history(10).collect { |x| x.author.id }		# Make id table
 				$i = 0
 				until msg[$i] == CLIENT_ID.to_i || $i == 11; $i += 1 end					# Scan for Bot's ID
 				unless $i == 11; $bot.channel($cmdChannel).history(10)[$i].delete end		# Delete message if its ours
-			elsif cIn[0].downcase == "leave"				# LEAVE command
-				id = cIn.delete_at(1).to_i						# Delete the channel ID into id
-				$bot.servers.each_value {|x| 					# Scan the list of servers to find a match, then leave that server
+			elsif cIn[0].downcase == "leave"											# LEAVE command
+				id = cIn.delete_at(1).to_i													# Delete the channel ID into id
+				$bot.servers.each_value {|x| 												# Scan the list of servers to find a match, then leave that server
 					if x.id == id
-						chat_scroll($kbcli, $fat_text_array, "Left #{x.name}")
+						chat_puts($kbcli, $fat_text_array, "Left #{x.name}")
 						x.leave
 						break 2
 					end
 				}
-			elsif cIn[0].downcase == "dm"					# DM command
-				cIn.delete_at(0)								# Delete the command from the user input
-				uid = cIn.delete_at(0)							# get the recipient uid
-				msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
+			elsif cIn[0].downcase == "dm"									# DM command
+				cIn.delete_at(0)												# Delete the command from the user input
+				uid = cIn.delete_at(0)											# get the recipient uid
+				msg = cIn.join(" ")												# Joint the rest of the input, as it is our message
 				$bot.user(uid.to_i).pm(msg)
-			elsif cIn[0].downcase == "uid"					# UID command
-				cIn.delete_at(0)								# Remove the command
-				uname = Parser.get_user(cIn.join(" "))			# Get the username
+			elsif cIn[0].downcase == "uid"									# UID command
+				cIn.delete_at(0)												# Remove the command
+				uname = Parser.get_user(cIn.join(" "))							# Get the username
 				if uname != nil
-					chat_scroll($kbcli, $fat_text_array, uname.id.to_s)
+					chat_puts($kbcli, $fat_text_array, uname.id.to_s)
 				else
-					chat_scroll($kbcli, $fat_text_array, "Invalid User")
+					chat_puts($kbcli, $fat_text_array, "Invalid User")
 				end
-			elsif cIn[0].downcase == "sid"					# SID command
-				cIn.delete_at(0)								# Remove the command
-				sname = Parser.get_server(cIn.join(" "))			# Get the server name
+			elsif cIn[0].downcase == "sid"									# SID command
+				cIn.delete_at(0)												# Remove the command
+				sname = Parser.get_server(cIn.join(" "))						# Get the server name
 				if sname != nil
-					chat_scroll($kbcli, $fat_text_array, sname.id.to_s)
+					chat_puts($kbcli, $fat_text_array, sname.id.to_s)
 				else
-					chat_scroll($kbcli, $fat_text_array, "Invalid Server")
+					chat_puts($kbcli, $fat_text_array, "Invalid Server")
 				end
-			elsif cIn[0].downcase == "servers"				# SERVERS command
-				servers = $bot.servers.each_value {|x| 			# For each server, print out its name and ID
-					chat_scroll($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
+			elsif cIn[0].downcase == "servers"										# SERVERS command
+				servers = $bot.servers.each_value {|x| 									# For each server, print out its name and ID
+					chat_puts($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
 				}
-			elsif cIn[0].downcase == "channels"				# CHANNELS command
+			elsif cIn[0].downcase == "channels"										# CHANNELS command
 				channels = $bot.channel($cmdChannel).server.channels.each {|x| 			# For the current server, print out the name of each channel
-					chat_scroll($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
+					chat_puts($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
 				}
-			else chat_scroll($kbcli, $fat_text_array, "Invalid Command", 1) 			# Notify invalid command input
+			elsif cIn[0].downcase == "update"										# UPDATE command
+				tui_redraw()															# Redraw the TUI screen
+			else chat_puts($kbcli, $fat_text_array, "Invalid Command", 1)
 			end
 			puts("")
 		end
