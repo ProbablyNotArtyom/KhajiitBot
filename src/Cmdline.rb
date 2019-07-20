@@ -103,7 +103,11 @@ def chat_scroll(screen, array, string, color=nil)
 end
 
 def chat_puts(screen, array, string, color=nil)
-	buffer = (' ' * string[/^.+?(?=:)/].size)
+	buffer = string[/^.+?(?=:)/]
+	if (buffer == nil) then buffer = "" end
+	if (buffer.size > 0)
+		buffer = (' ' * buffer.size)
+	end
 	string.each_line.with_index { |str, index|
 		str = str.strip
 		if (index > 0)
