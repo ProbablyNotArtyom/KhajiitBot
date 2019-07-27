@@ -245,7 +245,7 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 				cIn.delete_at(0)								# Delete the command from the user input
 				msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
 				$bot.send_message($cmdChannel, nil, false,
-					{"description" => msg, "color" => 0xa21a5d})
+					{"description" => msg, "color" => 0xf5367c})
 			elsif cIn[0].downcase == "rm"												# RM command
 				msg = $bot.channel($cmdChannel).history(10).collect { |x| x.author.id }		# Make id table
 				$i = 0

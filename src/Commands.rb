@@ -45,7 +45,7 @@ $bot.command :help do |event, *type|			# Help command
 				embed.add_field(name: 'Error!', value: 'Invalid help type. Please use on option from the list')
 			end
 		end
-		embed.color = 0xa21a5d
+		embed.color = 0xf5367c
 	end
 	return nil
 end
@@ -80,7 +80,7 @@ $bot.command(:lewd) do |event|												# LEWD command
 	unless event.channel.nsfw? then 										# Make sure the channel is marked as NSFW
 		event.channel.send_embed do |embed|
 			embed.title = "```Use this command in an NSFW marked channel.```"
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 		return nil
 	end
@@ -107,7 +107,7 @@ $bot.command(:arouse) do |event|
 	unless event.channel.nsfw? then
 		event.channel.send_embed do |embed|
 			embed.title = "```Use this command in an NSFW marked channel.```"
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 		return nil
 	end
@@ -121,7 +121,7 @@ $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Comm
 	else max = max.to_i end
 	event.channel.send_embed do |embed|										# Send the message as embedded
 		embed.title = rand(max)												# Generate a random number
-		embed.color = 0xa21a5d
+		embed.color = 0xf5367c
 	end
 	return nil
 end
@@ -131,12 +131,12 @@ $bot.command(:'8ball') do |event, *rest|									# 8BALL Command
 	if rest.include? "sleep"
 		event.channel.send_embed do |embed|                                     # Return the message
         	embed.title = "I dont think so," + event.user.name
-        	embed.color = 0xa21a5d
+        	embed.color = 0xf5367c
 		end
 	else
 		event.channel.send_embed do |embed|										# Return the message
 			embed.title = IO.readlines("./ext/8ball")[rand(lines)] + event.user.name
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	end
 	return nil
@@ -146,7 +146,7 @@ $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 	target = Parser.get_target(target, event)								# Parse the target into a discord markup for IDs
 	event.channel.send_embed do |embed|
 		embed.description = "I give " + target + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
-		embed.color = 0xa21a5d
+		embed.color = 0xf5367c
 	end
 	return nil
 end
@@ -164,7 +164,7 @@ end
 $bot.command(:chance, min_args: 1) do |event, *query|						# CHANCE Command
 	event.channel.send_embed do |embed|															# Return the message
 		embed.title = "I give the chance " + query.join(" ") + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
-		embed.color = 0xa21a5d
+		embed.color = 0xf5367c
 	end
 	return nil
 end
@@ -174,7 +174,7 @@ $bot.command(:scp) do |event, query|						# SCP Command
 	if query <= 0 || query >= 5000 then
 		event.channel.send_embed do |embed|
 			embed.title = "Invalid SCP!"
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	else
 		if query < 1000 then
@@ -184,7 +184,7 @@ $bot.command(:scp) do |event, query|						# SCP Command
 		end
 		event.channel.send_embed do |embed|
 			embed.title = "http://www.scp-wiki.net/scp-#{query}"
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	end
 	return nil
@@ -194,14 +194,14 @@ $bot.command(:e) do |event|
 	if (event.message.emoji?) then
 		#event.channel.send_embed do |embed|
 		#	embed.image = Discordrb::Webhooks::EmbedImage.new(url: event.message.emoji[0].icon_url)
-		#	embed.color = 0xa21a5d
+		#	embed.color = 0xf5367c
 		event.channel.send_message(event.message.emoji[0].icon_url)
 		#end
 	else
 		event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Message did not contain any valid emotes."
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	end
 	return nil
@@ -212,14 +212,14 @@ $bot.command(:a) do |event, user|
 	if (user != nil) then
 		#event.channel.send_embed do |embed|
 		#	embed.image = Discordrb::Webhooks::EmbedImage.new(url: user.avatar_url)
-		#	embed.color = 0xa21a5d
+		#	embed.color = 0xf5367c
 		event.channel.send_message(user.avatar_url)
 		#end
 	else
 		event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Invalid user."
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	end
 	return nil
@@ -295,7 +295,7 @@ $bot.command :uptime do |event|
 	uptime_hours = uptime_seconds/1440 % 1
 	event.channel.send_embed do |embed|
 		embed.title = uptime_hours.to_s + " hours, " + (uptime_seconds - uptime_hours*1440).to_s + " seconds."
-		embed.color = 0xa21a5d
+		embed.color = 0xf5367c
 	end
 end
 
@@ -304,7 +304,7 @@ $bot.command :e6 do |event, *tags|
 	unless event.channel.nsfw? then 										# Make sure the channel is marked as NSFW
 		event.channel.send_embed do |embed|
 			embed.title = "```Use this command in an NSFW marked channel.```"
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 		return nil
 	end
@@ -327,11 +327,12 @@ $bot.command :e6 do |event, *tags|
 	if (result.body != "[]") then
 		# Check the blacklist
 		black_tags = JSON.parse(result.body)[0]['tags'].split(" ")
-		if (Blacklist.e621_screen_tags(black_tags) == false) then
+		black_ret = Blacklist.e621_screen_tags(black_tags)
+		if (!black_ret.empty?) then
 			event.channel.send_embed do |embed|
 				embed.title = "Error"
-				embed.description = "Post contained one or more blacklisted tags."
-				embed.color = 0xa21a5d
+				embed.description = "Post contained one or more blacklisted tags: **#{a_get_list(black_ret)}**"
+				embed.color = 0xf5367c
 			end
 			return nil
 		end
@@ -344,14 +345,14 @@ $bot.command :e6 do |event, *tags|
 				" # Favourites: **" + JSON.parse(result.body)[0]['fav_count'].to_s + "**" +
 				" # [Post](https://e621.net/post/show/#{JSON.parse(result.body)[0]['id'].to_s})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	else
 		event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No posts matched your search:
 				**" + tags.join(" ") + "**"
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	end
 	debug_puts("k.e6 command end")
@@ -373,11 +374,12 @@ $bot.command :e9 do |event, *tags|
 	if (result.body != "[]") then
 		# Check the blacklist
 		black_tags = JSON.parse(result.body)[0]['tags'].split(" ")
-		if (Blacklist.e621_screen_tags(black_tags) == false) then
+		black_ret = Blacklist.e621_screen_tags(black_tags)
+		if (!black_ret.empty?) then
 			event.channel.send_embed do |embed|
 				embed.title = "Error"
-				embed.description = "Post contained one or more blacklisted tags."
-				embed.color = 0xa21a5d
+				embed.description = "Post contained one or more blacklisted tags: **#{a_get_list(black_ret)}**"
+				embed.color = 0xf5367c
 			end
 			return nil
 		end
@@ -390,14 +392,14 @@ $bot.command :e9 do |event, *tags|
 				" # Favourites: **" + JSON.parse(result.body)[0]['fav_count'].to_s + "**" +
 				" # [Post](https://e926.net/post/show/#{JSON.parse(result.body)[0]['id'].to_s})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	else
 		event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No posts matched your search:
 				**" + tags.join(" ") + "**"
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 	end
 end
@@ -407,7 +409,7 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 		event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
 			embed.description = Blacklist.e621_get_blacklist().join(" ")
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 		return nil;
 	end
@@ -416,7 +418,7 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 		event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No tags were specified for this action."
-			embed.color = 0xa21a5d
+			embed.color = 0xf5367c
 		end
 		return nil;
 	end
@@ -430,7 +432,7 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 	event.channel.send_embed do |embed|
 		embed.title = "Tag Blacklist"
 		embed.description = "Blacklist modified."
-		embed.color = 0xa21a5d
+		embed.color = 0xf5367c
 	end
 	return nil
 end
@@ -488,7 +490,7 @@ $bot.command :'define' do |event, *words|
 		embed.title = "**#{words.join(" ")}** | #{pnunce} | #{pOS}"
 		embed.description = "**Definition**: #{definition}
 			**Synonyms**: #{synonyms}"
-		embed.color = 0xa21a5d
+		embed.color = 0xf5367c
 	end
 end
 

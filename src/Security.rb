@@ -43,7 +43,7 @@ def action(target, event, action)																			# ACTION Handler method
 	if (target == nil || target == "<@!"+event.user.id.to_s+">") then line = rand(3) else line = rand(IO.readlines("./ext/#{action}").size-3)+3 end		# If the target exists then get the number of lines in the string file
 	event.channel.send_embed do |embed|																		# Send the embedded action
 		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}")[line])		# Pick a random string and return it
-		embed.color = 0xa21a5d
+		embed.color = 0xf5367c
 	end
 end
 
@@ -65,6 +65,18 @@ def get_file_input(event)
 	else
 		return event.message.attachments[0].url
 	end
+end
+
+def a_get_list(array)
+	ret = ""
+	array.each.with_index do |str, index|
+		if (index == 0) then
+			ret << str
+		else
+			ret << ", #{str}"
+		end
+	end
+	return ret
 end
 
 class Permit																		# Permit checking class
@@ -282,12 +294,13 @@ class E621_blacklist
 	end
 
 	def e621_screen_tags(tags)
+		ret = []
 		tags.each do |tag|
 			if (@@e621_black_tags.include?(tag)) then
-				return false
+				ret.push(tag)
 			end
 		end
-		return true
+		return ret
 	end
 end
 
