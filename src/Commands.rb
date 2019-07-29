@@ -317,7 +317,7 @@ $bot.command :e6 do |event, *tags|
 		end
 		return nil
 	end
-	
+
 	url = URI.parse("https://e621.net/post/index.json")
 	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
 	request.body = {
@@ -336,7 +336,7 @@ $bot.command :e6 do |event, *tags|
 	if (result.body != "[]") then
 		# Check the blacklist
 		black_tags = JSON.parse(result.body)[0]['tags'].split(" ")
-		black_ret = Blacklist.e621_screen_tags(black_tags)
+		black_ret = Blacklist_E621.e621_screen_tags(black_tags)
 		if (!black_ret.empty?) then
 			event.channel.send_embed do |embed|
 				embed.title = "Error"
@@ -392,7 +392,7 @@ $bot.command :e9 do |event, *tags|
 	if (result.body != "[]") then
 		# Check the blacklist
 		black_tags = JSON.parse(result.body)[0]['tags'].split(" ")
-		black_ret = Blacklist.e621_screen_tags(black_tags)
+		black_ret = Blacklist_E921.e621_screen_tags(black_tags)
 		if (!black_ret.empty?) then
 			event.channel.send_embed do |embed|
 				embed.title = "Error"
@@ -426,7 +426,7 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 	if (action == "get") then
 		event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
-			embed.description = Blacklist.e621_get_blacklist().join(" ")
+			embed.description = Blacklist_E621.e621_get_blacklist().join(" ")
 			embed.color = 0xf5367c
 		end
 		return nil;
@@ -441,9 +441,42 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 		return nil;
 	end
 	if (action == "add") then
-		Blacklist.e621_append_blacklist(tags)
+		Blacklist_E621.e621_append_blacklist(tags)
 	elsif (action == "remove")
-		Blacklist.e621_purge_blacklist(tags)
+		Blacklist_E621.e621_purge_blacklist(tags)
+	else
+		return nil
+	end
+	event.channel.send_embed do |embed|
+		embed.title = "Tag Blacklist"
+		embed.description = "Blacklist modified."
+		embed.color = 0xf5367c
+	end
+	return nil
+end
+
+$bot.command :'e9.blacklist' do |event, action, *tags|
+	if (action == "get") then
+		event.channel.send_embed do |embed|
+			embed.title = "Tag Blacklist"
+			embed.description = Blacklist_E921.e621_get_blacklist().join(" ")
+			embed.color = 0xf5367c
+		end
+		return nil;
+	end
+
+	if (tags[0] == nil) then
+		event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "No tags were specified for this action."
+			embed.color = 0xf5367c
+		end
+		return nil;
+	end
+	if (action == "add") then
+		Blacklist_E921.e621_append_blacklist(tags)
+	elsif (action == "remove")
+		Blacklist_E921.e621_purge_blacklist(tags)
 	else
 		return nil
 	end

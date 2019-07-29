@@ -60,16 +60,17 @@ $boottime = 0								# Holds the time of the last boot
 $bot = Discordrb::Commands::CommandBot.new token: TOKEN , client_id: CLIENT_ID , prefix: ['k.', 'K.'], log_mode: :verbose, fancy_log: true, ignore_bots: false, advanced_functionality: false
 $bot.should_parse_self = true
 
-require_relative 'Security.rb'				# Abstractions
-require_relative 'Commands.rb'				# Bot commands
-require_relative 'Image.rb'					# Image manipulation
+require_relative 'Security.rb'					# Abstractions
+require_relative 'Commands.rb'					# Bot commands
+require_relative 'Image.rb'						# Image manipulation
 
-PList = Permit.new()						# Create a permit list
-Parser = Parse.new()						# Setup ID parsing class
-Config = Setting.new()						# Set up persistence class
-Blacklist = E621_blacklist.new(Config)		# Set up e621 blacklist handler
+PList = Permit.new()												# Create a permit list
+Parser = Parse.new()												# Setup ID parsing class
+Config = Setting.new()												# Set up persistence class
+Blacklist_E921 = E621_blacklist.new(Config, "e926_blacklist")		# Set up e926 blacklist handler
+Blacklist_E621 = E621_blacklist.new(Config, "e621_blacklist")		# Set up e621 blacklist handler
 
-$boottime = Time.new						# Save to time the bot was started. used of uptime
+$boottime = Time.new							# Save to time the bot was started. used of uptime
 puts('Current time: ' + $boottime.ctime)
 puts('KhajiitBot Starting...')
 
