@@ -309,6 +309,15 @@ $bot.command :e6 do |event, *tags|
 		return nil
 	end
 
+	if (tags.count > 5) then
+		event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "Request had too many tags. Maximum number of tags is **5**"
+			embed.color = 0xf5367c
+		end
+		return nil
+	end
+	
 	url = URI.parse("https://e621.net/post/index.json")
 	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
 	request.body = {
@@ -359,6 +368,15 @@ $bot.command :e6 do |event, *tags|
 end
 
 $bot.command :e9 do |event, *tags|
+	if (tags.count > 5) then
+		event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "Request had too many tags. Maximum number of tags is **5**"
+			embed.color = 0xf5367c
+		end
+		return nil
+	end
+
 	url = URI.parse("https://e926.net/post/index.json")
 	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
 	request.body = {

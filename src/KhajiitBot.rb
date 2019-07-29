@@ -94,14 +94,14 @@ $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
 end
 
 def debug_loop()
-	if (DEBUG == true)
+	if (DEBUG == true) then
 		while 1 == 1 do
 		end
 	end
 end
 
 def debug_puts(str)
-	if (DEBUG == true)
+	if (DEBUG == true) then
 		puts(str)
 	end
 end
