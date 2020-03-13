@@ -265,18 +265,12 @@ class ImageMod
 end
 
 class E621_blacklist
-	@e621_black_tags = [""]
+	@e621_black_tags = []
 	@config_name = ""
 	def initialize(sys_config, strname)
 		@config_name = strname
 		if (sys_config.get(@config_name) != nil) then
 			@e621_black_tags = sys_config.get(@config_name)
-			debug_puts(@e621_black_tags)
-		else
-			debug_puts("[!] new e621 taglist created")
-			@e621_black_tags = ["cub"]
-			debug_puts(@e621_black_tags)
-			sys_config.save(@config_name, @e621_black_tags)
 		end
 	end
 	def e621_get_blacklist()

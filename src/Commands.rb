@@ -318,7 +318,7 @@ $bot.command :e6 do |event, *tags|
 		return nil
 	end
 
-	url = URI.parse("https://e621.net/post/index.json")
+	url = URI.parse("https://e621.net/posts.json")
 	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
 	request.body = {
 		limit:	1,
@@ -332,10 +332,12 @@ $bot.command :e6 do |event, *tags|
 		http.request(request)
 	end
 	debug_puts("http response recieved")
-
-	if (result.body != "[]") then
+	if (result.body != "") then
 		# Check the blacklist
-		black_tags = JSON.parse(result.body)[0]['tags'].split(" ")
+		black_tags = [""]
+		JSON.parse(result.body)['posts'][0]['tags'].each_value do |x|
+			black_tags = black_tags + x
+		end
 		black_ret = Blacklist_E621.e621_screen_tags(black_tags)
 		if (!black_ret.empty?) then
 			event.channel.send_embed do |embed|
@@ -346,13 +348,15 @@ $bot.command :e6 do |event, *tags|
 			return nil
 		end
 
-		file = JSON.parse(result.body)[0]['file_url']
-		artist = JSON.parse(result.body)[0]['author']
+		file = JSON.parse(result.body)['posts'][0]['file']['url']
+		debug_puts(file)
+		artist = JSON.parse(result.body)['posts'][0]['tags']['artist'][0]
+		debug_puts(artist)
 		event.channel.send_embed do |embed|
 			embed.title = "Tags: " + tags.join(" ")
-			embed.description = "Score: **" + JSON.parse(result.body)[0]['score'].to_s + "**" +
-				" # Favourites: **" + JSON.parse(result.body)[0]['fav_count'].to_s + "**" +
-				" # [Post](https://e621.net/post/show/#{JSON.parse(result.body)[0]['id'].to_s})"
+			embed.description = "Score: **" + JSON.parse(result.body)['posts'][0]['score']['total'].to_s + "**" +
+				" # Favourites: **" + JSON.parse(result.body)['posts'][0]['fav_count'].to_s + "**" +
+				" # [Post](https://e621.net/post/show/#{JSON.parse(result.body)['posts'][0]['id'].to_s})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
 			embed.color = 0xf5367c
 		end
@@ -389,10 +393,12 @@ $bot.command :e9 do |event, *tags|
 		http.request(request)
 	end
 
-	if (result.body != "[]") then
+	if (result.body != "") then
 		# Check the blacklist
-		black_tags = JSON.parse(result.body)[0]['tags'].split(" ")
-		black_ret = Blacklist_E921.e621_screen_tags(black_tags)
+		black_tags = [""]
+		JSON.parse(result.body)['posts'][0]['tags'].each_value do |x|
+			black_tags = black_tags + x
+		end
 		if (!black_ret.empty?) then
 			event.channel.send_embed do |embed|
 				embed.title = "Error"
@@ -402,13 +408,15 @@ $bot.command :e9 do |event, *tags|
 			return nil
 		end
 
-		file = JSON.parse(result.body)[0]['file_url']
-		artist = JSON.parse(result.body)[0]['author']
+		file = JSON.parse(result.body)['posts'][0]['file']['url']
+		debug_puts(file)
+		artist = JSON.parse(result.body)['posts'][0]['tags']['artist'][0]
+		debug_puts(artist)
 		event.channel.send_embed do |embed|
 			embed.title = "Tags: " + tags.join(" ")
-			embed.description = "Score: **" + JSON.parse(result.body)[0]['score'].to_s + "**" +
-				" # Favourites: **" + JSON.parse(result.body)[0]['fav_count'].to_s + "**" +
-				" # [Post](https://e926.net/post/show/#{JSON.parse(result.body)[0]['id'].to_s})"
+			embed.description = "Score: **" + JSON.parse(result.body)['posts'][0]['score']['total'].to_s + "**" +
+				" # Favourites: **" + JSON.parse(result.body)['posts'][0]['fav_count'].to_s + "**" +
+				" # [Post](https://e926.net/post/show/#{JSON.parse(result.body)['posts'][0]['id'].to_s})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
 			embed.color = 0xf5367c
 		end

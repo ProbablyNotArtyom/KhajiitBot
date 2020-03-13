@@ -48,23 +48,8 @@ TOKEN = File.read "./ext/sys/token"			# shh secrets (Put your token in this file
 E621_KEY = File.read "./ext/sys/e621"		# ssh more secrets (Put your e621 account's API key here)
 WORDSAPI_KEY = File.read "./ext/sys/words" 	# WORDSAPI key goes here
 
-#=====================Debug========================
-
 # enable to display debug info for commands that write to the debug stream
 DEBUG = false
-
-def debug_loop()
-	if (DEBUG == true) then
-		while 1 == 1 do
-		end
-	end
-end
-
-def debug_puts(str)
-	if (DEBUG == true) then
-		puts(str)
-	end
-end
 
 #=====================Globals======================
 
@@ -106,7 +91,25 @@ trap('INT') do								# Graceful violent exit
 end
 
 $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
-	event.respond("j.duel jbot")
+	target = "<@208140167536574464>"                                                                                                                               # Parse the target name and get back a formatted ID
+	line = rand(IO.readlines("./ext/hug").size-3)+3         # If the target exists then get the number of lines in the string file
+	event.channel.send_embed do |embed|                                                                                                                                             # Send the embedded action
+		embed.description = "**<@342149093117657105>** " + eval(IO.readlines("./ext/hug")[line])            # Pick a random string and return it
+		embed.color = 0xf5367c
+	end
+end
+
+def debug_loop()
+	if (DEBUG == true) then
+		while 1 == 1 do
+		end
+	end
+end
+
+def debug_puts(str)
+	if (DEBUG == true) then
+		puts(str)
+	end
 end
 
 #==================================================
@@ -115,11 +118,6 @@ $cmdChannel = Config.get("channel")			# Reload the last active channel
 $inBuffer = ""
 
 #==================================================
-
-debug_puts("CLIENT_ID: #{CLIENT_ID}")
-debug_puts("TOKEN: #{TOKEN}")
-debug_puts("E621 KEY: #{E621_KEY}")
-debug_puts("WORDSAPI KEY: #{WORDSAPI_KEY}")
 
 if (DEBUG == true)
 	$bot.mode = :normal
