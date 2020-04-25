@@ -402,7 +402,7 @@ $bot.command :e9 do |event, *tags|
 		JSON.parse(result.body)['posts'][0]['tags'].each_value do |x|
 			black_tags = black_tags + x
 		end
-		black_ret = Blacklist_E621.e621_screen_tags(black_tags)
+		black_ret = Blacklist_E926.e621_screen_tags(black_tags)
 		if (!black_ret.empty?) then
 			event.channel.send_embed do |embed|
 				embed.title = "Error"

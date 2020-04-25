@@ -226,7 +226,7 @@ class ImageMod
 			return nil
 		end
 		files = get_file_input(event)
-		download = open(files)
+		download = ::OpenURI.open_uri(files)
 		uri = URI.parse(files)
 		tmp = "./tmp" + File.basename(uri.path).slice!(/\..*/)
 		IO.copy_stream(download, tmp)

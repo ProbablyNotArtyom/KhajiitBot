@@ -67,6 +67,7 @@ require_relative 'Image.rb'						# Image manipulation
 PList = Permit.new()												# Create a permit list
 Parser = Parse.new()												# Setup ID parsing class
 Config = Setting.new()												# Set up persistence class
+Blacklist_E926 = E621_blacklist.new(Config, "e926_blacklist")		# Set up e926 blacklist handler
 Blacklist_E621 = E621_blacklist.new(Config, "e621_blacklist")		# Set up e621 blacklist handler
 
 $boottime = Time.new							# Save to time the bot was started. used of uptime

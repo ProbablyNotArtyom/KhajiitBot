@@ -30,8 +30,7 @@
 $bot.command :contrast do |event, *level|
 	level = level.join("").to_f
 	image = ImageMod.load_tmp(event)
-	if level >= 100 then
-		level = level - 100
+	if level >= 0 then
 		image = image.sigmoidal_contrast_channel((level/2), Magick::QuantumRange.to_f * 0.50, true, Magick::AllChannels)
 	else
 		level = 100 - level
@@ -57,11 +56,11 @@ $bot.command :sharpen do |event, *level|
 	return nil
 end
 
-$bot.command :hue do |event, *level|
-	level = level.join("").to_f
+$bot.command :hue do |event, *degrees|
+	degrees = degrees.join("").to_f
 	image = ImageMod.load_tmp(event)
 	image = image.quantize(256, Magick::GRAYColorspace)
-	image = image.colorize(0.60, 0.60, 0.60, Magick::Pixel.from_hsla(level, 100.0, 100.0, 1.0))
+	image = image.colorize(0.60, 0.60, 0.60, Magick::Pixel.from_hsla(degrees, 100.0, 100.0, 1.0))
 	image = image.sigmoidal_contrast_channel(15.0, Magick::QuantumRange.to_f * 0.50, true, Magick::AllChannels)
 	ImageMod.return_img(event, image)
 	return nil
@@ -70,19 +69,13 @@ end
 $bot.command :bright do |event, *level|
 	level = level.join("").to_f
 	image = ImageMod.load_tmp(event)
-	if level >= 100 then
-		level = level.to_f - 100.0
-		image = image.level(0.0 - (Magick::QuantumRange.to_f*((level/25.0))), Magick::QuantumRange, 1.0)
-	else
-		level = 100.0 - level.to_f
-		image = image.level(0.0, Magick::QuantumRange.to_f * (1.0+(level/16)), 1.0)
-	end
+	image = image.level(-Magick::QuantumRange * 0.25, Magick::QuantumRange * 1.25, 1.0)
 	ImageMod.return_img(event, image)
 	return nil
 end
 
-$bot.command :rotate do |event, *level|
-	level = level.join("").to_f
+$bot.command :rotate do |event, *degrees|
+	degrees = level.join("").to_f
 	image = ImageMod.load_tmp(event)
 	image = image.rotate(degrees)
 	ImageMod.return_img(event, image)
