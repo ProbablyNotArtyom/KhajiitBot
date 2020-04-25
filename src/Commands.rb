@@ -468,6 +468,39 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 	return nil
 end
 
+$bot.command :'e9.blacklist' do |event, action, *tags|
+	if (action == "get") then
+		event.channel.send_embed do |embed|
+			embed.title = "Tag Blacklist"
+			embed.description = Blacklist_E926.e621_get_blacklist().join(" ")
+			embed.color = 0xf5367c
+		end
+		return nil;
+	end
+
+	if (tags[0] == nil) then
+		event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "No tags were specified for this action."
+			embed.color = 0xf5367c
+		end
+		return nil;
+	end
+	if (action == "add") then
+		Blacklist_E926.e621_append_blacklist(tags)
+	elsif (action == "remove")
+		Blacklist_E926.e621_purge_blacklist(tags)
+	else
+		return nil
+	end
+	event.channel.send_embed do |embed|
+		embed.title = "Tag Blacklist"
+		embed.description = "Blacklist modified."
+		embed.color = 0xf5367c
+	end
+	return nil
+end
+
 module Urban
   module_function
 
