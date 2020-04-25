@@ -372,6 +372,7 @@ $bot.command :e6 do |event, *tags|
 end
 
 $bot.command :e9 do |event, *tags|
+	debug_puts("k.e9 command begin")
 	if (tags.count > 5) then
 		event.channel.send_embed do |embed|
 			embed.title = "Error"
@@ -381,7 +382,7 @@ $bot.command :e9 do |event, *tags|
 		return nil
 	end
 
-	url = URI.parse("https://e926.net/post/index.json")
+	url = URI.parse("https://e926.net/posts.json")
 	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
 	request.body = {
 		limit:	1,
@@ -389,16 +390,19 @@ $bot.command :e9 do |event, *tags|
 	}.to_json
 
 	request.add_field('User-Agent', 'Ruby')
+
+	debug_puts("starting http request")
 	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') do |http|
 		http.request(request)
 	end
-
+	debug_puts("http response recieved")
 	if (result.body != "") then
 		# Check the blacklist
 		black_tags = [""]
 		JSON.parse(result.body)['posts'][0]['tags'].each_value do |x|
 			black_tags = black_tags + x
 		end
+		black_ret = Blacklist_E621.e621_screen_tags(black_tags)
 		if (!black_ret.empty?) then
 			event.channel.send_embed do |embed|
 				embed.title = "Error"
@@ -428,6 +432,7 @@ $bot.command :e9 do |event, *tags|
 			embed.color = 0xf5367c
 		end
 	end
+	debug_puts("k.e9 command end")
 end
 
 $bot.command :'e6.blacklist' do |event, action, *tags|
@@ -452,39 +457,6 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 		Blacklist_E621.e621_append_blacklist(tags)
 	elsif (action == "remove")
 		Blacklist_E621.e621_purge_blacklist(tags)
-	else
-		return nil
-	end
-	event.channel.send_embed do |embed|
-		embed.title = "Tag Blacklist"
-		embed.description = "Blacklist modified."
-		embed.color = 0xf5367c
-	end
-	return nil
-end
-
-$bot.command :'e9.blacklist' do |event, action, *tags|
-	if (action == "get") then
-		event.channel.send_embed do |embed|
-			embed.title = "Tag Blacklist"
-			embed.description = Blacklist_E921.e621_get_blacklist().join(" ")
-			embed.color = 0xf5367c
-		end
-		return nil;
-	end
-
-	if (tags[0] == nil) then
-		event.channel.send_embed do |embed|
-			embed.title = "Error"
-			embed.description = "No tags were specified for this action."
-			embed.color = 0xf5367c
-		end
-		return nil;
-	end
-	if (action == "add") then
-		Blacklist_E921.e621_append_blacklist(tags)
-	elsif (action == "remove")
-		Blacklist_E921.e621_purge_blacklist(tags)
 	else
 		return nil
 	end
