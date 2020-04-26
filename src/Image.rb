@@ -70,7 +70,6 @@ $bot.command :bright do |event, *level|
 end
 
 $bot.command :rotate do |event, *degrees|
-	degrees = degrees.join("").to_f
 	image = ImageMod.load_tmp(event)
 	image.rotate(degrees.join(""))
 	ImageMod.return_img(event, image)
@@ -86,7 +85,10 @@ end
 
 $bot.command :i do |event|
 	image = ImageMod.load_tmp(event)
-	image.negate
+	image.combine_options do |x|
+		x.channel("RGB")
+		x.negate
+	end
 	ImageMod.return_img(event, image)
 	return nil
 end
