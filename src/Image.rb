@@ -30,20 +30,12 @@
 $bot.command :contrast do |event, *level|
 	level = level.join("").to_f
 	image = ImageMod.load_tmp(event)
-	if level >= 0 then
-		image = image.sigmoidal_contrast_channel((level/2), Magick::QuantumRange.to_f * 0.50, true, Magick::AllChannels)
+	if (level >= 0) then
+		image.level("#{(level/4).to_s}%")
 	else
-		level = 100 - level
-		image = image.sigmoidal_contrast_channel((level/2), Magick::QuantumRange.to_f * 0.50, false, Magick::AllChannels)
+		level = 0 - level
+		image.level("#{(level/4).to_s}%!")
 	end
-	ImageMod.return_img(event, image)
-	return nil
-end
-
-$bot.command :saturation do |event, *level|
-	level = level.join("").to_f
-	image = ImageMod.load_tmp(event)
-	image = image.modulate(1, (level/100)*2, 1)
 	ImageMod.return_img(event, image)
 	return nil
 end
@@ -51,88 +43,58 @@ end
 $bot.command :sharpen do |event, *level|
 	level = level.join("").to_f
 	image = ImageMod.load_tmp(event)
-	image = image.sharpen(4, level/20)
+	image.sharpen("0x#{(level/20).to_s}")
 	ImageMod.return_img(event, image)
 	return nil
 end
 
 $bot.command :hue do |event, *degrees|
-	degrees = degrees.join("").to_f
 	image = ImageMod.load_tmp(event)
-	image = image.quantize(256, Magick::GRAYColorspace)
-	image = image.colorize(0.60, 0.60, 0.60, Magick::Pixel.from_hsla(degrees, 100.0, 100.0, 1.0))
-	image = image.sigmoidal_contrast_channel(15.0, Magick::QuantumRange.to_f * 0.50, true, Magick::AllChannels)
+	image.modulate("100, 100, #{( degrees.join("").to_f * 100/180 ) + 100}")
+	ImageMod.return_img(event, image)
+	return nil
+end
+
+$bot.command :saturation do |event, *level|
+	image = ImageMod.load_tmp(event)
+	image.modulate("100, #{level.join("")}, 300")
 	ImageMod.return_img(event, image)
 	return nil
 end
 
 $bot.command :bright do |event, *level|
-	level = level.join("").to_f
 	image = ImageMod.load_tmp(event)
-	image = image.level(-Magick::QuantumRange * 0.25, Magick::QuantumRange * 1.25, 1.0)
+	image.modulate(level.join(""))
 	ImageMod.return_img(event, image)
 	return nil
 end
 
 $bot.command :rotate do |event, *degrees|
-	degrees = level.join("").to_f
+	degrees = degrees.join("").to_f
 	image = ImageMod.load_tmp(event)
-	image = image.rotate(degrees)
+	image.rotate(degrees.join(""))
 	ImageMod.return_img(event, image)
 	return nil
 end
 
 $bot.command :bw do |event|
 	image = ImageMod.load_tmp(event)
-	image = image.quantize(256, Magick::GRAYColorspace)
+	image.colorspace("Gray")
 	ImageMod.return_img(event, image)
 	return nil
 end
 
 $bot.command :i do |event|
 	image = ImageMod.load_tmp(event)
-	image = image.negate(false)
+	image.negate
 	ImageMod.return_img(event, image)
 	return nil
 end
 
 $bot.command :fuzz do |event, *level|
-	level = level.join("").to_f
 	image = ImageMod.load_tmp(event)
-	image = image.spread(level)
+	image = image.spread(level.join(""))
 	ImageMod.return_img(event, image)
-	return nil
-end
-
-$bot.command :dither do |event, *level|
-	level = level.join("").to_i
-	image = ImageMod.load_tmp(event)
-	image = image.ordered_dither("h3x4a")
-	ImageMod.return_img(event, image)
-	return nil
-end
-
-$bot.command :noise do |event|
-	image = ImageMod.load_tmp(event)
-	tmpImg = Magick::Image.new(image.columns, image.rows)
-	tmpImg.color_reset!("black")
-	tmpImg = tmpImg.add_noise(Magick::ImpulseNoise)
-	tmpImg = tmpImg.transparent("black", Magick::TransparentOpacity)
-	tmpImg = tmpImg.modulate(1, 0.5, 1)
-	tmpImg = tmpImg.blur_image(0.0, 1.0)
-
-	image.composite!(tmpImg, Magick::CenterGravity, Magick::OverCompositeOp)
-	ImageMod.return_img(event, image)
-	return nil
-end
-
-$bot.command :pc do |event|
-	image = ImageMod.load_tmp(event)
-	tmpList = Magick::ImageList.new
-	90.times do |i|
-		tmpList << image.modulate(1, 1, 0.022*i)
-	end
-	ImageMod.compose_gif(event, tmpList, image, 3)
 	return nil
 end
 

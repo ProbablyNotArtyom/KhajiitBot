@@ -40,9 +40,9 @@ end
 
 def action(target, event, action)																			# ACTION Handler method
 	target = Parser.get_target(target, event)																# Parse the target name and get back a formatted ID
-	if (target == nil || target == "<@!"+event.user.id.to_s+">") then line = rand(3) else line = rand(IO.readlines("./ext/#{action}").size-3)+3 end		# If the target exists then get the number of lines in the string file
+	if (target == nil || target == "<@!"+event.user.id.to_s+">") then line = rand(3) else line = rand(IO.readlines("./ext/#{action}.action").size-3)+3 end		# If the target exists then get the number of lines in the string file
 	event.channel.send_embed do |embed|																		# Send the embedded action
-		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}")[line])		# Pick a random string and return it
+		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}.action")[line])		# Pick a random string and return it
 		embed.color = 0xf5367c
 	end
 end
@@ -57,12 +57,15 @@ def get_file_input(event)
 		chan_hist = event.channel.history(50)
 		chan_hist.each do |msg|
 			if (!msg.attachments.empty?) then
+				debug_puts(msg.attachments[0].url)
 				return msg.attachments[0].url
 			elsif (!msg.embeds.empty?)
+				debug_puts(msg.embeds[0].url)
 				return msg.embeds[0].url
 			end
 		end
 	else
+		debug_puts(event.message.attachments[0].url)
 		return event.message.attachments[0].url
 	end
 end
@@ -77,6 +80,16 @@ def a_get_list(array)
 		end
 	end
 	return ret
+end
+
+def generate_uniqe_name(file_type)
+  charset = Array('A'..'Z') + Array('a'..'z')
+  rndstr = Array.new(10) { charset.sample }.join
+  # If a file with this name already exists, then loop until we get a uniqe name
+  while (File.file?("#{rndstr}.#{file_type}"))
+	  rndstr = Array.new(10) { charset.sample }.join
+  end
+  return "#{rndstr}.#{file_type}"
 end
 
 class Permit																		# Permit checking class
@@ -226,35 +239,25 @@ class ImageMod
 			return nil
 		end
 		files = get_file_input(event)
-		download = ::OpenURI.open_uri(files)
-		uri = URI.parse(files)
-		tmp = "./tmp" + File.basename(uri.path).slice!(/\..*/)
-		IO.copy_stream(download, tmp)
-		img = Magick::Image::read(tmp)[0]
-		img = img.quantize(256, Magick::HSLColorspace)
+		img = MiniMagick::Image.open(files)
 		return img
 	end
 	def self.return_img(event, image)
-		if File.file?("./" + image.filename) then
-			image.write("./tmp.png")
-			tmp = File.open("./tmp.png")
-			event.send_file(tmp)
-			File.delete("./" + image.filename)
-			File.delete("./tmp.png")
-			tmp.close unless tmp.nil? or tmp.closed?
-			return true
-		else
-			puts "[!!!] Fault. TMP image file not found before return."
-			return nil
-		end
+		filname = generate_uniqe_name(image.type)
+		image.write(filname)
+		tmp = File.open(filname, 'r')
+		event.send_file(tmp)
+		File.delete(filname)
+		tmp.close unless tmp.nil? or tmp.closed?
 	end
 	def self.compose_gif(event, images, image, frameTime)
 		if File.file?("./" + image.filename) then
 			images.delay = frameTime
-			images.write("./tmp.gif")
-			tmp = File.open("./tmp.gif")
+			filname = generate_uniqe_name(image.type)
+			image.write(filname)
+			tmp = File.open(filname, 'r')
 			event.send_file(tmp)
-			File.delete("./" + image.filename)
+			File.delete(filname)
 			tmp.close unless tmp.nil? or tmp.closed?
 			return true
 		else

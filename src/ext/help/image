@@ -16,7 +16,3 @@
 ​ ​ ​ ​ ​ ​ ​ ​ ​ inverts the colors of the image.
 **`k.fuzz [ammount]`**
 ​ ​ ​ ​ ​ ​ ​ ​ ​ adds chroma fuzz to the image.
-**`k.noise`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ adds HSV noise to the image.
-**`k.pc`**
-​ ​ ​ ​ ​ ​ ​ ​ ​ creates a GIF from color cycling the image.

@@ -37,7 +37,7 @@ require 'resolv-replace'
 require 'open-uri'
 require 'net/https'
 require 'tempfile'
-require 'rmagick'
+require 'mini_magick'
 require 'rutui'
 require 'io/console'
 
