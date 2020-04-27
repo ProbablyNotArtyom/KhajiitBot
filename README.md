@@ -6,35 +6,39 @@ KhajiitBot is a discord bot written in ruby for use on the Khajiit_IRL discord s
 
 KhajiitBot has a multitude of functions mostly comprizing of user interaction functions. Heres a quick overview:
 
-  * k.random <max value>  :  generates a truly random number with max value. default max is 10.
-  * k.8ball [question]    :  answeres any question with true randomness.
-  * k.rate @[user]        :  rates another user on a scale from 0 to 10. slightly less random...
-  * k.katia               :  returns a random katia image.
-  * k.hug @[user]     :  hugs another user.
-  * k.kiss @[user]    :  kisses another user.
-  * k.stab @[user]    :  stabbes another user.
-  * k.shoot @[user]   :  shoots another user.
-  * k.pet @[user]     :  pets another user.
-  * k.bless @[user]   :  blesses another user.
+ * **`k.yiff @[user]`**		: sends a yiffy message.
+ * **`k.hug @[user]`**		: hugs another user.
+ * **`k.kiss @[user]`**		:  kisses another user.
+ * **`k.stab @[user]`**		: stabs another user.
+ * **`k.shoot @[user]`**	: shoots another user.
+ * **`k.pet @[user]`**		: pets another user.
+ * **`k.bless @[user]`**	: blesses another user.
+ * **`k.nuke @[user]`**		: nukes another user.
+ * **`k.meow @[user]`**		: meow at another user.
+ * **`k.vore @[user]`**		: vore another user.
+ * **`k.grope @[user]`**	: gropes another user. Why would you want that.
+ * **`k.f @[user]`**		: pays respects, optionally to another user.
+ * **`k.boof @[user]`**		: rip da boof, or pass da boof to a fren.
 
-There are also functions based on image sharing:
-
-  * k.trade [image]       :  adds user image to meme pool and sends a random meme back.
-  * k.image               :  gets a random image from the k.trade pool.
-  * k.lewd <image>        :  adds user image to lewd pool and sends a random lewd back.
-
-The Trade function is the most interesting. The bot has a pool of images saved in a folder in the project directory.
-When a user uses the Trade command, they supply an image to trade with the Bot.
-The bot will then take that image and add it to its own pool, while also returning a random image from the pool back to the user.
-The Image function just returns a random image without modifying the pool.
-
-The Lewd function is essentially the same thing but with lewd instead of memes.
+For a full list of commands, look at the k.help files in ext/sys/help
 
 There is a command line available to the host with a few functions:
 
-  * say <channel id> "message"   : Sends a message to a channel.
-  * embed <channel id> "message" : Sends an embedded message to a channel.
-  * exit                         : Stops the bot.
+ * **`go`**		 	 : Change to a different channel. args: [channel id]
+ * **`exit`**		 : Exits KhajiitBot
+ * **`status`**		 : Sets KhajiitBot's status. args: [online|idle|invisible]
+ * **`play`**		 : Sets the playing status. args: [string]
+ * **`watch`**		 : Sets the watching status. args: [string]
+ * **`say`**		 : Sends a text message. args: [string]
+ * **`embed`**		 : Sends an embed message. args: [string]
+ * **`rm`**		 	 : Removes the last sent message.
+ * **`leave`**		 : Leaves a channel. args: [channel id]
+ * **`dm`**			 : Direct messages a user. args: [user id][message]
+ * **`uid`**		 : Prints the ID of a user by name. args: [username]
+ * **`sid`**		 : Prints the ID of a server by name. args: [server name]
+ * **`servers`**	 : Prints a list of servers KhajiitBot is in.
+ * **`channels`**	 : Prints a list of all channels from every server KhajiitBot is in.
+ * **`update`**		 : Forces the command UI to be redrawn."
 
 There are many admin commands available to the owner:
 
@@ -53,7 +57,7 @@ You will need ruby installed on the host machine in order to run the bot. Here i
 
   * discordrb
   * openssl
-  * rmagick
+  * minimagick
   * rutui
 
 Once all required gems are installed, simply run KhajiitBot.rb using ruby
@@ -74,14 +78,15 @@ To move the bot onto another system, such as a server, just copy the entire proj
 * [DiscordRB](https://rubygems.org/gems/discordrb) - Discord API interface for ruby
 * [openSSL](https://rubygems.org/gems/openssl) - OpenSSL GEM for ruby
 * [ruby](https://www.ruby-lang.org/en/downloads/) - Ruby runtime environment
+* [MiniMagick](https://github.com/minimagick/minimagick) - MiniMagick ruby gem
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for info about contributing to KhajiitBot, aswell as when contributions are wanted.
+Please read [CONTRIBUTING.md](https://github.com/ProbablyNotArtyom/KhajiitBot/blob/master/CONTRIBUTING.md) for info about contributing to KhajiitBot, aswell as when contributions are wanted.
 
 ## Authors
 
-* **Carson Herrington / NotArtyom** - *All Code* - [Website](http://notartyoms-box.com)
+* **Carson Herrington / NotArtyom** - *All Code* - [Website](http://notartyoms-box.net)
 * **Members of the Khajiit_IRL discord** - *Funny Strings* - [Khajiit_IRL](https://www.reddit.com/r/KHAJIIT_IRL/)
 
 ## License
