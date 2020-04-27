@@ -117,6 +117,13 @@ def chat_puts(screen, array, string, color=nil)
 	}
 end
 
+def cli_puts(screen, array, string, color=nil)
+	string.each_line.with_index { |str, index|
+		str = str.strip
+		chat_scroll(screen, array, str, color)
+	}
+end
+
 def tui_redraw()
 	new_size = RuTui::Screen.size
 	$line_head.length = new_size[1]
@@ -198,17 +205,35 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 	$cli_field.set_focus
 	if key == :enter then
 		cIn = $cli_field.get_text.split(" ")
-		unless cIn[0] == nil						# Ignore everything if the input is nil
+		unless cIn[0] == nil								# Ignore everything if the input is nil
 			if $cmdChannel == "KhajiitBot"					# Sanity Check
-				chat_puts($kbcli, $fat_text_array,
-					"You must select a valid channel!")			# Fault if no channel has been selected
+				cli_puts($kbcli, $fat_text_array,
+					"You must select a valid channel!")		# Fault if no channel has been selected
+			elsif cIn[0].downcase == "help"					# HELP command
+				cli_puts($kbcli, $fat_text_array,
+					"go       | Change to a different channel. args: [channel id]\n" +
+					"exit     | Exits KhajiitBot\n" +
+					"status   | Sets KhajiitBot's status. args: [online|idle|invisible]\n" +
+					"play     | Sets the playing status. args: [string]\n" +
+					"watch    | Sets the watching status. args: [string]\n" +
+					"say      | Sends a text message. args: [string]\n" +
+					"embed    | Sends an embed message. args: [string]\n" +
+					"rm       | Removes the last sent message.\n" +
+					"leave    | Leaves a channel. args: [channel id]\n" +
+					"dm       | Direct messages a user. args: [user id][message]\n" +
+					"uid      | Prints the ID of a user by name. args: [username]\n" +
+					"sid      | Prints the ID of a server by name. args: [server name] \n" +
+					"servers  | Prints a list of servers KhajiitBot is in.\n" +
+					"channels | Prints a list of all channels from every server KhajiitBot is in.\n" +
+					"update   | Forces the command UI to be redrawn."
+				)
 			elsif cIn[0].downcase == "go"					# GO command
 				chan = cIn.delete_at(1)							# Get the channel from the user input
 				if chan != nil && chan.length == 18				# Make sure it's the right length
 					$cmdChannel = chan.to_i  					# Set the current channel
 					Config.save("channel", $cmdChannel)			# Save the current channel across runs
 					$text_head.set_text("Current channel: #{channel_get_name($cmdChannel)}")
-				else chat_puts($kbcli, $fat_text_array, "Invalid Channel") end	# Notify channel fuckery
+				else cli_puts($kbcli, $fat_text_array, "Invalid Channel") end	# Notify channel fuckery
 			elsif cIn[0].downcase == "exit"					# EXIT command
 				$bot.stop()										# Stop the bot
 				exit											# Exit
@@ -216,14 +241,14 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 				stat = cIn.delete_at(1)							# Delete the command
 				if stat == "online"
 					$bot.online
-					chat_puts($kbcli, $fat_text_array, "KhajiitBot now online")
+					cli_puts($kbcli, $fat_text_array, "KhajiitBot now online")
 				elsif stat == "idle"
 					$bot.idle
-					chat_puts($kbcli, $fat_text_array, "KhajiitBot now idle")
+					cli_puts($kbcli, $fat_text_array, "KhajiitBot now idle")
 				elsif stat == "invisible"
 					$bot.invisible
-					chat_puts($kbcli, $fat_text_array, "KhajiitBot now invisible")
-				else chat_puts($kbcli, $fat_text_array, "Invalid status")
+					cli_puts($kbcli, $fat_text_array, "KhajiitBot now invisible")
+				else cli_puts($kbcli, $fat_text_array, "Invalid status")
 				end
 			elsif cIn[0].downcase == "play"					# PLAY command
 				cIn.delete_at(0)								# Remove the command
@@ -255,7 +280,7 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 				id = cIn.delete_at(1).to_i													# Delete the channel ID into id
 				$bot.servers.each_value {|x| 												# Scan the list of servers to find a match, then leave that server
 					if x.id == id
-						chat_puts($kbcli, $fat_text_array, "Left #{x.name}")
+						cli_puts($kbcli, $fat_text_array, "Left #{x.name}")
 						x.leave
 						break 2
 					end
@@ -269,29 +294,29 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 				cIn.delete_at(0)												# Remove the command
 				uname = Parser.get_user(cIn.join(" "))							# Get the username
 				if uname != nil
-					chat_puts($kbcli, $fat_text_array, uname.id.to_s)
+					cli_puts($kbcli, $fat_text_array, uname.id.to_s)
 				else
-					chat_puts($kbcli, $fat_text_array, "Invalid User")
+					cli_puts($kbcli, $fat_text_array, "Invalid User")
 				end
 			elsif cIn[0].downcase == "sid"									# SID command
 				cIn.delete_at(0)												# Remove the command
 				sname = Parser.get_server(cIn.join(" "))						# Get the server name
 				if sname != nil
-					chat_puts($kbcli, $fat_text_array, sname.id.to_s)
+					cli_puts($kbcli, $fat_text_array, sname.id.to_s)
 				else
-					chat_puts($kbcli, $fat_text_array, "Invalid Server")
+					cli_puts($kbcli, $fat_text_array, "Invalid Server")
 				end
 			elsif cIn[0].downcase == "servers"										# SERVERS command
 				servers = $bot.servers.each_value {|x| 									# For each server, print out its name and ID
-					chat_puts($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
+					cli_puts($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
 				}
 			elsif cIn[0].downcase == "channels"										# CHANNELS command
 				channels = $bot.channel($cmdChannel).server.channels.each {|x| 			# For the current server, print out the name of each channel
-					chat_puts($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
+					cli_puts($kbcli, $fat_text_array, "#{x.name} : #{x.id}")
 				}
 			elsif cIn[0].downcase == "update"										# UPDATE command
 				tui_redraw()															# Redraw the TUI screen
-			else chat_puts($kbcli, $fat_text_array, "Invalid Command", 1)
+			else cli_puts($kbcli, $fat_text_array, "Invalid Command", 1)
 			end
 			puts("")
 		end

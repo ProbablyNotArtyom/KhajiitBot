@@ -16,3 +16,11 @@
 ​ ​ ​ ​ ​ ​ ​ ​ ​ inverts the colors of the image.
 **`k.fuzz [ammount]`**
 ​ ​ ​ ​ ​ ​ ​ ​ ​ adds chroma fuzz to the image.
+**`k.hooh`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ Mirrors lower half of image across the x-axis.
+**`k.haah`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ Mirrors left half of image across the y-axis.
+**`k.woow`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ Mirrors upper half of image across the x-axis.
+**`k.waaw`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ Mirrors right half of image across the y-axis.

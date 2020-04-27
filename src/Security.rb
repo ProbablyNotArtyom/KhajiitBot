@@ -233,12 +233,8 @@ class Setting																		# SETTING class for storing persistent data
 end
 
 class ImageMod
-	def self.load_tmp(event)
-		if File.file?("./tmp*") then
-			puts "[!!!] Fault. TMP image file already exists."
-			return nil
-		end
-		files = get_file_input(event)
+	def self.load_tmp(*event)
+		files = get_file_input(event[0])
 		img = MiniMagick::Image.open(files)
 		return img
 	end
@@ -249,6 +245,14 @@ class ImageMod
 		event.send_file(tmp)
 		File.delete(filname)
 		tmp.close unless tmp.nil? or tmp.closed?
+	end
+	def self.write_img(image)
+		filname = generate_uniqe_name(image.type)
+		image.write(filname)
+		return filname
+	end
+	def self.remove_img(filname)
+		File.delete(filname)
 	end
 	def self.compose_gif(event, images, image, frameTime)
 		if File.file?("./" + image.filename) then
