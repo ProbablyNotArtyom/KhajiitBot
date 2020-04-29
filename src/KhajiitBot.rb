@@ -91,10 +91,10 @@ trap('INT') do								# Graceful violent exit
 end
 
 $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
-	target = "<@208140167536574464>"                                                                                                                               # Parse the target name and get back a formatted ID
-	line = rand(IO.readlines("./ext/hug").size-3)+3         # If the target exists then get the number of lines in the string file
-	event.channel.send_embed do |embed|                                                                                                                                             # Send the embedded action
-		embed.description = "**<@342149093117657105>** " + eval(IO.readlines("./ext/hug")[line])            # Pick a random string and return it
+	target = "<@208140167536574464>"                               # Parse the target name and get back a formatted ID
+	line = rand(IO.readlines("./ext/hug.action").size-3)+3         # If the target exists then get the number of lines in the string file
+	event.channel.send_embed do |embed|                            # Send the embedded action
+		embed.description = "**<@342149093117657105>** " + eval(IO.readlines("./ext/hug.action")[line])
 		embed.color = 0xf5367c
 	end
 end
