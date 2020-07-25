@@ -127,9 +127,9 @@ $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Comm
 end
 
 $bot.command(:'8ball') do |event, *rest|									# 8BALL Command
-	lines = IO.readlines("./ext/8ball.action").size 								# Get the number of lines
+	lines = IO.readlines("./ext/8ball.action").size 						# Get the number of lines
 	event.channel.send_embed do |embed|										# Return the message
-		embed.title = "" + IO.readlines("./ext/8ball.action")[rand(lines)] + event.user.name
+		embed.description = "**" + IO.readlines("./ext/8ball.action")[rand(lines)].strip + " **" + "<@#{event.user.id}>"
 		embed.color = 0xf5367c
 	end
 	return nil
@@ -162,7 +162,7 @@ $bot.command(:chance, min_args: 1) do |event, *query|						# CHANCE Command
 	return nil
 end
 
-$bot.command(:scp) do |event, query|						# SCP Command
+$bot.command(:scp) do |event, query|										# SCP Command
 	query = query.to_i
 	if query <= 0 || query >= 5000 then
 		event.channel.send_embed do |embed|
@@ -325,7 +325,7 @@ $bot.command :e6 do |event, *tags|
 		http.request(request)
 	end
 	debug_puts("http response recieved")
-	if (result.body != "") then
+	if (JSON.parse(result.body)['posts'][0] != nil) then
 		# Check the blacklist
 		black_tags = [""]
 		JSON.parse(result.body)['posts'][0]['tags'].each_value do |x|
@@ -348,8 +348,8 @@ $bot.command :e6 do |event, *tags|
 		event.channel.send_embed do |embed|
 			embed.title = "Tags: " + tags.join(" ")
 			embed.description = "Score: **" + JSON.parse(result.body)['posts'][0]['score']['total'].to_s + "**" +
-				" # Favourites: **" + JSON.parse(result.body)['posts'][0]['fav_count'].to_s + "**" +
-				" # [Post](https://e621.net/post/show/#{JSON.parse(result.body)['posts'][0]['id'].to_s})"
+				" | Favourites: **" + JSON.parse(result.body)['posts'][0]['fav_count'].to_s + "**" +
+				" | [Post](https://e621.net/post/show/#{JSON.parse(result.body)['posts'][0]['id'].to_s})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
 			embed.color = 0xf5367c
 		end
@@ -389,7 +389,7 @@ $bot.command :e9 do |event, *tags|
 		http.request(request)
 	end
 	debug_puts("http response recieved")
-	if (result.body != "") then
+	if (JSON.parse(result.body)['posts'][0] != nil) then
 		# Check the blacklist
 		black_tags = [""]
 		JSON.parse(result.body)['posts'][0]['tags'].each_value do |x|
@@ -412,8 +412,8 @@ $bot.command :e9 do |event, *tags|
 		event.channel.send_embed do |embed|
 			embed.title = "Tags: " + tags.join(" ")
 			embed.description = "Score: **" + JSON.parse(result.body)['posts'][0]['score']['total'].to_s + "**" +
-				" # Favourites: **" + JSON.parse(result.body)['posts'][0]['fav_count'].to_s + "**" +
-				" # [Post](https://e926.net/post/show/#{JSON.parse(result.body)['posts'][0]['id'].to_s})"
+				" | Favourites: **" + JSON.parse(result.body)['posts'][0]['fav_count'].to_s + "**" +
+				" | [Post](https://e926.net/post/show/#{JSON.parse(result.body)['posts'][0]['id'].to_s})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
 			embed.color = 0xf5367c
 		end
@@ -517,16 +517,17 @@ module Urban
 end
 
 $bot.command :'define' do |event, *words|
-	pOS = ""
+	pOS = ""							# part of speech
 	synonyms = ""
 	definition = ""
-	pnunce = ""
+	pnunce = ""							# pronunciation
+	fmtwords = words.join(' ')
 	begin
-		result = open("https://wordsapiv1.p.mashape.com/words/#{words[0]}",
+		result = open("https://wordsapiv1.p.mashape.com/words/#{fmtwords}",
 			"User-Agent" => "Ruby/#{RUBY_VERSION}",
 			"X-Mashape-Key" => WORDSAPI_KEY)
 	rescue
-		result = open("http://api.urbandictionary.com/v0/define?term=#{words[0]}").read
+		result = open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}").read
 		result = JSON.parse(result)
 
 		synonyms = "none"
