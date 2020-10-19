@@ -1,13 +1,7 @@
-
-#==================================================
-#     KhajiitBot  --  NotArtyom  --  03/06/18
-#==================================================
-#                Image Manipulation
-#==================================================
 #
 # MIT License
 #
-# Copyright (c) 2018 Carson Herrington
+# Copyright (c) 2020 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +20,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+#====================================================================================================
+# KhajiitBot - NotArtyom - 2020
+# ----------------------------------------
+# Image Manipulation
+#====================================================================================================
 
 $bot.command :contrast do |event, *level|
 	level = level.join("").to_f
@@ -196,4 +196,4 @@ $bot.command :woow do |event|
 	return nil
 end
 
-#==================================================
+#====================================================================================================

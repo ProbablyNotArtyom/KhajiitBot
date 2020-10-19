@@ -1,13 +1,7 @@
-
-#==================================================
-#     KhajiitBot  --  NotArtyom  --  03/06/18
-#==================================================
-#       Security and permissions functions
-#==================================================
 #
 # MIT License
 #
-# Copyright (c) 2018 Carson Herrington
+# Copyright (c) 2020 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+#====================================================================================================
+# KhajiitBot - NotArtyom - 2020
+# ----------------------------------------
+# Security and permissions functions
+#====================================================================================================
+
 def valid_json?(json)				# Detect if a file is valid JSON
 	buff = JSON.parse(json)
 		return buff
@@ -42,9 +42,10 @@ def action(target, event, action)																			# ACTION Handler method
 	target = Parser.get_target(target, event)																# Parse the target name and get back a formatted ID
 	if (target == nil || target == "<@!"+event.user.id.to_s+">") then line = rand(3) else line = rand(IO.readlines("./ext/#{action}.action").size-3)+3 end		# If the target exists then get the number of lines in the string file
 	event.channel.send_embed do |embed|																		# Send the embedded action
-		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}.action")[line])		# Pick a random string and return it
-		embed.color = 0xf5367c
+		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}.action")[line])	# Pick a random string
+		embed.color = EMBED_COLOR
 	end
+	return nil
 end
 
 def channel_get_name(chan)
@@ -291,6 +292,7 @@ class E621_blacklist
 			end
 		end
 		Config.save(@config_name, @e621_black_tags)
+		return nil
 	end
 
 	def e621_purge_blacklist(tags)
@@ -300,6 +302,7 @@ class E621_blacklist
 			end
 		end
 		Config.save(@config_name, @e621_black_tags)
+		return nil
 	end
 
 	def e621_screen_tags(tags)
@@ -313,4 +316,49 @@ class E621_blacklist
 	end
 end
 
-#==================================================
+#====================================================================================================
+
+module Urban
+	extend self
+
+	# Gets the definitions for the word.
+	# @param word [String] The word to define.
+	# @return [Array<Slang>] An array of #{Slang} objects.
+	def define(word)
+		params = { term: word }
+		@client = HTTPClient.new if @client.nil?
+		response = JSON.parse(@client.get(URI.parse('http://api.urbandictionary.com/v0/define'), params).body)
+		ret = []
+
+		response['list'].each do |hash|
+			ret << Slang.new(hash)
+		end
+		return ret
+	end
+end
+
+#====================================================================================================
+
+def require_nsfw(event)
+	unless (event.channel.nsfw?)
+		return event.send_embed do |embed|
+			embed.title = "```Use this command in an NSFW marked channel.```"
+			embed.color = EMBED_COLOR
+		end
+	end
+end
+
+def require_blacklist(event, post, blacklist)
+	taglist = []
+	post['tags'].each_value { |x| taglist = taglist + x }					# Create a flat array of all tags on the post
+	black_ret = blacklist.e621_screen_tags(taglist)							# Check the blacklist
+	unless (black_ret.empty?)
+		return event.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "Post contained one or more blacklisted tags: **#{a_get_list(black_ret)}**"
+			embed.color = EMBED_COLOR
+		end
+	end
+end
+
+#====================================================================================================

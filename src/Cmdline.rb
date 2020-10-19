@@ -1,13 +1,7 @@
-
-#==================================================
-#     KhajiitBot  --  NotArtyom  --  07/24/18
-#==================================================
-#             Internal command prompt
-#==================================================
 #
 # MIT License
 #
-# Copyright (c) 2018 Carson Herrington
+# Copyright (c) 2020 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +20,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+#====================================================================================================
+# KhajiitBot - NotArtyom - 2020
+# ----------------------------------------
+# Internal command prompt
+#====================================================================================================
 
 HEAD_HEIGHT		= 1
 PROMPT_HEIGHT	= 3
@@ -270,7 +270,7 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 				cIn.delete_at(0)								# Delete the command from the user input
 				msg = cIn.join(" ")								# Joint the rest of the input, as it is our message
 				$bot.send_message($cmdChannel, nil, false,
-					{"description" => msg, "color" => 0xf5367c})
+					{"description" => msg, "color" => EMBED_COLOR})
 			elsif cIn[0].downcase == "rm"												# RM command
 				msg = $bot.channel($cmdChannel).history(10).collect { |x| x.author.id }		# Make id table
 				$i = 0

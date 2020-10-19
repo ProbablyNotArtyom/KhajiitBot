@@ -1,13 +1,8 @@
 #!/usr/bin/env ruby
-#==================================================
-#     KhajiitBot  --  NotArtyom  --  07/24/18
-#==================================================
-#    KhajiitBot - A Discord bot written w/ ruby
-#==================================================
 #
 # MIT License
 #
-# Copyright (c) 2018 Carson Herrington
+# Copyright (c) 2020 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+#====================================================================================================
+# KhajiitBot - NotArtyom - 2020
+# ----------------------------------------
+# A Discord bot written in ruby
+#====================================================================================================
+
 ENV['SSL_CERT_FILE'] = '/etc/ssl/certs/cacert.pem'
 # Workaround for OpenSSL's broken ass certs
 
@@ -41,21 +42,21 @@ require 'mini_magick'
 require 'rutui'
 require 'io/console'
 
-#===================Constants======================
+#=========================================== Constants ==============================================
 
-CLIENT_ID = File.read "./ext/sys/client"	# KhajiitBot Client ID (put it here, this one isn't valid!)
-TOKEN = File.read "./ext/sys/token"			# shh secrets (Put your token in this file too...)
-E621_KEY = File.read "./ext/sys/e621"		# ssh more secrets (Put your e621 account's API key here)
-WORDSAPI_KEY = File.read "./ext/sys/words" 	# WORDSAPI key goes here
+CLIENT_ID = File.read "./ext/sys/client"		# KhajiitBot Client ID (put it here, this one isn't valid!)
+TOKEN = File.read "./ext/sys/token"				# shh secrets (Put your token in this file too...)
+E621_KEY = File.read "./ext/sys/e621"			# ssh more secrets (Put your e621 account's API key here)
 
-# enable to display debug info for commands that write to the debug stream
-DEBUG = false
+DEBUG = false									# Enable to display debug info for commands that write to the debug stream
 
-#=====================Globals======================
+EMBED_COLOR = 0xf5367c							# Sets the embed color used by all bot embeds
 
-$boottime = 0								# Holds the time of the last boot
+#============================================= Globals ==============================================
 
-#======================Main========================
+$boottime = 0									# Holds the time of the last boot
+
+#=============================================== Main ===============================================
 
 $bot = Discordrb::Commands::CommandBot.new token: TOKEN , client_id: CLIENT_ID , prefix: ['k.', 'K.'], log_mode: :verbose, fancy_log: true, ignore_bots: false, advanced_functionality: false
 $bot.should_parse_self = true
@@ -75,61 +76,49 @@ puts('Current time: ' + $boottime.ctime)
 puts('KhajiitBot Starting...')
 
 $bot.ready do
-	if Config.get("game") != nil
+	if (Config.get("game") != nil)
 		$bot.game = Config.get("game")
-	elsif Config.get("watching") != nil
+	elsif (Config.get("watching") != nil)
 		$bot.watching = Config.get("watching")
 	else
-		 $bot.game = 'k.help'		# Set the "playing" text to the help command
+		$bot.game = 'k.help'					# Set the "playing" text to the help command
 	end
 end
 
-#==================================================
+#====================================================================================================
 
-trap('INT') do								# Graceful violent exit
+trap('INT') do									# Graceful violent exit
 	exit
 end
 
 $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
-	target = "<@208140167536574464>"                               # Parse the target name and get back a formatted ID
-	line = rand(IO.readlines("./ext/hug.action").size-3)+3         # If the target exists then get the number of lines in the string file
-	event.channel.send_embed do |embed|                            # Send the embedded action
+	target = "<@208140167536574464>"							# Parse the target name and get back a formatted ID
+	line = rand(IO.readlines("./ext/hug.action").size-3)+3		# If the target exists then get the number of lines in the string file
+	return event.channel.send_embed do |embed|					# Send the embedded action
 		embed.description = "**<@342149093117657105>** " + eval(IO.readlines("./ext/hug.action")[line])
-		embed.color = 0xf5367c
-	end
-end
-
-def debug_loop()
-	if (DEBUG == true) then
-		while 1 == 1 do
-		end
+		embed.color = EMBED_COLOR
 	end
 end
 
 def debug_puts(str)
-	if (DEBUG == true) then
-		puts(str)
-	end
+	puts(str) if (DEBUG == true)
 end
 
-#==================================================
+#====================================================================================================
 
 $cmdChannel = Config.get("channel")			# Reload the last active channel
 $inBuffer = ""
 
-#==================================================
+#====================================================================================================
 
-if (DEBUG == true)
-	$bot.mode = :normal
-else
-	$bot.mode = :silent
-end
+(DEBUG == true) ? ($bot.mode = :normal) : ($bot.mode = :silent)
 
 $bot.run :async								# Start the bot & run async
 puts('Bot Active')							# Notify bot being active
 puts('Awaiting user activity...')
-debug_loop()
+
+while (DEBUG) do; end						# If DEBUG is enabled, then hault here instead of starting the CMD shell
 
 require_relative 'Cmdline.rb'				# Start executing the internal shell
 
-#==================================================
+#====================================================================================================

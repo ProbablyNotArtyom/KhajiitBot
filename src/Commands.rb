@@ -1,13 +1,7 @@
-
-#==================================================
-#     KhajiitBot  --  NotArtyom  --  03/06/18
-#==================================================
-#                Command functions
-#==================================================
 #
 # MIT License
 #
-# Copyright (c) 2018 Carson Herrington
+# Copyright (c) 2020 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,568 +21,436 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+#====================================================================================================
+# KhajiitBot - NotArtyom - 2020
+# ----------------------------------------
+# Command functions
+#====================================================================================================
+
 $bot.command :help do |event, *type|			# Help command
 	type = type.join(" ")
-	begin
-		event.message.delete					# Delete the help in case somthing implodes
-	rescue
-	end
-	event.channel.send_embed do |embed|			# Send embedded help message
+
+	return event.send_embed do |embed|				# Send embedded help message
 		embed.thumbnail = Discordrb::Webhooks::EmbedImage.new(url: 'http://i.imgur.com/pG3L2RP.png')
 		embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: 'KhajiitBot', url: 'https://discordapp.com/oauth2/authorize?client_id=452660556990644225&scope=bot&permissions=0', icon_url: 'http://i.imgur.com/pG3L2RP.png')
-		if type.empty? then
+		if (type.empty?)
 			embed.add_field(name: 'k.help usage:', value: IO.read("./ext/help/meta").force_encoding("utf-8"))
 		else
-			if File.file?("./ext/help/#{type}") then
+			if (File.file?("./ext/help/#{type}"))
 				embed.add_field(name: "#{type.slice(0, 1).capitalize + type.slice(1..-1)} Commands:", value: IO.read("./ext/help/#{type}").force_encoding("utf-8"))
 			else
 				embed.add_field(name: 'Error!', value: 'Invalid help type. Please use on option from the list')
 			end
 		end
-		embed.color = 0xf5367c
+		embed.color = EMBED_COLOR
 	end
-	return nil
+end
+
+#=============================================== POOLS ==============================================
+
+TRADE_WARES = "This one is displeased with your lack of wares..."				# Error message for when no image is given
+TRADE_TYPE = "This one does not think that your wares are of proper type..."	# Error message for when the input file isn't an image
+
+$bot.command(:image) do |event|												# IMAGE command
+	numItems = File.read("./ext/meme/max").to_i									# Get the current image count
+	output = Dir.glob("./ext/meme/" + rand(numItems + 1).to_s + ".*")			# Pick a random image
+	event.attach_file(File.open(output[0], 'r'))								# Return the randomly chosen image
+end
+
+$bot.command(:arouse) do |event|											# AROUSE Command
+	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
+
+	numItems = File.read("./ext/lewd/max").to_i									# Get the current image count
+	output = Dir.glob("./ext/lewd/" + rand(numItems + 1).to_s + ".*")			# Pick a random image
+	event.attach_file(File.open(output[0], 'r'))								# Return the randomly chosen image
 end
 
 $bot.command(:trade) do |event|												# TRADE Command
-	if event.message.attachments.empty? then								# If there are no images attached then respond accordingly
-		event.respond("This one is displeased with your lack of wares...")
-		return nil
-	end
-	files = event.message.attachments										# Get the attached image
-	unless files[0].image? then												# If the attached file isnt an image then respond accordingly
-		event.respond("This one does not think that your wares are of proper type...")
-		return nil
-	end
-	download = open(files[0].url)											# Download the image
-	oname = File.read("./ext/meme/max").to_i								# See what the current number of images is
-	event.send_file(File.open(Dir.glob("./ext/meme/#{rand(oname).to_s}.*")[0], 'r'))	# Pick a random image and send it back
-	oname += 1																# Increase the max image count
-	File.open("./ext/meme/max", 'w') { |f| f << oname.to_s }				# Open a new image
-	oname = "./ext/meme/" + oname.to_s + files[0].filename.slice!(/\..*/)	# Create a new file with the new max number as its name, saving the extension
-	IO.copy_stream(download, oname)											# Output the image to the opened file
-	return nil
-end
+	return TRADE_WARES if (event.message.attachments.empty?)					# If there are no images attached then respond accordingly
+	input = event.message.attachments											# Get the attached image
+	return TRADE_TYPE unless (input[0].image?)									# If the attached file isn't an image, then respond accordingly
 
-$bot.command(:image) do |event|												# IMAGE command
-	oname = File.read("./ext/meme/max").to_i								# See what the current number of images is
-	event.send_file(File.open(Dir.glob("./ext/meme/#{rand(oname).to_s}.*")[0], 'r'))	# Pick a random image and send it back
-	return nil
+	numItems = File.read("./ext/meme/max").to_i									# Get the current image count
+	output = Dir.glob("./ext/meme/" + rand(numItems + 1).to_s + ".*")			# Pick a random image
+
+	numItems += 1																# Increase the max image count
+	File.open("./ext/meme/max", 'w') { |f| f << numItems.to_s }					# Write back the updated item count
+	newItem = numItems.to_s + input[0].filename.slice!(/\..*/)					# Create a new file with the new max number as its name, saving the extension
+	IO.copy_stream(URI.open(input[0].url), "./ext/meme/" + newItem)				# Output the image to the opened file
+
+	event.attach_file(File.open(output[0], 'r'))								# Return the randomly chosen image
 end
 
 $bot.command(:lewd) do |event|												# LEWD command
-	unless event.channel.nsfw? then 										# Make sure the channel is marked as NSFW
-		event.channel.send_embed do |embed|
-			embed.title = "```Use this command in an NSFW marked channel.```"
-			embed.color = 0xf5367c
-		end
-		return nil
-	end
-	if event.message.attachments.empty? then								# If the attached file isnt existant then respond accordingly
-		event.respond("This one is displeased with your lack of wares...")
-		return nil
-	end
-	files = event.message.attachments										# Get the attached file
-	unless files[0].image? then												# If the attached file isnt an image then respond accordingly
-		event.respond("This one does not think that your wares are of proper type...")
-		return nil
-	end
-	download = open(files[0].url)											# Download the image
-	oname = File.read("./ext/lewd/max").to_i								# See what the current number of images is
-	event.send_file(File.open(Dir.glob("./ext/lewd/#{rand(oname).to_s}.*")[0], 'r'))	# Pick a random image and send it back
-	oname += 1																# Increase the max image count
-	File.open("./ext/lewd/max", 'w') { |f| f << oname.to_s }				# Open a new image
-	oname = "./ext/lewd/" + oname.to_s + files[0].filename.slice!(/\..*/)	# Create a new file with the new max number as its name, saving the extension
-	IO.copy_stream(download, oname)											# Output the image to the opened file
-	return nil
+	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
+
+	return TRADE_WARES if (event.message.attachments.empty?)					# If there are no images attached then respond accordingly
+	input = event.message.attachments											# Get the attached image
+	return TRADE_TYPE unless (input[0].image?)									# If the attached file isn't an image, then respond accordingly
+
+	numItems = File.read("./ext/lewd/max").to_i									# Get the current image count
+	output = Dir.glob("./ext/lewd/" + rand(numItems + 1).to_s + ".*")			# Pick a random image
+
+	numItems += 1																# Increase the max image count
+	File.open("./ext/lewd/max", 'w') { |f| f << numItems.to_s }					# Write back the updated item count
+	newItem = numItems.to_s + input[0].filename.slice!(/\..*/)					# Create a new file with the new max number as its name, saving the extension
+	IO.copy_stream(URI.open(input[0].url), "./ext/lewd/" + newItem)				# Output the image to the opened file
+
+	event.attach_file(File.open(output[0], 'r'))								# Return the randomly chosen image
 end
 
-$bot.command(:arouse) do |event|
-	unless event.channel.nsfw? then
-		event.channel.send_embed do |embed|
-			embed.title = "```Use this command in an NSFW marked channel.```"
-			embed.color = 0xf5367c
-		end
-		return nil
-	end
-	oname = File.read("./ext/lewd/max").to_i                                		  	# See what the current number of images is
-    event.send_file(File.open(Dir.glob("./ext/lewd/#{rand(oname).to_s}.*")[0], 'r'))    # Pick a random image and send it back
-	return nil
-end
+#============================================== GENERAL =============================================
 
 $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Command
-	if max == nil then max = 10 											# If the max is not specified, then use 10
-	else max = max.to_i end
-	event.channel.send_embed do |embed|										# Send the message as embedded
-		embed.title = rand(max)												# Generate a random number
-		embed.color = 0xf5367c
+	max = '10' unless (max)														# If no max is specified, then use 10
+	max = max.to_i
+
+	return event.send_embed do |embed|											# Send the message as embedded
+		embed.title = rand(max)													# Generate a random number
+		embed.color = EMBED_COLOR
 	end
-	return nil
 end
 
 $bot.command(:'8ball') do |event, *rest|									# 8BALL Command
-	lines = IO.readlines("./ext/8ball.action").size 						# Get the number of lines
-	event.channel.send_embed do |embed|										# Return the message
+	lines = IO.readlines("./ext/8ball.action").size 							# Get the number of lines
+	return event.channel.send_embed do |embed|									# Return the message
 		embed.description = "**" + IO.readlines("./ext/8ball.action")[rand(lines)].strip + " **" + "<@#{event.user.id}>"
-		embed.color = 0xf5367c
+		embed.color = EMBED_COLOR
 	end
-	return nil
 end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
-	target = Parser.get_target(target, event)								# Parse the target into a discord markup for IDs
-	event.channel.send_embed do |embed|
-		embed.description = "I give " + target + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
-		embed.color = 0xf5367c
+	target = Parser.get_target(target, event)									# Parse the target into a discord markup for IDs
+	num = rand(11).to_s															# Generate a random number 0-10
+	return event.channel.send_embed do |embed|									# Return the message
+		embed.description = "I give **#{target}** a **#{num}/10**"				# Format string
+		embed.color = EMBED_COLOR
 	end
-	return nil
 end
 
 $bot.command(:katia) do |event, num|										# KATIA Command
-	if num == nil
-		index = rand(1036).to_s
-	else
-		index = Integer(num) rescue index = "hitler"
-	end
-	event.send_file(File.open(Dir.glob("./ext/kat/#{index}.*")[0], 'r'))	# Pick a random image and send it. The MAX is hard-coded here because you probably wont add images much
-	return nil
+	num = rand(1036).to_s unless (num)											# Supply a random index if no params are given
+	index = num.to_i															# The item count is hard-coded here because images dont get added often
+	output = Dir.glob("./ext/kat/#{index}.*")									# Pick a random image
+	event.attach_file(File.open(output[0], 'r'))								# Send it
 end
 
 $bot.command(:chance, min_args: 1) do |event, *query|						# CHANCE Command
-	event.channel.send_embed do |embed|															# Return the message
-		embed.title = "I give the chance " + query.join(" ") + " a " + rand(10).to_s + "/10"	# Generate a random number 0-10
-		embed.color = 0xf5367c
+	query = query.join(" ")														# Stringify the globbed input params
+	num = rand(11).to_s															# Generate a random number 0-10
+	return event.channel.send_embed do |embed|									# Return the message
+		embed.description = "I give the chance **#{query}** a **#{num}/10**"	# Format string
+		embed.color = EMBED_COLOR
 	end
-	return nil
 end
 
 $bot.command(:scp) do |event, query|										# SCP Command
-	query = query.to_i
-	if query <= 0 || query >= 5000 then
-		event.channel.send_embed do |embed|
+	query = query.to_i															# Interpret the input as an int
+	if (query < 0 || query > 5999)												# Check for invalid SCPs
+		return event.channel.send_embed do |embed|
 			embed.title = "Invalid SCP!"
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
 	else
-		if query < 1000 then
-			query = query.to_s.rjust(3, "0")
-		else
-			query = query.to_s
-		end
-		event.channel.send_embed do |embed|
-			embed.title = "http://www.scp-wiki.net/scp-#{query}"
-			embed.color = 0xf5367c
+		entry = query.to_s
+		entry = entry.rjust(3, "0") if (query < 1000)							# For SCPs under 1-999, the number must be 3 digits long and right aligned
+
+		return event.channel.send_embed do |embed|								# Return an embedded message
+			embed.title = "http://www.scp-wiki.net/scp-#{entry}"				# Create the formatted URL
+			embed.color = EMBED_COLOR
 		end
 	end
-	return nil
 end
 
-$bot.command(:e) do |event|
-	if (event.message.emoji?) then
-		#event.channel.send_embed do |embed|
-		#	embed.image = Discordrb::Webhooks::EmbedImage.new(url: event.message.emoji[0].icon_url)
-		#	embed.color = 0xf5367c
-		event.channel.send_message(event.message.emoji[0].icon_url)
-		#end
-	else
-		event.channel.send_embed do |embed|
+$bot.command(:e) do |event|													# E Command
+	unless (event.message.emoji?)												# Error out if the message doesn't have any emotes
+		return event.channel.send_embed do |embed|								# Return error message
 			embed.title = "Error"
 			embed.description = "Message did not contain any valid emotes."
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
 	end
-	return nil
+	event.channel.send_message(event.message.emoji[0].icon_url)					# Respond with the URL of the first emote found
 end
 
-$bot.command(:a) do |event, user|
-	user = Parser.get_user_obj(user, event)
-	if (user != nil) then
-		#event.channel.send_embed do |embed|
-		#	embed.image = Discordrb::Webhooks::EmbedImage.new(url: user.avatar_url)
-		#	embed.color = 0xf5367c
-		event.channel.send_message(user.avatar_url)
-		#end
-	else
-		event.channel.send_embed do |embed|
+$bot.command(:a) do |event, user|											# A Command
+	user = Parser.get_user_obj(user, event)										# Get a user object from a username fragment
+	unless (user != nil)														# Error out if the user reference is invalid
+		return event.channel.send_embed do |embed|								# Return error message
 			embed.title = "Error"
 			embed.description = "Invalid user."
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
 	end
-	return nil
+	event.channel.send_message(user.avatar_url)									# Respond with the URL of the user's avatar
 end
 
+$bot.command :uptime do |event|												# UPTIME Command
+	seconds = (Time.now - $boottime).to_i										# Compute total seconds since program start
+	return event.channel.send_embed do |embed|									# Return embed with formatted time string
+		embed.title = Time.at(seconds).utc.strftime("%H:%M:%S")					# Format seconds into a human friendly string
+		embed.color = EMBED_COLOR
+	end
+end
+
+$bot.command :'define' do |event, *words|									# DEFINE Command
+	pOS = ""																	# Part of speech
+	synonyms = ""
+	definition = ""
+	pnunce = ""																	# Pronunciation
+	fmtwords = words.join(' ')
+
+	begin
+		result = URI.open("https://api.dictionaryapi.dev/api/v2/entries/en/#{fmtwords}")
+	rescue
+		result = URI.open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}")
+		result = JSON.parse(result.read)
+
+		synonyms = "?"
+		pOS = "?"
+		pnunce = "?"
+		definition = result['list'].sample['definition']
+	else
+		result = JSON.parse(result.read)[0]
+		meanings = result['meanings'][0]
+		definitions = result['meanings'][0]['definitions'][0]
+		phonetics = result['phonetics'][0]
+
+		pOS 		= meanings['partOfSpeech']				if (meanings.has_key?('partOfSpeech'))
+		definition	= definitions['definition']				if (definitions.has_key?('definition'))
+		synonyms	= definitions['synonyms'].join(", ")	if (definitions.has_key?('synonyms'))
+		pnunce		= phonetics['text'] 					if (phonetics.has_key?('text'))
+	end
+
+	return event.channel.send_embed do |embed|
+		embed.title = "#{words.join(" ")}   |   #{pnunce}   |   #{pOS}"
+		embed.description = "**Definition**: #{definition} \n**Synonyms**: #{synonyms}"
+		embed.color = EMBED_COLOR
+	end
+end
+
+#============================================= ACTIONS ==============================================
+
 $bot.command :yiff do |event, *target|		# YIFF Command
-	action(target, event, "yiff")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "yiff")				# Execute command handler using the proper stringset
 end
 
 $bot.command :hug do |event, *target|		# HUG Command
-	action(target, event, "hug")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "hug")				# Execute command handler using the proper stringset
 end
 
 $bot.command :kiss do |event, *target|		# KISS Command
-	action(target, event, "kiss")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "kiss")				# Execute command handler using the proper stringset
 end
 
 $bot.command :stab do |event, *target|		# STAB Command
-	action(target, event, "stab")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "stab")				# Execute command handler using the proper stringset
 end
 
 $bot.command :shoot do |event, *target|		# SHOOT Command
-	action(target, event, "shoot")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "shoot")				# Execute command handler using the proper stringset
 end
 
 $bot.command :pet do |event, *target|		# PET Command
-	action(target, event, "pet")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "pet")				# Execute command handler using the proper stringset
 end
 
 $bot.command :bless do |event, *target|		# BLESS Command
-	action(target, event, "bless")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "bless")				# Execute command handler using the proper stringset
 end
 
 $bot.command :f do |event, *target|			# RESPECTS Command
-	action(target, event, "respects")		# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "respects")			# Execute command handler using the proper stringset
 end
 
 $bot.command :nuke do |event, *target|		# NUKE Command
-	action(target, event, "nuke")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "nuke")				# Execute command handler using the proper stringset
 end
 
 $bot.command :meow do |event, *target|		# MEOW Command
-	action(target, event, "meow")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "meow")				# Execute command handler using the proper stringset
 end
 
 $bot.command :grope do |event, *target|		# NUKE Command
-	action(target, event, "grope")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "grope")				# Execute command handler using the proper stringset
 end
 
 $bot.command :vore do |event, *target|		# VORE Command
-	action(target, event, "vore")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "vore")				# Execute command handler using the proper stringset
 end
 
 $bot.command :boof do |event, *target|		# BOOF Command
-	action(target, event, "boof")			# Execute command handler using the proper stringset
-	return nil
+	action(target, event, "boof")				# Execute command handler using the proper stringset
 end
 
-$bot.command :uptime do |event|
-	uptime_seconds = Time.now.to_i - $boottime.to_i
-	uptime_hours = uptime_seconds/1440 % 1
-	event.channel.send_embed do |embed|
-		embed.title = uptime_hours.to_s + " hours, " + (uptime_seconds - uptime_hours*1440).to_s + " seconds."
-		embed.color = 0xf5367c
-	end
-end
+#=========================================== E621 FETCHING ==========================================
 
-$bot.command :e6 do |event, *tags|
-	debug_puts("k.e6 command begin")
-	unless event.channel.nsfw? then 										# Make sure the channel is marked as NSFW
-		event.channel.send_embed do |embed|
-			embed.title = "```Use this command in an NSFW marked channel.```"
-			embed.color = 0xf5367c
-		end
-		return nil
-	end
-
-	if (tags.count > 5) then
-		event.channel.send_embed do |embed|
+$bot.command :e6 do |event, *tags|											# E6 Command
+	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
+	if (tags.count > 5)															# Enforce tag limit
+		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Request had too many tags. Maximum number of tags is **5**"
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
-		return nil
 	end
 
-	url = URI.parse("https://e621.net/posts.json")
-	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
-	request.body = {
-		limit:	1,
-		tags:	"order:random " + tags.join(" ")
-	}.to_json
-
-	request.add_field('User-Agent', 'Ruby')
-
-	debug_puts("starting http request")
+	url = URI.parse("https://e621.net/posts.json")								# Parse base URI
+	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')		# Create new HTTP request
+	request.body = { limit: 1, tags: "order:random " + tags.join(" ") }.to_json	# Form the request
+	request.add_field('User-Agent', 'Ruby')										# Add USER AGENT field to the request. E6 gets pissy if this field is blank
+																				# Perform the actual HTTP GET
 	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') do |http|
 		http.request(request)
 	end
-	debug_puts("http response recieved")
-	if (JSON.parse(result.body)['posts'][0] != nil) then
-		# Check the blacklist
-		black_tags = [""]
-		JSON.parse(result.body)['posts'][0]['tags'].each_value do |x|
-			black_tags = black_tags + x
-		end
-		black_ret = Blacklist_E621.e621_screen_tags(black_tags)
-		if (!black_ret.empty?) then
-			event.channel.send_embed do |embed|
-				embed.title = "Error"
-				embed.description = "Post contained one or more blacklisted tags: **#{a_get_list(black_ret)}**"
-				embed.color = 0xf5367c
-			end
-			return nil
-		end
 
-		file = JSON.parse(result.body)['posts'][0]['file']['url']
-		debug_puts(file)
-		artist = JSON.parse(result.body)['posts'][0]['tags']['artist'][0]
-		debug_puts(artist)
-		event.channel.send_embed do |embed|
+	post = JSON.parse(result.body)['posts'][0]									# Create a shorthand variable to reference the post
+	if (post)																	# Proceed only if the post is populated with elements
+		return nil if (require_blacklist(event, post, Blacklist_E621))			# Handle error conditions from blacklisted tags
+
+		file = post['file']['url']												# Parse the URL of the image
+		artist = post['tags']['artist'][0]										# Parse the name of the artist
+		return event.channel.send_embed do |embed|								# Construct the returning embed
 			embed.title = "Tags: " + tags.join(" ")
-			embed.description = "Score: **" + JSON.parse(result.body)['posts'][0]['score']['total'].to_s + "**" +
-				" | Favourites: **" + JSON.parse(result.body)['posts'][0]['fav_count'].to_s + "**" +
-				" | [Post](https://e621.net/post/show/#{JSON.parse(result.body)['posts'][0]['id'].to_s})"
+			embed.description = "Score: **#{post['score']['total']}**" +
+				"  |  Favourites: **#{post['fav_count']}**" +
+				"  |  [Post](https://e621.net/post/show/#{post['id']})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
-			embed.color = 0xf5367c
-		end
-	else
-		event.channel.send_embed do |embed|
-			embed.title = "Error"
-			embed.description = "No posts matched your search:
-				**" + tags.join(" ") + "**"
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
 	end
-	debug_puts("k.e6 command end")
+
+	return event.channel.send_embed do |embed|									# In the event that we can't parse any useful information back...
+		embed.title = "Error"													# Assume that no images were found under the given tags and error out
+		embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
+		embed.color = EMBED_COLOR
+	end
 end
 
-$bot.command :e9 do |event, *tags|
-	debug_puts("k.e9 command begin")
-	if (tags.count > 5) then
-		event.channel.send_embed do |embed|
+$bot.command :e9 do |event, *tags|											# E9 Command
+	if (tags.count > 5)															# Enforce tag limit
+		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Request had too many tags. Maximum number of tags is **5**"
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
-		return nil
 	end
 
-	url = URI.parse("https://e926.net/posts.json")
-	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')
-	request.body = {
-		limit:	1,
-		tags:	"order:random " + tags.join(" ")
-	}.to_json
-
-	request.add_field('User-Agent', 'Ruby')
-
-	debug_puts("starting http request")
+	url = URI.parse("https://e926.net/posts.json")								# Parse base URI
+	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')		# Create new HTTP request
+	request.body = { limit: 1, tags: "order:random " + tags.join(" ") }.to_json	# Form the request
+	request.add_field('User-Agent', 'Ruby')										# Add USER AGENT field to the request. E6 gets pissy if this field is blank
+																				# Perform the actual HTTP GET
 	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') do |http|
 		http.request(request)
 	end
-	debug_puts("http response recieved")
-	if (JSON.parse(result.body)['posts'][0] != nil) then
-		# Check the blacklist
-		black_tags = [""]
-		JSON.parse(result.body)['posts'][0]['tags'].each_value do |x|
-			black_tags = black_tags + x
-		end
-		black_ret = Blacklist_E926.e621_screen_tags(black_tags)
-		if (!black_ret.empty?) then
-			event.channel.send_embed do |embed|
-				embed.title = "Error"
-				embed.description = "Post contained one or more blacklisted tags: **#{a_get_list(black_ret)}**"
-				embed.color = 0xf5367c
-			end
-			return nil
-		end
 
-		file = JSON.parse(result.body)['posts'][0]['file']['url']
-		debug_puts(file)
-		artist = JSON.parse(result.body)['posts'][0]['tags']['artist'][0]
-		debug_puts(artist)
-		event.channel.send_embed do |embed|
+	post = JSON.parse(result.body)['posts'][0]									# Create a shorthand variable to reference the post
+	if (post)																	# Proceed only if the post is populated with elements
+		return nil if (require_blacklist(event, post, Blacklist_E926))			# Handle error conditions from blacklisted tags
+
+		file = post['file']['url']												# Parse the URL of the image
+		artist = post['tags']['artist'][0]										# Parse the name of the artist
+		return event.channel.send_embed do |embed|								# Construct the returning embed
 			embed.title = "Tags: " + tags.join(" ")
-			embed.description = "Score: **" + JSON.parse(result.body)['posts'][0]['score']['total'].to_s + "**" +
-				" | Favourites: **" + JSON.parse(result.body)['posts'][0]['fav_count'].to_s + "**" +
-				" | [Post](https://e926.net/post/show/#{JSON.parse(result.body)['posts'][0]['id'].to_s})"
+			embed.description = "Score: **#{post['score']['total']}**" +
+				"  |  Favourites: **#{post['fav_count']}**" +
+				"  |  [Post](https://e926.net/post/show/#{post['id']})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
-			embed.color = 0xf5367c
-		end
-	else
-		event.channel.send_embed do |embed|
-			embed.title = "Error"
-			embed.description = "No posts matched your search:
-				**" + tags.join(" ") + "**"
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
 	end
-	debug_puts("k.e9 command end")
+
+	return event.channel.send_embed do |embed|									# In the event that we can't parse any useful information back...
+		embed.title = "Error"													# Assume that no images were found under the given tags and error out
+		embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
+		embed.color = EMBED_COLOR
+	end
 end
 
 $bot.command :'e6.blacklist' do |event, action, *tags|
 	if (action == "get") then
-		event.channel.send_embed do |embed|
+		return event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
 			embed.description = Blacklist_E621.e621_get_blacklist().join(" ")
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
-		return nil;
 	end
 
 	if (tags[0] == nil) then
-		event.channel.send_embed do |embed|
+		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No tags were specified for this action."
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
-		return nil;
 	end
-	if (action == "add") then
+
+	if (action == "add")
 		Blacklist_E621.e621_append_blacklist(tags)
 	elsif (action == "remove")
 		Blacklist_E621.e621_purge_blacklist(tags)
 	else
 		return nil
 	end
-	event.channel.send_embed do |embed|
+
+	return event.channel.send_embed do |embed|
 		embed.title = "Tag Blacklist"
 		embed.description = "Blacklist modified."
-		embed.color = 0xf5367c
+		embed.color = EMBED_COLOR
 	end
-	return nil
 end
 
 $bot.command :'e9.blacklist' do |event, action, *tags|
-	if (action == "get") then
-		event.channel.send_embed do |embed|
+	if (action == "get")
+		return event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
 			embed.description = Blacklist_E926.e621_get_blacklist().join(" ")
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
-		return nil;
 	end
 
-	if (tags[0] == nil) then
-		event.channel.send_embed do |embed|
+	if (tags[0] == nil)
+		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No tags were specified for this action."
-			embed.color = 0xf5367c
+			embed.color = EMBED_COLOR
 		end
-		return nil;
 	end
-	if (action == "add") then
+
+	if (action == "add")
 		Blacklist_E926.e621_append_blacklist(tags)
 	elsif (action == "remove")
 		Blacklist_E926.e621_purge_blacklist(tags)
 	else
 		return nil
 	end
-	event.channel.send_embed do |embed|
+
+	return event.channel.send_embed do |embed|
 		embed.title = "Tag Blacklist"
 		embed.description = "Blacklist modified."
-		embed.color = 0xf5367c
-	end
-	return nil
-end
-
-module Urban
-  module_function
-
-  URL = 'http://api.urbandictionary.com/v0/define'
-
-  # Gets the definitions for the word.
-  # @param word [String] The word to define.
-  # @return [Array<Slang>] An array of #{Slang} objects.
-  def define(word)
-    params = {
-      term: word
-    }
-    @client = HTTPClient.new if @client.nil?
-    response = JSON.parse(@client.get(URI.parse(URL), params).body)
-    ret = []
-    response['list'].each do |hash|
-      ret << Slang.new(hash)
-    end
-    ret
-  end
-end
-
-$bot.command :'define' do |event, *words|
-	pOS = ""							# part of speech
-	synonyms = ""
-	definition = ""
-	pnunce = ""							# pronunciation
-	fmtwords = words.join(' ')
-	begin
-		result = open("https://wordsapiv1.p.mashape.com/words/#{fmtwords}",
-			"User-Agent" => "Ruby/#{RUBY_VERSION}",
-			"X-Mashape-Key" => WORDSAPI_KEY)
-	rescue
-		result = open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}").read
-		result = JSON.parse(result)
-
-		synonyms = "none"
-		pOS = "none"
-		pnunce = "none"
-		definition = result['list'].sample['definition']
-	else
-		result = JSON.parse(result.read)
-		if (result['results'][0].has_key?('partOfSpeech') == true) then pOS=result['results'][0]['partOfSpeech'] else pOS="none" end
-		if (result['results'][0].has_key?('synonyms') == true) then synonyms=result['results'][0]['synonyms'].join(", ") else synonyms="none" end
-		if (result['results'][0].has_key?('definition') == true) then definition=result['results'][0]['definition'] else definition="none" end
-		if (result['pronunciation'].has_key?(pOS) == true) then pnunce=result['pronunciation'][pOS]
-		elsif (result['pronunciation'].has_key?('all') == true) then pnunce=result['pronunciation']['all']
-		else pnunce="none" end
-	end
-
-	event.channel.send_embed do |embed|
-		embed.title = "**#{words.join(" ")}** | #{pnunce} | #{pOS}"
-		embed.description = "**Definition**: #{definition}
-			**Synonyms**: #{synonyms}"
-		embed.color = 0xf5367c
+		embed.color = EMBED_COLOR
 	end
 end
 
-#=================INTERNAL PROMPT==================
-
-$bot.command(:blacklist) do |event, func, target|								# BLACKLIST Command
-	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator."); return nil end
-	if func == "list" then BList.list(event, target); return nil end
-	target = Parser.get_uid(target, event)
-	if func == "remove"
-		$bot.unignore_user(target)
-	elsif func == "add"
-		$bot.ignore_user(target)
-	else event.respond "Invalid operation. valid operations are: remove add list"; return nil
-	end
-	event.respond "Blacklist updated."
-	return nil
-end
+#============================================ INTERNAL ==============================================
 
 $bot.command(:usermod, max_args: 2, min_args: 2) do |event, target, level|		# USERMOD Command
 	target = Parser.get_uid(target, event)
-	if target == nil then return nil end
-	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.")
-		return nil
-	end
-	if PList.add(target, level) == nil then event.respond "User is already on list."
-	else event.respond "User permissions updated." end
-	return nil
+	return nil if (target == nil)
+	return "Naughty! You are not an administrator." unless PList.query(event.user.id, 2)
+	return "User is already on list." if (PList.add(target, level) == nil)
+	return "User permissions updated."
 end
 
 $bot.command(:servermod, max_args: 0, min_args: 0) do |event|					# SERVERMOD Command
-	unless PList.query(event.user.id, 2) then event.respond("Naughty! You are not an administrator.")
-		return nil
-	end
+	return "Naughty! You are not an administrator." unless PList.query(event.user.id, 2)
+
 	i = 0
 	while event.server.members[i] != nil do
-		unless PList.is_exist(event.server.members[i].id) then PList.add(event.server.members[i].id, 1) end
+		PList.add(event.server.members[i].id, 1) unless PList.is_exist(event.server.members[i].id)
 		i += 1
 	end
-	event.respond "User permissions updated."
+	return "User permissions updated."
 end
 
 $bot.command(:listmod, max_args: 0) do |event|									# LISTMOD Command
@@ -596,4 +458,4 @@ $bot.command(:listmod, max_args: 0) do |event|									# LISTMOD Command
 	return nil
 end
 
-#==================================================
+#====================================================================================================
