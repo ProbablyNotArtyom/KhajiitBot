@@ -58,7 +58,7 @@ $boottime = 0									# Holds the time of the last boot
 
 #=============================================== Main ===============================================
 
-$bot = Discordrb::Commands::CommandBot.new token: TOKEN , client_id: CLIENT_ID , prefix: ['k.', 'K.'], log_mode: :verbose, fancy_log: true, ignore_bots: false, advanced_functionality: false
+$bot = Discordrb::Commands::CommandBot.new token: TOKEN , client_id: CLIENT_ID , prefix: ['k.', 'K.'], fancy_log: true, ignore_bots: false, advanced_functionality: false
 $bot.should_parse_self = true
 
 require_relative 'Security.rb'					# Abstractions
@@ -66,7 +66,6 @@ require_relative 'Commands.rb'					# Bot commands
 require_relative 'Image.rb'						# Image manipulation
 
 PList = Permit.new()												# Create a permit list
-Parser = Parse.new()												# Setup ID parsing class
 Config = Setting.new()												# Set up persistence class
 Blacklist_E926 = E621_blacklist.new(Config, "e926_blacklist")		# Set up e926 blacklist handler
 Blacklist_E621 = E621_blacklist.new(Config, "e621_blacklist")		# Set up e621 blacklist handler
@@ -111,7 +110,7 @@ $inBuffer = ""
 
 #====================================================================================================
 
-(DEBUG == true) ? ($bot.mode = :normal) : ($bot.mode = :silent)
+(DEBUG == true) ? ($bot.mode = :debug) : ($bot.mode = :silent)
 
 $bot.run :async								# Start the bot & run async
 puts('Bot Active')							# Notify bot being active

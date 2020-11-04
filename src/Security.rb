@@ -41,11 +41,10 @@ end
 def action(target, event, action)																			# ACTION Handler method
 	target = Parser.get_target(target, event)																# Parse the target name and get back a formatted ID
 	if (target == nil || target == "<@!"+event.user.id.to_s+">") then line = rand(3) else line = rand(IO.readlines("./ext/#{action}.action").size-3)+3 end		# If the target exists then get the number of lines in the string file
-	event.channel.send_embed do |embed|																		# Send the embedded action
+	return event.channel.send_embed do |embed|																# Send the embedded action
 		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}.action")[line])	# Pick a random string
 		embed.color = EMBED_COLOR
 	end
-	return nil
 end
 
 def channel_get_name(chan)
@@ -131,10 +130,8 @@ class Permit																		# Permit checking class
 	end
 end
 
-class Parse																			# PARSE class for parsing user names and nicknames
-	def initialize()
-	end
-	def get_user(user)																		# GET_USER method. inputs a nickname or username and returns a user object
+class Parser																			# PARSE class for parsing user names and nicknames
+	def self.get_user(user)																	# GET_USER method. inputs a nickname or username and returns a user object
 		if user == nil then return nil end													# If user is nil then abort
 		if user.length > 1 then return user.join(" ") end
 		unless user[0] == "<"																# As long as the username isn't an ID then loop
@@ -153,7 +150,7 @@ class Parse																			# PARSE class for parsing user names and nicknames
 		end
 		return nil
 	end
-	def get_server(server)
+	def self.get_server(server)
 		if server[0] == nil then return nil end													# If user is nil then abort
 		unless server[0][0] == "<"																# As long as the username isn't an ID then loop
 			serverList = $bot.servers
@@ -164,8 +161,11 @@ class Parse																			# PARSE class for parsing user names and nicknames
 		end
 		return server[0]
 	end
-	def get_target(user, event)																	# GET_TARGET method. inputs a nickname or username and returns a uID
+	def self.get_target(user, event)														# GET_TARGET method. inputs a nickname or username and returns a mention
 		if user[0] == nil then return nil end													# If user is nil then abort
+
+		return user.join(" ")	# TEMPORATY PATCH UNTIL I CAN FIGURE OUT WHAT DISCORD CHANGED THAT MADE USERNAME GLOBBING NOT WORK
+
 		if user.length > 1 then return user.join(" ") end										# If the username is longer than 1 word then join them w/ spaces
 		unless user[0][0] == "<"																# As long as the username isn't an ID then loop
 			tmp = event.server.members.detect{|member| member.display_name.include?(user[0])}											# Return the ID string if the user matches a nickname in the server
@@ -183,7 +183,7 @@ class Parse																			# PARSE class for parsing user names and nicknames
 		end
 		return user[0]
 	end
-	def get_uid(user, event) 																	# GET_UID method. Inputs a mention and returns an ID
+	def self.get_uid(user, event) 															# GET_UID method. Inputs a mention and returns an ID
 		unless user[0] == "<"
 			tmp = event.server.members.detect{|member| member.display_name.include?(user)}
 			if tmp == nil then tmp = event.server.members.detect{|member| member.username.include?(user)}								# Return the ID int if the nickname exists
@@ -197,7 +197,7 @@ class Parse																			# PARSE class for parsing user names and nicknames
 		end
 		return user.delete('^0-9').to_i															# If the input is a ID w/ markup then strip the markup and return
 	end
-	def get_user_obj(user, event)
+	def self.get_user_obj(user, event)
 		if user == nil then return nil end
 		unless user[0] == "<"
 			tmp = event.server.members.detect{|member| member.display_name.include?(user)}
