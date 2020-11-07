@@ -206,6 +206,16 @@ $bot.command :'define' do |event, *words|									# DEFINE Command
 		result = URI.open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}")
 		result = JSON.parse(result.read)
 
+		debug_puts(result.inspect)
+
+		if (result['list'].empty?)												# Error out if the list is empty
+			return event.channel.send_embed do |embed|							# This means that no definitions were found on either site
+				embed.title = "Error"
+				embed.description = "No definitions were found for:\n**#{words.join(" ")}**"
+				embed.color = EMBED_COLOR
+			end
+		end
+
 		synonyms = "?"
 		pOS = "?"
 		pnunce = "?"
