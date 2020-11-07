@@ -110,7 +110,7 @@ $inBuffer = ""
 
 #====================================================================================================
 
-(DEBUG == true) ? ($bot.mode = :debug) : ($bot.mode = :silent)
+(DEBUG == true) ? ($bot.mode = :normal) : ($bot.mode = :silent)
 
 $bot.run :async								# Start the bot & run async
 puts('Bot Active')							# Notify bot being active

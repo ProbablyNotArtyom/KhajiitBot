@@ -163,9 +163,6 @@ class Parser																			# PARSE class for parsing user names and nickname
 	end
 	def self.get_target(user, event)														# GET_TARGET method. inputs a nickname or username and returns a mention
 		if user[0] == nil then return nil end													# If user is nil then abort
-
-		return user.join(" ")	# TEMPORATY PATCH UNTIL I CAN FIGURE OUT WHAT DISCORD CHANGED THAT MADE USERNAME GLOBBING NOT WORK
-
 		if user.length > 1 then return user.join(" ") end										# If the username is longer than 1 word then join them w/ spaces
 		unless user[0][0] == "<"																# As long as the username isn't an ID then loop
 			tmp = event.server.members.detect{|member| member.display_name.include?(user[0])}											# Return the ID string if the user matches a nickname in the server
