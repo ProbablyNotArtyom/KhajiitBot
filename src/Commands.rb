@@ -121,7 +121,7 @@ end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 	target = Parser.get_target(target, event)									# Parse the target into a discord markup for IDs
-	num = rand(11).to_s															# Generate a random number 0-10
+	num = Random.new(target.sum).rand(11).to_s															# Generate a random number 0-10
 	return event.channel.send_embed do |embed|									# Return the message
 		embed.description = "I give **#{target}** a **#{num}/10**"				# Format string
 		embed.color = EMBED_COLOR
