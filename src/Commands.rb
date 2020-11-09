@@ -42,7 +42,7 @@ $bot.command :help do |event, *type|			# Help command
 				embed.add_field(name: 'Error!', value: 'Invalid help type. Please use on option from the list')
 			end
 		end
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -107,7 +107,7 @@ $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Comm
 
 	return event.send_embed do |embed|											# Send the message as embedded
 		embed.title = rand(max)													# Generate a random number
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -115,16 +115,17 @@ $bot.command(:'8ball') do |event, *rest|									# 8BALL Command
 	lines = IO.readlines("./ext/8ball.action").size 							# Get the number of lines
 	return event.channel.send_embed do |embed|									# Return the message
 		embed.description = "**" + IO.readlines("./ext/8ball.action")[rand(lines)].strip + " **" + "<@#{event.user.id}>"
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
-	target = Parser.get_target(target, event)									# Parse the target into a discord markup for IDs
-	num = Random.new(target.sum).rand(11).to_s															# Generate a random number 0-10
+	user = Parser.get_user(target, event)									# Parse the target into a discord markup for IDs
+	target = (user == nil)? target.join("") : user.mention
+	num = Random.new(target.sum).rand(11).to_s									# Generate a random number 0-10
 	return event.channel.send_embed do |embed|									# Return the message
 		embed.description = "I give **#{target}** a **#{num}/10**"				# Format string
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -140,7 +141,7 @@ $bot.command(:chance, min_args: 1) do |event, *query|						# CHANCE Command
 	num = rand(11).to_s															# Generate a random number 0-10
 	return event.channel.send_embed do |embed|									# Return the message
 		embed.description = "I give the chance **#{query}** a **#{num}/10**"	# Format string
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -149,7 +150,7 @@ $bot.command(:scp) do |event, query|										# SCP Command
 	if (query < 0 || query > 5999)												# Check for invalid SCPs
 		return event.channel.send_embed do |embed|
 			embed.title = "Invalid SCP!"
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	else
 		entry = query.to_s
@@ -157,7 +158,7 @@ $bot.command(:scp) do |event, query|										# SCP Command
 
 		return event.channel.send_embed do |embed|								# Return an embedded message
 			embed.title = "http://www.scp-wiki.net/scp-#{entry}"				# Create the formatted URL
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 end
@@ -167,29 +168,29 @@ $bot.command(:e) do |event|													# E Command
 		return event.channel.send_embed do |embed|								# Return error message
 			embed.title = "Error"
 			embed.description = "Message did not contain any valid emotes."
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
-	event.channel.send_message(event.message.emoji[0].icon_url)					# Respond with the URL of the first emote found
+	event.channel.send_message(event.message.emoji[0].icon_url.gsub(".webp", ".png"))	# Respond with the URL of the first emote found
 end
 
-$bot.command(:a) do |event, user|											# A Command
-	user = Parser.get_user_obj(user, event)										# Get a user object from a username fragment
+$bot.command(:a) do |event, *user|											# A Command
+	user = Parser.get_user(user, event)										# Get a user object from a username fragment
 	unless (user != nil)														# Error out if the user reference is invalid
 		return event.channel.send_embed do |embed|								# Return error message
 			embed.title = "Error"
 			embed.description = "Invalid user."
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
-	event.channel.send_message(user.avatar_url)									# Respond with the URL of the user's avatar
+	event.channel.send_message(user.avatar_url.gsub(".webp", ".png"))			# Respond with the URL of the user's avatar
 end
 
 $bot.command :uptime do |event|												# UPTIME Command
 	seconds = (Time.now - $boottime).to_i										# Compute total seconds since program start
 	return event.channel.send_embed do |embed|									# Return embed with formatted time string
 		embed.title = Time.at(seconds).utc.strftime("%H:%M:%S")					# Format seconds into a human friendly string
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -212,7 +213,7 @@ $bot.command :'define' do |event, *words|									# DEFINE Command
 			return event.channel.send_embed do |embed|							# This means that no definitions were found on either site
 				embed.title = "Error"
 				embed.description = "No definitions were found for:\n**#{words.join(" ")}**"
-				embed.color = EMBED_COLOR
+				embed.color = EMBED_MSG_COLOR
 			end
 		end
 
@@ -235,7 +236,7 @@ $bot.command :'define' do |event, *words|									# DEFINE Command
 	return event.channel.send_embed do |embed|
 		embed.title = "#{words.join(" ")}   |   #{pnunce}   |   #{pOS}"
 		embed.description = "**Definition**: #{definition} \n**Synonyms**: #{synonyms}"
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -301,7 +302,7 @@ $bot.command :e6 do |event, *tags|											# E6 Command
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Request had too many tags. Maximum number of tags is **5**"
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
@@ -326,14 +327,14 @@ $bot.command :e6 do |event, *tags|											# E6 Command
 				"  |  Favourites: **#{post['fav_count']}**" +
 				"  |  [Post](https://e621.net/post/show/#{post['id']})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
 	return event.channel.send_embed do |embed|									# In the event that we can't parse any useful information back...
 		embed.title = "Error"													# Assume that no images were found under the given tags and error out
 		embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -342,7 +343,7 @@ $bot.command :e9 do |event, *tags|											# E9 Command
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Request had too many tags. Maximum number of tags is **5**"
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
@@ -367,14 +368,14 @@ $bot.command :e9 do |event, *tags|											# E9 Command
 				"  |  Favourites: **#{post['fav_count']}**" +
 				"  |  [Post](https://e926.net/post/show/#{post['id']})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
 	return event.channel.send_embed do |embed|									# In the event that we can't parse any useful information back...
 		embed.title = "Error"													# Assume that no images were found under the given tags and error out
 		embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -383,7 +384,7 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 		return event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
 			embed.description = Blacklist_E621.e621_get_blacklist().join(" ")
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
@@ -391,7 +392,7 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No tags were specified for this action."
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
@@ -406,7 +407,7 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 	return event.channel.send_embed do |embed|
 		embed.title = "Tag Blacklist"
 		embed.description = "Blacklist modified."
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
@@ -415,7 +416,7 @@ $bot.command :'e9.blacklist' do |event, action, *tags|
 		return event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
 			embed.description = Blacklist_E926.e621_get_blacklist().join(" ")
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
@@ -423,7 +424,7 @@ $bot.command :'e9.blacklist' do |event, action, *tags|
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No tags were specified for this action."
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
@@ -438,14 +439,14 @@ $bot.command :'e9.blacklist' do |event, action, *tags|
 	return event.channel.send_embed do |embed|
 		embed.title = "Tag Blacklist"
 		embed.description = "Blacklist modified."
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
 #============================================ INTERNAL ==============================================
 
 $bot.command(:usermod, max_args: 2, min_args: 2) do |event, target, level|		# USERMOD Command
-	target = Parser.get_uid(target, event)
+	target = Parser.get_user(target).id
 	return nil if (target == nil)
 	return "Naughty! You are not an administrator." unless PList.query(event.user.id, 2)
 	return "User is already on list." if (PList.add(target, level) == nil)

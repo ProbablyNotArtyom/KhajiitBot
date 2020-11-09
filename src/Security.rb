@@ -38,12 +38,22 @@ def update_json(file, data)			# Abstraction for updaating a JSON file
 	File.open(file, 'w+') {|f| f.write(JSON.generate(data)) }
 end
 
-def action(target, event, action)																			# ACTION Handler method
-	target = Parser.get_target(target, event)																# Parse the target name and get back a formatted ID
-	if (target == nil || target == "<@!"+event.user.id.to_s+">") then line = rand(3) else line = rand(IO.readlines("./ext/#{action}.action").size-3)+3 end		# If the target exists then get the number of lines in the string file
-	return event.channel.send_embed do |embed|																# Send the embedded action
+def action(mention, event, action)									# ACTION Handler method
+	mention = event.user.name if (mention.empty?)						# If the target of the action is empty, then assume the user is targeting themself
+	userTmp = Parser.get_user(mention, event)							# Parse the target name and get back a formatted mention
+	line = (userTmp != nil && userTmp.id == event.user.id)? rand(3) : rand(IO.readlines("./ext/#{action}.action").size-3)+3
+	target = (userTmp == nil)? mention.join("") : userTmp.mention
+ 	return event.channel.send_embed do |embed|																# Send the embedded action
 		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}.action")[line])	# Pick a random string
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
+	end
+end
+
+def embed_error(message, channel)
+	channel.send_embed do |embed|
+		embed.title = "Error"
+		embed.description = message
+		embed.color = EMBED_ERROR_COLOR
 	end
 end
 
@@ -130,85 +140,22 @@ class Permit																		# Permit checking class
 	end
 end
 
-class Parser																			# PARSE class for parsing user names and nicknames
-	def self.get_user(user)																	# GET_USER method. inputs a nickname or username and returns a user object
-		if user == nil then return nil end													# If user is nil then abort
-		if user.length > 1 then return user.join(" ") end
-		unless user[0] == "<"																# As long as the username isn't an ID then loop
-			serverList = $bot.servers
-			serverList.each_value {|srv|
-				tmp = srv.members.detect{|member| member.display_name.include?(user)}											# Return the ID string if the user matches a nickname in the server
-				if tmp == nil then tmp = srv.members.detect{|member| member.display_name.downcase.include?(user.downcase)}		# Return the ID string if the user matches a nickname in the server. Case insensetive
-					if tmp == nil then tmp = srv.members.detect{|member| member.username.include?(user)}						# Return the ID string if the user matches a username in the server
-						if tmp == nil then tmp = srv.members.detect{|member| member.username.downcase.include?(user.downcase)}	# Return the ID string if the user matches a username in the server. Case insensetive															# Return nil if no matches
-						end
-					end
-				end
-				if tmp != nil then return tmp end
-			}
-			return nil
-		end
-		return nil
-	end
-	def self.get_server(server)
-		if server[0] == nil then return nil end													# If user is nil then abort
-		unless server[0][0] == "<"																# As long as the username isn't an ID then loop
-			serverList = $bot.servers
-			serverList.each_value {|srv|
-				if srv.name.include?(server) then return srv end
-			}
-			return nil
-		end
-		return server[0]
-	end
-	def self.get_target(user, event)														# GET_TARGET method. inputs a nickname or username and returns a mention
-		if user[0] == nil then return nil end													# If user is nil then abort
-		if user.length > 1 then return user.join(" ") end										# If the username is longer than 1 word then join them w/ spaces
-		unless user[0][0] == "<"																# As long as the username isn't an ID then loop
-			tmp = event.server.members.detect{|member| member.display_name.include?(user[0])}											# Return the ID string if the user matches a nickname in the server
-			if tmp == nil then tmp = event.server.members.detect{|member| member.display_name.downcase.include?(user[0].downcase)}		# Return the ID string if the user matches a nickname in the server. Case insensetive
-				if tmp == nil then tmp = event.server.members.detect{|member| member.username.include?(user[0])}						# Return the ID string if the user matches a username in the server
-					if tmp == nil then tmp = event.server.members.detect{|member| member.username.downcase.include?(user[0].downcase)}	# Return the ID string if the user matches a username in the server. Case insensetive
-						if tmp == nil then return user.join(" ") end																	# Return nil if no matches
-					end
-					if tmp.id == event.user.id then return nil end
-					return "<@" + tmp.id.to_s + ">"												# Username markup
-				end
-			end
-			if tmp.id == event.user.id then return nil end
-			return "<@!" + tmp.id.to_s + ">"													# Nickname markup
-		end
-		return user[0]
-	end
-	def self.get_uid(user, event) 															# GET_UID method. Inputs a mention and returns an ID
-		unless user[0] == "<"
-			tmp = event.server.members.detect{|member| member.display_name.include?(user)}
-			if tmp == nil then tmp = event.server.members.detect{|member| member.username.include?(user)}								# Return the ID int if the nickname exists
-				if tmp == nil then tmp = event.server.members.detect{|member| member.username.downcase.include?(user.downcase)}			# Return the ID int if the username exists
-					if tmp == nil then tmp = event.server.members.detect{|member| member.display_name.downcase.include?(user.downcase)}	# Return the ID int if the username exists. case insensetive
-						if tmp == nil then return nil end
-					end
-				end
-			end
-			return tmp.id
-		end
-		return user.delete('^0-9').to_i															# If the input is a ID w/ markup then strip the markup and return
-	end
-	def self.get_user_obj(user, event)
-		if user == nil then return nil end
-		unless user[0] == "<"
-			tmp = event.server.members.detect{|member| member.display_name.include?(user)}
-			if tmp == nil then tmp = event.server.members.detect{|member| member.username.include?(user)}
-				if tmp == nil then tmp = event.server.members.detect{|member| member.username.downcase.include?(user.downcase)}
-					if tmp == nil then tmp = event.server.members.detect{|member| member.display_name.downcase.include?(user.downcase)}
-						if tmp == nil then return nil end
-					end
-				end
-			end
-			return tmp
-		else
+module Parser																			# PARSE module for parsing user names and nicknames
+	module_function
+	def get_user(user, event=nil)
+		user = user.join(' ') if user.is_a?(Array)
+		user = user.downcase
+		memberList = event.server.members if (event != nil)
+		memberList = $bot.servers.values.collect_concat {|srv| srv.members} if (event == nil)
+		if user.start_with?("<")
 			return $bot.parse_mention(user, event.server)
+		else
+			return memberList.detect {|x| x.username.downcase.include?(user) || x.display_name.downcase.include?(user)}
 		end
+	end
+	def get_server(server)																# GET_SERVER method. Inputs a partial server name and returns the server object
+		return nil if server == nil															# If server name is nil then abort
+		return $bot.servers.values.detect {|srv| srv.name.include?(server)}
 	end
 end
 
@@ -340,7 +287,7 @@ def require_nsfw(event)
 	unless (event.channel.nsfw?)
 		return event.send_embed do |embed|
 			embed.title = "```Use this command in an NSFW marked channel.```"
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 end
@@ -353,7 +300,7 @@ def require_blacklist(event, post, blacklist)
 		return event.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Post contained one or more blacklisted tags: **#{a_get_list(black_ret)}**"
-			embed.color = EMBED_COLOR
+			embed.color = EMBED_MSG_COLOR
 		end
 	end
 end

@@ -50,7 +50,8 @@ E621_KEY = File.read "./ext/sys/e621"			# ssh more secrets (Put your e621 accoun
 
 DEBUG = false									# Enable to display debug info for commands that write to the debug stream
 
-EMBED_COLOR = 0xf5367c							# Sets the embed color used by all bot embeds
+EMBED_MSG_COLOR = 0xf5367c						# Sets the default embed color used by bot embeds
+EMBED_ERROR_COLOR = 0xe62f2f					# Sets the embed color used for error messages
 
 #============================================= Globals ==============================================
 
@@ -95,7 +96,7 @@ $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
 	line = rand(IO.readlines("./ext/hug.action").size-3)+3		# If the target exists then get the number of lines in the string file
 	return event.channel.send_embed do |embed|					# Send the embedded action
 		embed.description = "**<@342149093117657105>** " + eval(IO.readlines("./ext/hug.action")[line])
-		embed.color = EMBED_COLOR
+		embed.color = EMBED_MSG_COLOR
 	end
 end
 
