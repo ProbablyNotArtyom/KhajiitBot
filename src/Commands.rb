@@ -121,7 +121,7 @@ end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 	user = Parser.get_user(target, event)									# Parse the target into a discord markup for IDs
-	target = (user == nil)? target.join("") : user.mention
+	target = (user == nil)? target.join(" ") : user.mention
 	num = Random.new(target.sum).rand(11).to_s									# Generate a random number 0-10
 	return event.channel.send_embed do |embed|									# Return the message
 		embed.description = "I give **#{target}** a **#{num}/10**"				# Format string
@@ -188,8 +188,9 @@ end
 
 $bot.command :uptime do |event|												# UPTIME Command
 	seconds = (Time.now - $boottime).to_i										# Compute total seconds since program start
+	days = Time.at(seconds).utc.strftime("%j").to_i - 1
 	return event.channel.send_embed do |embed|									# Return embed with formatted time string
-		embed.title = Time.at(seconds).utc.strftime("%H:%M:%S")					# Format seconds into a human friendly string
+		embed.title = days.to_s + Time.at(seconds).utc.strftime(" days, %H:%M:%S")		# Format seconds into a human friendly string
 		embed.color = EMBED_MSG_COLOR
 	end
 end
@@ -232,6 +233,38 @@ $bot.command :'define' do |event, *words|									# DEFINE Command
 		synonyms	= definitions['synonyms'].join(", ")	if (definitions.has_key?('synonyms'))
 		pnunce		= phonetics['text'] 					if (phonetics.has_key?('text'))
 	end
+
+	return event.channel.send_embed do |embed|
+		embed.title = "#{words.join(" ")}   |   #{pnunce}   |   #{pOS}"
+		embed.description = "**Definition**: #{definition} \n**Synonyms**: #{synonyms}"
+		embed.color = EMBED_MSG_COLOR
+	end
+end
+
+$bot.command :'urban' do |event, *words|									# URBAN Command
+	pOS = ""																	# Part of speech
+	synonyms = ""
+	definition = ""
+	pnunce = ""																	# Pronunciation
+	fmtwords = words.join(' ')
+
+	result = URI.open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}")
+	result = JSON.parse(result.read)
+
+	debug_puts(result.inspect)
+
+	if (result['list'].empty?)													# Error out if the list is empty
+		return event.channel.send_embed do |embed|								# This means that no definitions were found on either site
+			embed.title = "Error"
+			embed.description = "No definitions were found for:\n**#{words.join(" ")}**"
+			embed.color = EMBED_MSG_COLOR
+		end
+	end
+
+	synonyms = "?"
+	pOS = "?"
+	pnunce = "?"
+	definition = result['list'].sample['definition']
 
 	return event.channel.send_embed do |embed|
 		embed.title = "#{words.join(" ")}   |   #{pnunce}   |   #{pOS}"

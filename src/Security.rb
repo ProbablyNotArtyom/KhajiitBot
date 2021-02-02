@@ -42,7 +42,7 @@ def action(mention, event, action)									# ACTION Handler method
 	mention = event.user.name if (mention.empty?)						# If the target of the action is empty, then assume the user is targeting themself
 	userTmp = Parser.get_user(mention, event)							# Parse the target name and get back a formatted mention
 	line = (userTmp != nil && userTmp.id == event.user.id)? rand(3) : rand(IO.readlines("./ext/#{action}.action").size-3)+3
-	target = (userTmp == nil)? mention.join("") : userTmp.mention
+	target = (userTmp == nil)? mention.join(" ") : userTmp.mention
  	return event.channel.send_embed do |embed|																# Send the embedded action
 		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}.action")[line])	# Pick a random string
 		embed.color = EMBED_MSG_COLOR
