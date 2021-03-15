@@ -164,7 +164,7 @@ $bot.command(:scp) do |event, query|										# SCP Command
 end
 
 $bot.command(:e) do |event|													# E Command
-	unless (event.message.emoji?)												# Error out if the message doesn't have any emotes
+	if (event.message.emoji?)												# Error out if the message doesn't have any emotes
 		return event.channel.send_embed do |embed|								# Return error message
 			embed.title = "Error"
 			embed.description = "Message did not contain any valid emotes."
