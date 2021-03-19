@@ -29,9 +29,9 @@
 
 def valid_json?(json)				# Detect if a file is valid JSON
 	buff = JSON.parse(json)
-		return buff
+	return buff
 rescue JSON::ParserError
-		return nil
+	return nil
 end
 
 def update_json(file, data)			# Abstraction for updaating a JSON file
@@ -89,24 +89,15 @@ end
 
 def a_get_list(array)
 	ret = ""
-	array.each.with_index do |str, index|
-		if (index == 0) then
-			ret << str
-		else
-			ret << ", #{str}"
-		end
-	end
+	array.each.with_index { |str, index| (index == 0)? ret << str : ret << ", #{str}" }
 	return ret
 end
 
 def generate_uniqe_name(file_type)
-  charset = Array('A'..'Z') + Array('a'..'z')
-  rndstr = Array.new(10) { charset.sample }.join
-  # If a file with this name already exists, then loop until we get a uniqe name
-  while (File.file?("#{rndstr}.#{file_type}"))
-	  rndstr = Array.new(10) { charset.sample }.join
-  end
-  return "#{rndstr}.#{file_type}"
+	charset = Array('A'..'Z') + Array('a'..'z')
+	rndstr = Array.new(10) { charset.sample }.join	# If a file with this name already exists, then loop until we get a uniqe name
+	rndstr = Array.new(10) { charset.sample }.join while (File.file?("#{rndstr}.#{file_type}"))
+	return "#{rndstr}.#{file_type}"
 end
 
 class Permit																		# Permit checking class
@@ -124,11 +115,10 @@ class Permit																		# Permit checking class
 		return true
 	end
 	def is_exist(user)																			# IS_EXIST method. Checks if a user is in the permits
-		if @@permits.fetch(user.to_s, nil) == nil then return false end							# If the user is in the permits, then return true
-		return true
+		return @@permits.fetch(user.to_s, nil) != nil											# If the user is in the permits, then return true
 	end
 	def query(user, level)																		# QUERY method. Checks if a user is a specific access level (0 = none, 1=usage, 2=admin)
-		if @@permits.fetch(user.to_s, 0) >= level.to_i then return true else return false end	# Check the user's access level and return false if not equal
+		return @@permits.fetch(user.to_s, 0) >= level.to_i										# Check the user's access level and return false if not equal
 	end
 	def list(svevent)																			# LIST method. Lists the current permits
 		i = 0
@@ -147,54 +137,41 @@ class Permit																		# Permit checking class
 	end
 end
 
-module Parser																			# PARSE module for parsing user names and nicknames
+module Parser							# PARSE module for parsing user names and nicknames
 	module_function
 	def get_user(user, event=nil)
 		user = user.join(' ') if user.is_a?(Array)
 		user = user.downcase
-		if (event != nil && event.is_a?(Discordrb::Events::Event))
-			memberList = event.server.members
-		else
-			memberList = $bot.servers.values.collect_concat {|srv| srv.members}
-		end
-		if user.start_with?("<")
-			return $bot.parse_mention(user, event.server)
-		else
-			return memberList.detect {|x| x.username.downcase.include?(user) || x.display_name.downcase.include?(user)}
-		end
+
+		if (event != nil && event.is_a?(Discordrb::Events::Event)) then memberList = event.server.members
+		else memberList = $bot.servers.values.collect_concat {|srv| srv.members} end
+		return $bot.parse_mention(user, event.server) if user.start_with?("<")
+		return memberList.detect {|x| x.username.downcase.include?(user) || x.display_name.downcase.include?(user)}
 	end
-	def get_server(server)																# GET_SERVER method. Inputs a partial server name and returns the server object
+	def get_server(server)					# GET_SERVER method. Inputs a partial server name and returns the server object
 		return nil if server == nil
 		server = server.to_s.downcase
-		if (server.is_a?(Fixnum))
-			return $bot.servers.values.detect {|srv| srv.id.include?(server)}
-		else
-			return $bot.servers.values.detect {|srv| srv.name.downcase.include?(server)}
-		end
+
+		if (server.is_a?(Fixnum)) then return $bot.servers.values.detect {|srv| srv.id.include?(server)}
+		else return $bot.servers.values.detect {|srv| srv.name.downcase.include?(server)} end
 	end
-	def get_channel(channel, server=nil)												# GET_CHANNEL method. Inputs a partial channel name and returns the channel object
+	def get_channel(channel, server=nil)	# GET_CHANNEL method. Inputs a partial channel name and returns the channel object
 		return nil if channel == nil
 		channel = channel.join(' ') if channel.is_a?(Array)
 		channel = channel.downcase
-		if (server != nil && server.is_a?(Discordrb::Server))
-			channelList = server.channels
-		else
-			channelList = $bot.servers.values.collect_concat {|srv| srv.channels}
-		end
-		if (channel.to_i >= 100000000000000000)
-			return $bot.parse_mention("<\##{channel}>", server)
-		else
-			return channelList.detect {|x| x.name.downcase.include?(channel)}
-		end
+
+		if (server != nil && server.is_a?(Discordrb::Server)) then channelList = server.channels
+		else channelList = $bot.servers.values.collect_concat {|srv| srv.channels} end
+		if (channel.to_i >= 100000000000000000) then return $bot.parse_mention("<\##{channel}>", server)
+		else return channelList.detect {|x| x.name.downcase.include?(channel)} end
 	end
 end
 
-class Setting																		# SETTING class for storing persistent data
+class Setting													# SETTING class for storing persistent data
 	def initialize()
-		@@persistent = {}																		# Create a new empty array to house the settings
-		unless valid_json?(IO.read("./ext/sys/persistent")) then  File.open("./ext/sys/persistent", 'w+') {|f| f.write(JSON.generate(@@persistent)) } end
-																								# If the persistence file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
-		@@persistent = JSON.load IO.read("./ext/sys/persistent")
+		@@persistent = {}											# Create a new empty array to house the settings
+		 File.open("./ext/sys/persistent", 'w+') {|f| f.write(JSON.generate(@@persistent)) } unless valid_json?(IO.read("./ext/sys/persistent"))
+		@@persistent = JSON.load IO.read("./ext/sys/persistent")	# If the persistence file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
 	end
 	def save(name, val)																			# SAVE method. saves a piece of data with a name
 		@@persistent.store(name, val)															# Store the data itself
@@ -251,41 +228,27 @@ class E621_blacklist
 	@config_name = ""
 	def initialize(sys_config, strname)
 		@config_name = strname
-		if (sys_config.get(@config_name) != nil) then
-			@e621_black_tags = sys_config.get(@config_name)
-		end
+		 @e621_black_tags = sys_config.get(@config_name) if (sys_config.get(@config_name) != nil)
 	end
 	def e621_get_blacklist()
 		return @e621_black_tags
 	end
 
 	def e621_append_blacklist(tags)
-		tags.each do |tag|
-			if (!@e621_black_tags.include?(tag)) then
-				@e621_black_tags.push(tag)
-			end
-		end
+		tags.each {|x| @e621_black_tags.push(x) if (!@e621_black_tags.include?(x))}
 		Config.save(@config_name, @e621_black_tags)
 		return nil
 	end
 
 	def e621_purge_blacklist(tags)
-		tags.each do |tag|
-			if (@e621_black_tags.include?(tag)) then
-				@e621_black_tags.delete(tag)
-			end
-		end
+		tags.each {|x| @e621_black_tags.delete(x) if (@e621_black_tags.include?(x))}
 		Config.save(@config_name, @e621_black_tags)
 		return nil
 	end
 
 	def e621_screen_tags(tags)
 		ret = []
-		tags.each do |tag|
-			if (@e621_black_tags.include?(tag)) then
-				ret.push(tag)
-			end
-		end
+		tags.each {|x| ret.push(x) if (@e621_black_tags.include?(x))}
 		return ret
 	end
 end
@@ -324,27 +287,6 @@ class CommandHistory
 	end
 	def trim()
 		@hist.shift
-	end
-end
-
-#====================================================================================================
-
-module Urban
-	extend self
-
-	# Gets the definitions for the word.
-	# @param word [String] The word to define.
-	# @return [Array<Slang>] An array of #{Slang} objects.
-	def define(word)
-		params = { term: word }
-		@client = HTTPClient.new if @client.nil?
-		response = JSON.parse(@client.get(URI.parse('http://api.urbandictionary.com/v0/define'), params).body)
-		ret = []
-
-		response['list'].each do |hash|
-			ret << Slang.new(hash)
-		end
-		return ret
 	end
 end
 

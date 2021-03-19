@@ -195,23 +195,33 @@ $bot.command :uptime do |event|												# UPTIME Command
 	end
 end
 
-$bot.command :'define' do |event, *words|									# DEFINE Command
-	pOS = ""																	# Part of speech
+$bot.command :'define' do |event, *words|		# DEFINE Command
+	pOS = ""										# Part of speech
 	synonyms = ""
 	definition = ""
-	pnunce = ""																	# Pronunciation
+	pnunce = ""										# Pronunciation
 	fmtwords = words.join(' ')
 
 	begin
 		result = URI.open("https://api.dictionaryapi.dev/api/v2/entries/en/#{fmtwords}")
+		result = JSON.parse(result.read)[0]
+
+		meanings = result['meanings'][0]
+		definitions = result['meanings'][0]['definitions'][0]
+		phonetics = result['phonetics'][0]
+
+		pOS 		= meanings['partOfSpeech']				if (meanings.has_key?('partOfSpeech'))
+		definition	= definitions['definition']				if (definitions.has_key?('definition'))
+		synonyms	= definitions['synonyms'].join(", ")	if (definitions.has_key?('synonyms'))
+		pnunce		= phonetics['text'] 					if (phonetics.has_key?('text'))
 	rescue
-		result = URI.open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}")
-		result = JSON.parse(result.read)
+		begin
+			result = URI.open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}")
+			result = JSON.parse(result.read)
 
-		debug_puts(result.inspect)
-
-		if (result['list'].empty?)												# Error out if the list is empty
-			return event.channel.send_embed do |embed|							# This means that no definitions were found on either site
+			raise if (result.nil? || result['list'].nil? || result['list'].empty?)
+		rescue
+			return event.channel.send_embed do |embed|
 				embed.title = "Error"
 				embed.description = "No definitions were found for:\n**#{words.join(" ")}**"
 				embed.color = EMBED_MSG_COLOR
@@ -222,16 +232,6 @@ $bot.command :'define' do |event, *words|									# DEFINE Command
 		pOS = "?"
 		pnunce = "?"
 		definition = result['list'].sample['definition']
-	else
-		result = JSON.parse(result.read)[0]
-		meanings = result['meanings'][0]
-		definitions = result['meanings'][0]['definitions'][0]
-		phonetics = result['phonetics'][0]
-
-		pOS 		= meanings['partOfSpeech']				if (meanings.has_key?('partOfSpeech'))
-		definition	= definitions['definition']				if (definitions.has_key?('definition'))
-		synonyms	= definitions['synonyms'].join(", ")	if (definitions.has_key?('synonyms'))
-		pnunce		= phonetics['text'] 					if (phonetics.has_key?('text'))
 	end
 
 	return event.channel.send_embed do |embed|
@@ -275,57 +275,19 @@ end
 
 #============================================= ACTIONS ==============================================
 
-$bot.command :yiff do |event, *target|		# YIFF Command
-	action(target, event, "yiff")				# Execute command handler using the proper stringset
-end
-
-$bot.command :hug do |event, *target|		# HUG Command
-	action(target, event, "hug")				# Execute command handler using the proper stringset
-end
-
-$bot.command :kiss do |event, *target|		# KISS Command
-	action(target, event, "kiss")				# Execute command handler using the proper stringset
-end
-
-$bot.command :stab do |event, *target|		# STAB Command
-	action(target, event, "stab")				# Execute command handler using the proper stringset
-end
-
-$bot.command :shoot do |event, *target|		# SHOOT Command
-	action(target, event, "shoot")				# Execute command handler using the proper stringset
-end
-
-$bot.command :pet do |event, *target|		# PET Command
-	action(target, event, "pet")				# Execute command handler using the proper stringset
-end
-
-$bot.command :bless do |event, *target|		# BLESS Command
-	action(target, event, "bless")				# Execute command handler using the proper stringset
-end
-
-$bot.command :f do |event, *target|			# RESPECTS Command
-	action(target, event, "respects")			# Execute command handler using the proper stringset
-end
-
-$bot.command :nuke do |event, *target|		# NUKE Command
-	action(target, event, "nuke")				# Execute command handler using the proper stringset
-end
-
-$bot.command :meow do |event, *target|		# MEOW Command
-	action(target, event, "meow")				# Execute command handler using the proper stringset
-end
-
-$bot.command :grope do |event, *target|		# NUKE Command
-	action(target, event, "grope")				# Execute command handler using the proper stringset
-end
-
-$bot.command :vore do |event, *target|		# VORE Command
-	action(target, event, "vore")				# Execute command handler using the proper stringset
-end
-
-$bot.command :boof do |event, *target|		# BOOF Command
-	action(target, event, "boof")				# Execute command handler using the proper stringset
-end
+$bot.command :yiff do |event, *target| action(target, event, "yiff") end
+$bot.command :hug do |event, *target| action(target, event, "hug") end
+$bot.command :kiss do |event, *target| action(target, event, "kiss") end
+$bot.command :stab do |event, *target| action(target, event, "stab") end
+$bot.command :shoot do |event, *target| action(target, event, "shoot") end
+$bot.command :pet do |event, *target| action(target, event, "pet") end
+$bot.command :bless do |event, *target| action(target, event, "bless") end
+$bot.command :f do |event, *target| action(target, event, "respects") end
+$bot.command :nuke do |event, *target| action(target, event, "nuke") end
+$bot.command :meow do |event, *target| action(target, event, "meow") end
+$bot.command :grope do |event, *target| action(target, event, "grope") end
+$bot.command :vore do |event, *target| action(target, event, "vore") end
+$bot.command :boof do |event, *target| action(target, event, "boof") end
 
 #=========================================== E621 FETCHING ==========================================
 
@@ -344,9 +306,7 @@ $bot.command :e6 do |event, *tags|											# E6 Command
 	request.body = { limit: 1, tags: "order:random " + tags.join(" ") }.to_json	# Form the request
 	request.add_field('User-Agent', 'Ruby')										# Add USER AGENT field to the request. E6 gets pissy if this field is blank
 																				# Perform the actual HTTP GET
-	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') do |http|
-		http.request(request)
-	end
+	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') {|http| http.request(request)}
 
 	post = JSON.parse(result.body)['posts'][0]									# Create a shorthand variable to reference the post
 	if (post)																	# Proceed only if the post is populated with elements
@@ -360,6 +320,7 @@ $bot.command :e6 do |event, *tags|											# E6 Command
 				"  |  Favourites: **#{post['fav_count']}**" +
 				"  |  [Post](https://e621.net/post/show/#{post['id']})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
+			embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: artist, icon_url: 'https://e621.net/favicon.ico')
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
@@ -385,9 +346,7 @@ $bot.command :e9 do |event, *tags|											# E9 Command
 	request.body = { limit: 1, tags: "order:random " + tags.join(" ") }.to_json	# Form the request
 	request.add_field('User-Agent', 'Ruby')										# Add USER AGENT field to the request. E6 gets pissy if this field is blank
 																				# Perform the actual HTTP GET
-	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') do |http|
-		http.request(request)
-	end
+	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') {|http| http.request(request)}
 
 	post = JSON.parse(result.body)['posts'][0]									# Create a shorthand variable to reference the post
 	if (post)																	# Proceed only if the post is populated with elements
@@ -401,6 +360,7 @@ $bot.command :e9 do |event, *tags|											# E9 Command
 				"  |  Favourites: **#{post['fav_count']}**" +
 				"  |  [Post](https://e926.net/post/show/#{post['id']})"
 			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
+			embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: artist, icon_url: 'https://e621.net/favicon.ico')
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
