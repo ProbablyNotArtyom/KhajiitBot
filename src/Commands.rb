@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2020 Carson Herrington
+# Copyright (c) 2021 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
 # SOFTWARE.
 
 #====================================================================================================
-# KhajiitBot - NotArtyom - 2020
+# KhajiitBot - NotArtyom - 2021
 # ----------------------------------------
 # Command functions
 #====================================================================================================
@@ -121,7 +121,7 @@ end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 	user = Parser.get_user(target, event)									# Parse the target into a discord markup for IDs
-	target = (user == nil)? target.join(" ") : user.mention
+	target = (user.nil?)? target.join(" ") : user.mention
 	num = Random.new(target.sum).rand(11).to_s									# Generate a random number 0-10
 	return event.channel.send_embed do |embed|									# Return the message
 		embed.description = "I give **#{target}** a **#{num}/10**"				# Format string
@@ -376,12 +376,12 @@ $bot.command :'e6.blacklist' do |event, action, *tags|
 	if (action == "get") then
 		return event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
-			embed.description = Blacklist_E621.e621_get_blacklist().join(" ")
+			embed.description = Blacklist_E621.e621_black_tags.join(" ")
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
-	if (tags[0] == nil) then
+	if (tags[0].nil?) then
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No tags were specified for this action."
@@ -408,12 +408,12 @@ $bot.command :'e9.blacklist' do |event, action, *tags|
 	if (action == "get")
 		return event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
-			embed.description = Blacklist_E926.e621_get_blacklist().join(" ")
+			embed.description = Blacklist_E926.e621_black_tags.join(" ")
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
 
-	if (tags[0] == nil)
+	if (tags[0].nil?)
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No tags were specified for this action."
@@ -440,9 +440,9 @@ end
 
 $bot.command(:usermod, max_args: 2, min_args: 2) do |event, target, level|		# USERMOD Command
 	target = Parser.get_user(target).id
-	return nil if (target == nil)
+	return nil if (target.nil?)
 	return "Naughty! You are not an administrator." unless PList.query(event.user.id, 2)
-	return "User is already on list." if (PList.add(target, level) == nil)
+	return "User is already on list." if (PList.add(target, level).nil?)
 	return "User permissions updated."
 end
 

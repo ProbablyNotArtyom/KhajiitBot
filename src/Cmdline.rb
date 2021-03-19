@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2020 Carson Herrington
+# Copyright (c) 2021 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
 # SOFTWARE.
 
 #====================================================================================================
-# KhajiitBot - NotArtyom - 2020
+# KhajiitBot - NotArtyom - 2021
 # ----------------------------------------
 # Internal command prompt
 #====================================================================================================
@@ -32,41 +32,26 @@ PROMPT_HEIGHT	= 3
 CHAT_OFFSET		= HEAD_HEIGHT + PROMPT_HEIGHT
 
 def clense(str)							# Cleans any unicode characters longer than 1 byte
-	if (str.ascii_only?) then return str end
+	return str if (str.ascii_only?)
 	newstr = ""
-	str.each_char.with_index do |char, index|
-		if /[\x00-\x7F]/ =~ char
-			newstr[index] = str[index]
-		else
-			newstr[index] = '?'
-		end
-	end
+	str.each_char.with_index {|char, i| newstr[i] = (/[\x00-\x7F]/ =~ char)? str[i] : '?'}
 	return newstr
 end
 
 def new_textarray(array, diff, size)
 	if diff < 0 then
-		(0..(diff.abs-1)).each do |x|
-			$kbcli.delete(array[x])
-		end
+		(0..(diff.abs-1)).each {|x| $kbcli.delete(array[x])}
 		array.shift(diff.abs)
-		array.each do |line|
-			line.move(0, diff)
-		end
+		array.each {|line| line.move(0, diff)}
 	else
 		(0..(diff-1)).each do |x|
 			array.insert(x, RuTui::Text.new({ :x => 0, :y => HEAD_HEIGHT+x, :text => " ", :foreground => 15 }))
 			array[x].max_width = size[1]
 			array[x].pixel = $pixel_chat
 		end
-		((diff)..(array.length-1)).each do |x|
-			array[x].move(0, diff)
-		end
+		((diff)..(array.length-1)).each {|x| array[x].move(0, diff)}
 	end
-	array.each do |line|
-		line.create
-	end
-	return array
+	return array.each {|line| line.create}
 end
 
 def init_chat(screen)
@@ -83,7 +68,7 @@ def init_chat(screen)
 end
 
 def chat_scroll(screen, array, string, color=nil)
-	if color == nil then color = 15 end
+	color = 15 if (color.nil?)
 	numLines = (string.size / RuTui::Screen.size[1])
 
 	numLines.downto(0) do |x|
@@ -96,23 +81,17 @@ def chat_scroll(screen, array, string, color=nil)
 		screen.add(array.last)
 	end
 	array.shift(numLines+1)
-	(0..(array.length-numLines-2)).each do |index|
-		array[index].move(0, -(numLines+1))
-	end
+	(0..(array.length-numLines-2)).each {|i| array[i].move(0, -(numLines+1))}
 	RuTui::ScreenManager.draw
 end
 
 def chat_puts(screen, array, string, color=nil)
 	buffer = string[/^.+?(?=:)/]
-	if (buffer == nil) then buffer = "" end
-	if (buffer.size > 0)
-		buffer = (' ' * buffer.size)
-	end
+	buffer = "" if (buffer.nil?)
+	buffer = (' ' * buffer.size) if (buffer.size > 0)
 	string.each_line.with_index { |str, index|
 		str = str.strip
-		if (index > 0)
-			str = buffer + ": " + str
-		end
+		str = (buffer + ": " + str) if (index > 0)
 		chat_scroll(screen, array, str, color)
 	}
 end
@@ -146,9 +125,8 @@ def tui_redraw()
 	$size = new_size
 end
 
-def tui_get_location()
-	return "Current channel: #{server_get_name($cmdServer)}/#{channel_get_name($cmdChannel)}"
-end
+def tui_get_location() "Current channel: #{server_get_name($cmdServer)}/#{channel_get_name($cmdChannel)}" end
+$bot.message() do |e| chat_puts($kbcli, $screen, "#{e.message.author.display_name} : #{e.message.content}", 7) if (e.message.channel == $cmdChannel.id) end
 
 $pixel_chat = RuTui::Pixel.new(15, 0, " ")
 $pixel_head = RuTui::Pixel.new(15, 4, " ")
@@ -185,24 +163,12 @@ $kbcli.add($text_head)
 $cli_field = RuTui::Textfield.new({ :x => 1, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT+1, :pixel => $pixel_cli, :focus_pixel => $pixel_cli })
 $cli_field.set_focus
 $cli_field.width = RuTui::Screen.size[1]-2
-# For some reason this isn't set to any default...
 $cli_field.allow = ('0'..'9').to_a + ('a'..'z').to_a + ('A'..'Z').to_a + [" ", ":", "<", ">", "|", "#", "%", "^", "&",
 	"@", "*", ",", "!", "?", ".", "-", "_", "=", "+", "[", "]", "(", ")", "{", "}", ";", "\'", "\"", "\\", "/", "`", "~", "\$"]
+
 $kbcli.add($cli_field)
-
 $screen = init_chat($kbcli)
-
-$bot.message() do |event|	# Print out any messages from the current channel
-	if event.message.channel == $cmdChannel.id then
-		chat_puts($kbcli, $screen, "#{event.message.author.display_name} : #{event.message.content}", 7)
-	end
-end
-
 $size = RuTui::Screen.size
-
-Signal.trap("SIGWINCH") do
-	tui_redraw()
-end
 
 HELP_MESSAGE = "" +
 	"go       | Change to a different channel. args: [channel id]\n" +
@@ -223,6 +189,8 @@ HELP_MESSAGE = "" +
 	"update   | Forces the command UI to be redrawn.\n" +
 	"eval     | Evaluates ruby code. USED ONLY FOR DEBUGGING. args: [ruby code]"
 
+Signal.trap("SIGWINCH") { tui_redraw() }
+
 HBuff = CommandHistory.new(50)
 RuTui::ScreenManager.add(:default, $kbcli)
 RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
@@ -231,7 +199,7 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 	if key == :enter then
 		cmd_args = $cli_field.get_text.split(" ")
 		cmd_name = cmd_args.shift							# Move the command name into its own variable
-		unless cmd_name == nil								# Ignore everything if the input is nil
+		unless cmd_name.nil?								# Ignore everything if the input is nil
 			HBuff.append($cli_field.get_text)
 			cmd_name = cmd_name.downcase
 			case cmd_name
@@ -333,11 +301,8 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 				when "channels"							# CHANNELS command
 					srv = $cmdServer if (cmd_args.empty? && $cmdServer.is_a?(Discordrb::Server))	# If no servername argument is passed, use the current channel's parent server
 					srv = Parser.get_server(cmd_args.delete_at(0)) unless (cmd_args.empty?)			# If it is, then get the matching server object
-					if srv != nil
-						srv.channels.each {cli_puts($kbcli, $screen, "#{channel_get_name(_1)} : #{_1.id}", 11)}
-					else
-						cli_puts($kbcli, $screen, "Invalid Server", 1)
-					end
+					if (srv.nil?) then cli_puts($kbcli, $screen, "Invalid Server", 1)
+					else srv.channels.each {cli_puts($kbcli, $screen, "#{channel_get_name(_1)} : #{_1.id}", 11)} end
 				when "update"							# UPDATE command
 					tui_redraw()
 				when "eval"								# EVAL command
@@ -370,5 +335,6 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 		RuTui::ScreenManager.draw
 	end
 end
+
 RuTui::Screen.hide_cursor
 print RuTui::Ansi.clear_color + RuTui::Ansi.clear

@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2020 Carson Herrington
+# Copyright (c) 2021 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
 # SOFTWARE.
 
 #====================================================================================================
-# KhajiitBot - NotArtyom - 2020
+# KhajiitBot - NotArtyom - 2021
 # ----------------------------------------
 # Security and permissions functions
 #====================================================================================================
@@ -42,7 +42,7 @@ def action(mention, event, action)									# ACTION Handler method
 	mention = event.user.name if (mention.empty?)						# If the target of the action is empty, then assume the user is targeting themself
 	userTmp = Parser.get_user(mention, event)							# Parse the target name and get back a formatted mention
 	line = (userTmp != nil && userTmp.id == event.user.id)? rand(3) : rand(IO.readlines("./ext/#{action}.action").size-3)+3
-	target = (userTmp == nil)? mention.join(" ") : userTmp.mention
+	target = (userTmp.nil?)? mention.join(" ") : userTmp.mention
  	return event.channel.send_embed do |embed|																# Send the embedded action
 		embed.description = "**<@#{event.user.id}>** " + eval(IO.readlines("./ext/#{action}.action")[line])	# Pick a random string
 		embed.color = EMBED_MSG_COLOR
@@ -149,14 +149,14 @@ module Parser							# PARSE module for parsing user names and nicknames
 		return memberList.detect {|x| x.username.downcase.include?(user) || x.display_name.downcase.include?(user)}
 	end
 	def get_server(server)					# GET_SERVER method. Inputs a partial server name and returns the server object
-		return nil if server == nil
+		return nil if server.nil?
 		server = server.to_s.downcase
 
 		if (server.is_a?(Fixnum)) then return $bot.servers.values.detect {|srv| srv.id.include?(server)}
 		else return $bot.servers.values.detect {|srv| srv.name.downcase.include?(server)} end
 	end
 	def get_channel(channel, server=nil)	# GET_CHANNEL method. Inputs a partial channel name and returns the channel object
-		return nil if channel == nil
+		return nil if channel.nil?
 		channel = channel.join(' ') if channel.is_a?(Array)
 		channel = channel.downcase
 
@@ -170,17 +170,17 @@ end
 class Setting													# SETTING class for storing persistent data
 	def initialize()
 		@@persistent = {}											# Create a new empty array to house the settings
-		 File.open("./ext/sys/persistent", 'w+') {|f| f.write(JSON.generate(@@persistent)) } unless valid_json?(IO.read("./ext/sys/persistent"))
+		File.open("./ext/sys/persistent", 'w+') {|f| f.write(JSON.generate(@@persistent)) } unless valid_json?(IO.read("./ext/sys/persistent"))
 		@@persistent = JSON.load IO.read("./ext/sys/persistent")	# If the persistence file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
 	end
-	def save(name, val)																			# SAVE method. saves a piece of data with a name
-		@@persistent.store(name, val)															# Store the data itself
-		update_json("./ext/sys/persistent", @@persistent)										# Update the JSON file
-		return true																				# Return the all-good
+	def save(name, val)												# SAVE method. saves a piece of data with a name
+		@@persistent.store(name, val)								# Store the data itself
+		update_json("./ext/sys/persistent", @@persistent)			# Update the JSON file
+		return true													# Return the all-good
 	end
-	def get(name)																				# GET method. returns the data piece associated with a name, or nil if DNE
-		ret = @@persistent.fetch(name, nil)														# Attempt to fetch the value
-		unless ret == nil; return ret end														# if its nil, then return nil
+	def get(name)													# GET method. returns the data piece associated with a name, or nil if DNE
+		ret = @@persistent.fetch(name, nil)							# Attempt to fetch the value
+		return ret if (ret != nil)									# if its nil, then return nil
 	end
 end
 
@@ -224,14 +224,13 @@ class ImageMod
 end
 
 class E621_blacklist
+	attr_reader :e621_black_tags
+
 	@e621_black_tags = []
 	@config_name = ""
 	def initialize(sys_config, strname)
 		@config_name = strname
 		 @e621_black_tags = sys_config.get(@config_name) if (sys_config.get(@config_name) != nil)
-	end
-	def e621_get_blacklist()
-		return @e621_black_tags
 	end
 
 	def e621_append_blacklist(tags)
@@ -270,23 +269,15 @@ class CommandHistory
 		self.trim if (@hist.length > @max)	# Keep a maximum of 50 lines in the history
 		self.update_index
 	end
-	def up()
-		@index = (@index > 0)? @index - 1 : @index
-	end
-	def down()
-		@index = (@index < @hist.length - 1)? @index + 1 : @index
-	end
-	def peek()
-		return @hist[@index]
-	end
+	def up() @index = (@index > 0)? @index - 1 : @index end
+	def down() @index = (@index < @hist.length - 1)? @index + 1 : @index end
+	def peek() return @hist[@index] end
 
 	private
+	def trim() @hist.shift end
 	def update_index()
 		@index = @hist.length - 1
 		@line_buffer = @hist[@index]
-	end
-	def trim()
-		@hist.shift
 	end
 end
 
