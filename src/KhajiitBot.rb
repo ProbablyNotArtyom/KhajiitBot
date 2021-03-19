@@ -106,11 +106,6 @@ end
 
 #====================================================================================================
 
-$cmdChannel = Config.get("channel")			# Reload the last active channel
-$inBuffer = ""
-
-#====================================================================================================
-
 (DEBUG == true) ? ($bot.mode = :normal) : ($bot.mode = :silent)
 
 $bot.run :async								# Start the bot & run async
@@ -118,6 +113,13 @@ puts('Bot Active')							# Notify bot being active
 puts('Awaiting user activity...')
 
 while (DEBUG) do; end						# If DEBUG is enabled, then hault here instead of starting the CMD shell
+
+$cmdChannel = Parser.get_channel(Config.get("channel"))
+$cmdServer = Parser.get_server(Config.get("server"))
+
+$cmdChannel = ($cmdChannel)? $cmdChannel : channel_get_name($cmdChannel)
+$cmdServer = ($cmdServer)? $cmdServer : server_get_name($cmdServer)
+$inBuffer = ""
 
 require_relative 'Cmdline.rb'				# Start executing the internal shell
 

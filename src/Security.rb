@@ -30,7 +30,7 @@
 def valid_json?(json)				# Detect if a file is valid JSON
 	buff = JSON.parse(json)
 		return buff
-	rescue JSON::ParserError => e
+rescue JSON::ParserError
 		return nil
 end
 
@@ -58,8 +58,15 @@ def embed_error(message, channel)
 end
 
 def channel_get_name(chan)
-	if $bot.channel(chan.to_i).nil? then return "" end
+	if (chan.is_a?(Discordrb::Channel)) then return chan.name end
+	if $bot.channel(chan.to_i).nil? then return "<NO CHANNEL>" end
 	return $bot.channel(chan.to_i).name
+end
+
+def server_get_name(srv)
+	if (srv.is_a?(Discordrb::Server)) then return srv.name end
+	if Parser.get_server(srv).nil? then return "<NO SERVER>" end
+	return Parser.get_server(srv).name
 end
 
 def get_file_input(event)
@@ -145,8 +152,11 @@ module Parser																			# PARSE module for parsing user names and nickna
 	def get_user(user, event=nil)
 		user = user.join(' ') if user.is_a?(Array)
 		user = user.downcase
-		memberList = event.server.members if (event != nil)
-		memberList = $bot.servers.values.collect_concat {|srv| srv.members} if (event == nil)
+		if (event != nil && event.is_a?(Discordrb::Events::Event))
+			memberList = event.server.members
+		else
+			memberList = $bot.servers.values.collect_concat {|srv| srv.members}
+		end
 		if user.start_with?("<")
 			return $bot.parse_mention(user, event.server)
 		else
@@ -154,8 +164,28 @@ module Parser																			# PARSE module for parsing user names and nickna
 		end
 	end
 	def get_server(server)																# GET_SERVER method. Inputs a partial server name and returns the server object
-		return nil if server == nil															# If server name is nil then abort
-		return $bot.servers.values.detect {|srv| srv.name.include?(server)}
+		return nil if server == nil
+		server = server.to_s.downcase
+		if (server.is_a?(Fixnum))
+			return $bot.servers.values.detect {|srv| srv.id.include?(server)}
+		else
+			return $bot.servers.values.detect {|srv| srv.name.downcase.include?(server)}
+		end
+	end
+	def get_channel(channel, server=nil)												# GET_CHANNEL method. Inputs a partial channel name and returns the channel object
+		return nil if channel == nil
+		channel = channel.join(' ') if channel.is_a?(Array)
+		channel = channel.downcase
+		if (server != nil && server.is_a?(Discordrb::Server))
+			channelList = server.channels
+		else
+			channelList = $bot.servers.values.collect_concat {|srv| srv.channels}
+		end
+		if (channel.to_i >= 100000000000000000)
+			return $bot.parse_mention("<\##{channel}>", server)
+		else
+			return channelList.detect {|x| x.name.downcase.include?(channel)}
+		end
 	end
 end
 
