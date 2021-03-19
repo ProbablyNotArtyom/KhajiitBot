@@ -135,7 +135,7 @@ def tui_redraw()
 	$cli_field.move(0, new_size[0] - $size[0])
 	$box_cli.width = new_size[1]
 	$box_cli.move(0, new_size[0] - $size[0])
-	$fat_text_array = new_textarray($fat_text_array, new_size[0] - $size[0], $size)
+	$screen = new_textarray($screen, new_size[0] - $size[0], $size)
 
 	$line_head.create
 	$box_chat.create
@@ -186,15 +186,15 @@ $cli_field = RuTui::Textfield.new({ :x => 1, :y => RuTui::Screen.size[0]-PROMPT_
 $cli_field.set_focus
 $cli_field.width = RuTui::Screen.size[1]-2
 # For some reason this isn't set to any default...
-$cli_field.allow = ('0'..'9').to_a + ('a'..'z').to_a + ('A'..'Z').to_a + [" ", ":", "<", ">", "|", "#",
+$cli_field.allow = ('0'..'9').to_a + ('a'..'z').to_a + ('A'..'Z').to_a + [" ", ":", "<", ">", "|", "#", "%", "^", "&",
 	"@", "*", ",", "!", "?", ".", "-", "_", "=", "+", "[", "]", "(", ")", "{", "}", ";", "\'", "\"", "\\", "/", "`", "~", "\$"]
 $kbcli.add($cli_field)
 
-$fat_text_array = init_chat($kbcli)
+$screen = init_chat($kbcli)
 
 $bot.message() do |event|	# Print out any messages from the current channel
 	if event.message.channel == $cmdChannel.id then
-		chat_puts($kbcli, $fat_text_array, "#{event.message.author.display_name} : #{event.message.content}")
+		chat_puts($kbcli, $screen, "#{event.message.author.display_name} : #{event.message.content}", 7)
 	end
 end
 
@@ -223,17 +223,20 @@ HELP_MESSAGE = "" +
 	"update   | Forces the command UI to be redrawn.\n" +
 	"eval     | Evaluates ruby code. USED ONLY FOR DEBUGGING. args: [ruby code]"
 
+HBuff = CommandHistory.new(50)
 RuTui::ScreenManager.add(:default, $kbcli)
 RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 	break if key == :ctrl_c
 	$cli_field.set_focus
 	if key == :enter then
 		cmd_args = $cli_field.get_text.split(" ")
-		cmd_name = cmd_args.shift.downcase					# Move the command name into its own variable
+		cmd_name = cmd_args.shift							# Move the command name into its own variable
 		unless cmd_name == nil								# Ignore everything if the input is nil
+			HBuff.append($cli_field.get_text)
+			cmd_name = cmd_name.downcase
 			case cmd_name
 				when "help"					# HELP command
-					cli_puts($kbcli, $fat_text_array, HELP_MESSAGE)
+					cli_puts($kbcli, $screen, HELP_MESSAGE, 10)
 				when "go"					# GO command
 					cmd_args = cmd_args.join(" ")
 					if (!cmd_args.empty?)
@@ -258,7 +261,7 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 								$cmdServer = Parser.get_server(cmd_args)
 								$cmdChannel = nil
 							else
-								cli_puts($kbcli, $fat_text_array, "Invalid Channel", 1)
+								cli_puts($kbcli, $screen, "Invalid Channel", 1)
 							end
 						end
 						Config.save("channel", ($cmdChannel)? channel_get_name($cmdChannel) : nil)	# Save the current channel across runs
@@ -272,14 +275,14 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 					stat = cmd_args.delete_at(1)		# Delete the command
 					if stat == "online"
 						$bot.online
-						cli_puts($kbcli, $fat_text_array, "KhajiitBot now online")
+						cli_puts($kbcli, $screen, "KhajiitBot now online", 5)
 					elsif stat == "idle"
 						$bot.idle
-						cli_puts($kbcli, $fat_text_array, "KhajiitBot now idle")
+						cli_puts($kbcli, $screen, "KhajiitBot now idle", 5)
 					elsif stat == "invisible"
 						$bot.invisible
-						cli_puts($kbcli, $fat_text_array, "KhajiitBot now invisible")
-					else cli_puts($kbcli, $fat_text_array, "Invalid status", 1)
+						cli_puts($kbcli, $screen, "KhajiitBot now invisible", 5)
+					else cli_puts($kbcli, $screen, "Invalid status", 1)
 					end
 				when "play"								# PLAY command
 					msg = cmd_args.join(" ")				# Get desired string
@@ -307,7 +310,7 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 					id = cmd_args.delete_at(1).to_i			# Delete the server ID into id
 					$bot.servers.each_value {				# Scan the list of servers to find a match, then leave that server
 						if _1.id == id
-							cli_puts($kbcli, $fat_text_array, "Left #{_1.name}")
+							cli_puts($kbcli, $screen, "Left #{_1.name}", 5)
 							_1.leave
 							break 2
 						end
@@ -318,41 +321,52 @@ RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 					$bot.user(uid.to_i).pm(msg)
 				when "uid"								# UID command
 					uname = Parser.get_user(cmd_args.join(" "))
-					cli_puts($kbcli, $fat_text_array, (uname)? uname.id.to_s : "Invalid User", 1)
+					cli_puts($kbcli, $screen, (uname)? uname.id.to_s : "Invalid User", 1)
 				when "sid"								# SID command
 					sname = Parser.get_server(cmd_args.join(" "))
-					cli_puts($kbcli, $fat_text_array, (sname)? sname.id.to_s : "Invalid Server", 1)
+					cli_puts($kbcli, $screen, (sname)? sname.id.to_s : "Invalid Server", 1)
 				when "cid"								# CID command
 					cname = Parser.get_channel(cmd_args.join(" "))
-					cli_puts($kbcli, $fat_text_array, (cname)? cname.id.to_s : "Invalid Channel", 1)
+					cli_puts($kbcli, $screen, (cname)? cname.id.to_s : "Invalid Channel", 1)
 				when "servers"							# SERVERS command
-					$bot.servers.each_value {cli_puts($kbcli, $fat_text_array, "#{server_get_name(_1)} : #{_1.id}")}
+					$bot.servers.each_value {cli_puts($kbcli, $screen, "#{server_get_name(_1)} : #{_1.id}", 11)}
 				when "channels"							# CHANNELS command
 					srv = $cmdServer if (cmd_args.empty? && $cmdServer.is_a?(Discordrb::Server))	# If no servername argument is passed, use the current channel's parent server
 					srv = Parser.get_server(cmd_args.delete_at(0)) unless (cmd_args.empty?)			# If it is, then get the matching server object
 					if srv != nil
-						srv.channels.each {cli_puts($kbcli, $fat_text_array, "#{channel_get_name(_1)} : #{_1.id}")}
+						srv.channels.each {cli_puts($kbcli, $screen, "#{channel_get_name(_1)} : #{_1.id}", 11)}
 					else
-						cli_puts($kbcli, $fat_text_array, "Invalid Server", 1)
+						cli_puts($kbcli, $screen, "Invalid Server", 1)
 					end
 				when "update"							# UPDATE command
 					tui_redraw()
 				when "eval"								# EVAL command
-					cmd_args = cmd_args.join("")												# Flatten the array into a string
-					cmd_args.gsub!("puts(", "cli_puts($kbcli, $fat_text_array, ")				# Replace puts with the custom one so the output is written to the chat TUI element
+					cmd_args = cmd_args.join(" ")										# Flatten the array into a string
+					cli_puts($kbcli, $screen, "#{cmd_args}", 13)
+					cmd_args.gsub!("puts", "cli_puts $kbcli, $screen, ")				# Replace puts with the custom one so the output is written to the chat TUI element
+					cmd_args.gsub!("puts(", "cli_puts($kbcli, $screen, ")
 					begin
-						cli_puts($kbcli, $fat_text_array, "returned: #{eval(cmd_args).to_s}")	# Run the string as ruby code and display the return value
+						cli_puts($kbcli, $screen, "==> #{eval(cmd_args).to_s}")			# Run the string as ruby code and display the return value
 					rescue StandardError => err
-						cli_puts($kbcli, $fat_text_array, "ERROR: #{err.message}", 1)			# If the code generates an exception, display that too
+						cli_puts($kbcli, $screen, "ERROR: #{err.message}", 1)			# If the code generates an exception, display that too
 					end
 				else
-					cli_puts($kbcli, $fat_text_array, "Invalid Command", 1)
+					cli_puts($kbcli, $screen, "Invalid Command", 1)
 			end
 		end
 		$cli_field.set_text("")
 		RuTui::ScreenManager.draw
+	elsif (key == :up)
+		HBuff.up()
+		$cli_field.set_text(HBuff.peek)
+		RuTui::ScreenManager.draw
+	elsif (key == :down)
+		HBuff.down()
+		$cli_field.set_text(HBuff.peek)
+		RuTui::ScreenManager.draw
 	else
 		$cli_field.write(key)
+		HBuff.line_buffer = $cli_field.get_text
 		RuTui::ScreenManager.draw
 	end
 end

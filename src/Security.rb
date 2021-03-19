@@ -290,6 +290,43 @@ class E621_blacklist
 	end
 end
 
+class CommandHistory
+	attr_accessor :line_buffer
+	attr_reader :index, :max
+
+	@index = 0
+	def initialize(max_size=50)
+		@max = max_size
+		@hist = Array.new(1) { "" }
+		self.update_index
+	end
+	def append(line)
+		self.update_index
+		@hist[@index] = line
+		@hist.push("")
+		self.trim if (@hist.length > @max)	# Keep a maximum of 50 lines in the history
+		self.update_index
+	end
+	def up()
+		@index = (@index > 0)? @index - 1 : @index
+	end
+	def down()
+		@index = (@index < @hist.length - 1)? @index + 1 : @index
+	end
+	def peek()
+		return @hist[@index]
+	end
+
+	private
+	def update_index()
+		@index = @hist.length - 1
+		@line_buffer = @hist[@index]
+	end
+	def trim()
+		@hist.shift
+	end
+end
+
 #====================================================================================================
 
 module Urban
