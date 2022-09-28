@@ -44,9 +44,9 @@ require 'io/console'
 
 #=========================================== Constants ==============================================
 
-CLIENT_ID = File.read "./ext/sys/client"		# KhajiitBot Client ID (put it here, this one isn't valid!)
-TOKEN = File.read "./ext/sys/token"				# shh secrets (Put your token in this file too...)
-E621_KEY = File.read "./ext/sys/e621"			# ssh more secrets (Put your e621 account's API key here)
+CLIENT_ID = File.read("./ext/sys/client").chomp		# KhajiitBot Client ID (put it here, this one isn't valid!)
+TOKEN = File.read("./ext/sys/token").chomp			# shh secrets (Put your token in this file too...)
+E621_KEY = File.read("./ext/sys/e621").chomp		# ssh more secrets (Put your e621 account's API key here)
 
 DEBUG = false									# Enable to display debug info for commands that write to the debug stream
 
@@ -59,15 +59,42 @@ $boottime = 0									# Holds the time of the last boot
 
 #=============================================== Main ===============================================
 
-$bot = Discordrb::Commands::CommandBot.new token: TOKEN , client_id: CLIENT_ID , prefix: ['k.', 'K.'], fancy_log: true, ignore_bots: false, advanced_functionality: false
+$bot = Discordrb::Commands::CommandBot.new(
+	token: TOKEN,
+	client_id: CLIENT_ID,
+	prefix: ['k.', 'K.'],
+	fancy_log: true,
+	ignore_bots: false,
+	advanced_functionality: false,
+	intents: [
+		:servers,
+ 		:server_members,
+ 		:server_bans,
+ 		:server_emojis,
+ 		:server_integrations,
+ 		:server_webhooks,
+ 		:server_invites,
+ 		:server_voice_states,
+ 		:server_presences,
+ 		:server_messages,
+ 		:server_message_reactions,
+ 		:server_message_typing,
+ 		:direct_messages,
+ 		:direct_message_reactions,
+ 		:direct_message_typing
+	]
+)
+
 $bot.should_parse_self = true
 
 require_relative 'Security.rb'					# Abstractions
 require_relative 'Commands.rb'					# Bot commands
 require_relative 'Image.rb'						# Image manipulation
+require_relative 'Cmdline.rb'				# Start executing the internal shell
 
 PList = Permit.new()												# Create a permit list
 Config = Setting.new()												# Set up persistence class
+
 Blacklist_E926 = E621_blacklist.new(Config, "e926_blacklist")		# Set up e926 blacklist handler
 Blacklist_E621 = E621_blacklist.new(Config, "e621_blacklist")		# Set up e621 blacklist handler
 
@@ -75,21 +102,7 @@ $boottime = Time.new							# Save to time the bot was started. used of uptime
 puts('Current time: ' + $boottime.ctime)
 puts('KhajiitBot Starting...')
 
-$bot.ready do
-	if (Config.get("game") != nil)
-		$bot.game = Config.get("game")
-	elsif (Config.get("watching") != nil)
-		$bot.watching = Config.get("watching")
-	else
-		$bot.game = 'k.help'					# Set the "playing" text to the help command
-	end
-end
-
 #====================================================================================================
-
-trap('INT') do									# Graceful violent exit
-	exit
-end
 
 $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
 	target = "<@208140167536574464>"							# Parse the target name and get back a formatted ID
@@ -106,21 +119,27 @@ end
 
 #====================================================================================================
 
-(DEBUG == true) ? ($bot.mode = :normal) : ($bot.mode = :silent)
+$bot.mode = :normal
 
 $bot.run :async								# Start the bot & run async
+
+$bot.ready do |event|
+	puts("Bot Ready.")
+	if (Config.get("game") != nil)
+		$bot.game = Config.get("game")
+	elsif (Config.get("watching") != nil)
+		$bot.watching = Config.get("watching")
+	else
+		$bot.game = 'k.help'					# Set the "playing" text to the help command
+	end
+end
+
 puts('Bot Active')							# Notify bot being active
 puts('Awaiting user activity...')
 
 while (DEBUG) do; end						# If DEBUG is enabled, then hault here instead of starting the CMD shell
 
-$cmdChannel = Parser.get_channel(Config.get("channel"))
-$cmdServer = Parser.get_server(Config.get("server"))
-
-$cmdChannel = ($cmdChannel)? $cmdChannel : channel_get_name($cmdChannel)
-$cmdServer = ($cmdServer)? $cmdServer : server_get_name($cmdServer)
-$inBuffer = ""
-
-require_relative 'Cmdline.rb'				# Start executing the internal shell
+Interface = PilotInterface.new(Config)
+Interface.run(Config)
 
 #====================================================================================================

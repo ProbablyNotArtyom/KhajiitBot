@@ -57,18 +57,6 @@ def embed_error(message, channel)
 	end
 end
 
-def channel_get_name(chan)
-	if (chan.is_a?(Discordrb::Channel)) then return chan.name end
-	if $bot.channel(chan.to_i).nil? then return "<NO CHANNEL>" end
-	return $bot.channel(chan.to_i).name
-end
-
-def server_get_name(srv)
-	if (srv.is_a?(Discordrb::Server)) then return srv.name end
-	if Parser.get_server(srv).nil? then return "<NO SERVER>" end
-	return Parser.get_server(srv).name
-end
-
 def get_file_input(event)
 	if (event.message.attachments.empty?) then
 		chan_hist = event.channel.history(50)
@@ -150,18 +138,20 @@ module Parser							# PARSE module for parsing user names and nicknames
 	end
 	def get_server(server)					# GET_SERVER method. Inputs a partial server name and returns the server object
 		return nil if server.nil?
-		server = server.to_s.downcase
+		return server if (server.is_a?(Discordrb::Server))	# Idiot gaurd
 
-		if (server.is_a?(Fixnum)) then return $bot.servers.values.detect {|srv| srv.id.include?(server)}
-		else return $bot.servers.values.detect {|srv| srv.name.downcase.include?(server)} end
+		if (server.is_a?(Fixnum)) then return $bot.servers.values.detect {|srv| srv.id == server}
+		else return $bot.servers.values.detect {|srv| srv.name.downcase.include?(server.to_s.downcase)} end
 	end
 	def get_channel(channel, server=nil)	# GET_CHANNEL method. Inputs a partial channel name and returns the channel object
 		return nil if channel.nil?
+		return channel if (channel.is_a?(Discordrb::Channel))	# Idiot gaurd
 		channel = channel.join(' ') if channel.is_a?(Array)
-		channel = channel.downcase
 
 		if (server != nil && server.is_a?(Discordrb::Server)) then channelList = server.channels
+		elsif (server != nil && server.is_a?(Fixnum)) then channelList = get_server(server).channels
 		else channelList = $bot.servers.values.collect_concat {|srv| srv.channels} end
+
 		if (channel.to_i >= 100000000000000000) then return $bot.parse_mention("<\##{channel}>", server)
 		else return channelList.detect {|x| x.name.downcase.include?(channel)} end
 	end
