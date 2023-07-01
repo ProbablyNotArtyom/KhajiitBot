@@ -291,149 +291,135 @@ $bot.command :boof do |event, *target| action(target, event, "boof") end
 
 #=========================================== E621 FETCHING ==========================================
 
-$bot.command :e6 do |event, *tags|											# E6 Command
-	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
-	if (tags.count > 5)															# Enforce tag limit
+# Handles searching for both sites
+def command_e621_e926(event, tags, site_url, blacklist)
+	# Enforce tag limit
+	if (tags.count > 5)														
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Request had too many tags. Maximum number of tags is **5**"
-			embed.color = EMBED_MSG_COLOR
+			embed.color = EMBED_ERROR_COLOR
 		end
 	end
-
-	url = URI.parse("https://e621.net/posts.json")								# Parse base URI
+	
+	url = URI.parse("#{site_url}/posts.json")									# Parse base URI
 	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')		# Create new HTTP request
 	request.body = { limit: 1, tags: "order:random " + tags.join(" ") }.to_json	# Form the request
 	request.add_field('User-Agent', 'Ruby')										# Add USER AGENT field to the request. E6 gets pissy if this field is blank
-																				# Perform the actual HTTP GET
+	# Perform the actual HTTP GET
 	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') {|http| http.request(request)}
-
-	post = JSON.parse(result.body)['posts'][0]									# Create a shorthand variable to reference the post
+	
+	post = nil													# Will hold the selected post
+	posts = JSON.parse(result.body)['posts']					# Array of all posts recieved
+	posts.each_with_index do |x, i|								# Iterate over the first 5 posts to try and find one that isn't blacklisted
+		break if (i >= 5)										# Give up after 5 tries
+		taglist = []
+		x['tags'].each_value {|y| taglist = taglist + y}
+		blacklisted = blacklist.check_tags(taglist)		# Check for blacklisted tags
+		if (blacklisted.empty?) 								# Found something with no blacklist hits
+			post = x
+			break
+		end
+	end
+	
 	if (post)																	# Proceed only if the post is populated with elements
-		return nil if (require_blacklist(event, post, Blacklist_E621))			# Handle error conditions from blacklisted tags
-
-		file = post['file']['url']												# Parse the URL of the image
-		artist = post['tags']['artist'][0]										# Parse the name of the artist
 		return event.channel.send_embed do |embed|								# Construct the returning embed
 			embed.title = "Tags: " + tags.join(" ")
 			embed.description = "Score: **#{post['score']['total']}**" +
 				"  |  Favourites: **#{post['fav_count']}**" +
-				"  |  [Post](https://e621.net/post/show/#{post['id']})"
-			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
-			embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: artist, icon_url: 'https://e621.net/favicon.ico')
+				"  |  [Post](#{site_url}/post/show/#{post['id']})"
+			embed.image = Discordrb::Webhooks::EmbedImage.new(url: post['file']['url'])
+			embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: post['tags']['artist'].join(", "), icon_url: "#{site_url}/favicon.ico")
 			embed.color = EMBED_MSG_COLOR
 		end
+	elsif (posts[0] == nil)			# No posts found matching the query
+		return event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
+			embed.color = EMBED_ERROR_COLOR
+		end
+	else 							# Could only find blacklisted posts within 5 tries
+		return event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "Could not find a non blacklisted post within 5 tries. Try again"
+			embed.color = EMBED_ERROR_COLOR
+		end
 	end
+end
 
-	return event.channel.send_embed do |embed|									# In the event that we can't parse any useful information back...
-		embed.title = "Error"													# Assume that no images were found under the given tags and error out
-		embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
-		embed.color = EMBED_MSG_COLOR
-	end
+$bot.command :e6 do |event, *tags|											# E6 Command
+	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
+	command_e621_e926(event, tags, "https://e621.net", Blacklist_E621)
 end
 
 $bot.command :e9 do |event, *tags|											# E9 Command
-	if (tags.count > 5)															# Enforce tag limit
-		return event.channel.send_embed do |embed|
-			embed.title = "Error"
-			embed.description = "Request had too many tags. Maximum number of tags is **5**"
-			embed.color = EMBED_MSG_COLOR
-		end
-	end
-
-	url = URI.parse("https://e926.net/posts.json")								# Parse base URI
-	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')		# Create new HTTP request
-	request.body = { limit: 1, tags: "order:random " + tags.join(" ") }.to_json	# Form the request
-	request.add_field('User-Agent', 'Ruby')										# Add USER AGENT field to the request. E6 gets pissy if this field is blank
-																				# Perform the actual HTTP GET
-	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') {|http| http.request(request)}
-
-	post = JSON.parse(result.body)['posts'][0]									# Create a shorthand variable to reference the post
-	if (post)																	# Proceed only if the post is populated with elements
-		return nil if (require_blacklist(event, post, Blacklist_E926))			# Handle error conditions from blacklisted tags
-
-		file = post['file']['url']												# Parse the URL of the image
-		artist = post['tags']['artist'][0]										# Parse the name of the artist
-		return event.channel.send_embed do |embed|								# Construct the returning embed
-			embed.title = "Tags: " + tags.join(" ")
-			embed.description = "Score: **#{post['score']['total']}**" +
-				"  |  Favourites: **#{post['fav_count']}**" +
-				"  |  [Post](https://e926.net/post/show/#{post['id']})"
-			embed.image = Discordrb::Webhooks::EmbedImage.new(url: file)
-			embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: artist, icon_url: 'https://e621.net/favicon.ico')
-			embed.color = EMBED_MSG_COLOR
-		end
-	end
-
-	return event.channel.send_embed do |embed|									# In the event that we can't parse any useful information back...
-		embed.title = "Error"													# Assume that no images were found under the given tags and error out
-		embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
-		embed.color = EMBED_MSG_COLOR
-	end
+	command_e621_e926(event, tags, "https://e926.net", Blacklist_E926)
 end
 
-$bot.command :'e6.blacklist' do |event, action, *tags|
-	if (action == "get") then
-		return event.channel.send_embed do |embed|
-			embed.title = "Tag Blacklist"
-			embed.description = Blacklist_E621.e621_black_tags.join(" ")
-			embed.color = EMBED_MSG_COLOR
-		end
-	end
-
-	if (tags[0].nil?) then
-		return event.channel.send_embed do |embed|
-			embed.title = "Error"
-			embed.description = "No tags were specified for this action."
-			embed.color = EMBED_MSG_COLOR
-		end
-	end
-
-	if (action == "add")
-		Blacklist_E621.e621_append_blacklist(tags)
-	elsif (action == "remove")
-		Blacklist_E621.e621_purge_blacklist(tags)
-	else
-		return nil
-	end
-
-	return event.channel.send_embed do |embed|
-		embed.title = "Tag Blacklist"
-		embed.description = "Blacklist modified."
-		embed.color = EMBED_MSG_COLOR
-	end
-end
-
-$bot.command :'e9.blacklist' do |event, action, *tags|
+# Handles blacklist for both sites
+def command_blacklist_e621_e926(event, action, tags, blacklist)
 	if (action == "get")
 		return event.channel.send_embed do |embed|
 			embed.title = "Tag Blacklist"
-			embed.description = Blacklist_E926.e621_black_tags.join(" ")
+			embed.description = (blacklist.e621_black_tags.empty?)? "" : blacklist.e621_black_tags.join(" ")
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
-
+	
+	if (action == "clear")
+		blacklist.clear()
+		return event.channel.send_embed do |embed|
+			embed.title = "Tag Blacklist"
+			embed.description = "Blacklist cleared."
+			embed.color = EMBED_MSG_COLOR
+		end
+	end
+	
+	if (action == "help" || action == nil)
+		return event.channel.send_embed do |embed|
+			embed.title = "Available options"
+			embed.description = "get : Returns the blacklist\n" +
+				"add <tags> : Adds tags to the blacklist\n" +
+				"clear : Clears the entire blacklist\n" +
+				"remove <tags> : Removes tags from the blacklist\n" +
+				"\n" +
+				"<tags> is a list of tags seperated by spaces"
+			
+			embed.color = EMBED_MSG_COLOR
+		end
+	end
+	
 	if (tags[0].nil?)
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "No tags were specified for this action."
-			embed.color = EMBED_MSG_COLOR
+			embed.color = EMBED_ERROR_COLOR
+		end
+	else
+		if (action == "add")
+			blacklist.append(tags)
+			return event.channel.send_embed do |embed|
+				embed.title = "Tag Blacklist"
+				embed.description = "Added #{tags.length} tags."
+				embed.color = EMBED_MSG_COLOR
+			end
+		elsif (action == "remove")
+			blacklist.remove(tags)
+			return event.channel.send_embed do |embed|
+				embed.title = "Tag Blacklist"
+				embed.description = "Removed #{tags.length} tags."
+				embed.color = EMBED_MSG_COLOR
+			end
 		end
 	end
+end
 
-	if (action == "add")
-		Blacklist_E926.e621_append_blacklist(tags)
-	elsif (action == "remove")
-		Blacklist_E926.e621_purge_blacklist(tags)
-	else
-		return nil
-	end
+$bot.command :'e6.blacklist' do |event, action, *tags|
+	command_blacklist_e621_e926(event, action, tags, Blacklist_E621)
+end
 
-	return event.channel.send_embed do |embed|
-		embed.title = "Tag Blacklist"
-		embed.description = "Blacklist modified."
-		embed.color = EMBED_MSG_COLOR
-	end
+$bot.command :'e9.blacklist' do |event, action, *tags|
+	command_blacklist_e621_e926(event, action, tags, Blacklist_E926)
 end
 
 #============================================ INTERNAL ==============================================

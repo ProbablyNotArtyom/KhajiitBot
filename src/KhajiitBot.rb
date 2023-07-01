@@ -48,14 +48,14 @@ CLIENT_ID = File.read("./ext/sys/client").chomp		# KhajiitBot Client ID (put it 
 TOKEN = File.read("./ext/sys/token").chomp			# shh secrets (Put your token in this file too...)
 E621_KEY = File.read("./ext/sys/e621").chomp		# ssh more secrets (Put your e621 account's API key here)
 
-DEBUG = false									# Enable to display debug info for commands that write to the debug stream
+DEBUG = false										# Enable to display debug info for commands that write to the debug stream
 
-EMBED_MSG_COLOR = 0xf5367c						# Sets the default embed color used by bot embeds
-EMBED_ERROR_COLOR = 0xe62f2f					# Sets the embed color used for error messages
+EMBED_MSG_COLOR = 0xf5367c							# Sets the default embed color used by bot embeds
+EMBED_ERROR_COLOR = 0xe62f2f						# Sets the embed color used for error messages
 
 #============================================= Globals ==============================================
 
-$boottime = 0									# Holds the time of the last boot
+$boottime = 0										# Holds the time of the last boot
 
 #=============================================== Main ===============================================
 
@@ -87,10 +87,10 @@ $bot = Discordrb::Commands::CommandBot.new(
 
 $bot.should_parse_self = true
 
-require_relative 'Security.rb'					# Abstractions
-require_relative 'Commands.rb'					# Bot commands
-require_relative 'Image.rb'						# Image manipulation
-require_relative 'Cmdline.rb'				# Start executing the internal shell
+require_relative 'Helpers.rb'				# Abstractions
+require_relative 'Commands.rb'				# Bot commands
+require_relative 'Image.rb'					# Image manipulation
+require_relative 'Cmdline.rb'				# Internal shell
 
 PList = Permit.new()												# Create a permit list
 Config = Setting.new()												# Set up persistence class
@@ -98,7 +98,7 @@ Config = Setting.new()												# Set up persistence class
 Blacklist_E926 = E621_blacklist.new(Config, "e926_blacklist")		# Set up e926 blacklist handler
 Blacklist_E621 = E621_blacklist.new(Config, "e621_blacklist")		# Set up e621 blacklist handler
 
-$boottime = Time.new							# Save to time the bot was started. used of uptime
+$boottime = Time.new							# Save to time the bot was started. used in uptime
 puts('Current time: ' + $boottime.ctime)
 puts('KhajiitBot Starting...')
 
@@ -121,8 +121,10 @@ end
 
 $bot.mode = :normal
 
-$bot.run :async								# Start the bot & run async
+# Start the bot & run async
+$bot.run :async
 
+# Update upon bot finishing its startup
 $bot.ready do |event|
 	puts("Bot Ready.")
 	if (Config.get("game") != nil)
@@ -130,16 +132,20 @@ $bot.ready do |event|
 	elsif (Config.get("watching") != nil)
 		$bot.watching = Config.get("watching")
 	else
-		$bot.game = 'k.help'					# Set the "playing" text to the help command
+		$bot.game = 'k.help'
 	end
 end
 
-puts('Bot Active')							# Notify bot being active
+# Notify bot being active
+puts('Bot Active')							
 puts('Awaiting user activity...')
 
-while (DEBUG) do; end						# If DEBUG is enabled, then hault here instead of starting the CMD shell
+# If DEBUG is enabled, then hault here instead of starting the CMD shell
+while (DEBUG) do; end						
 
+# Startup the TUI interface
 Interface = PilotInterface.new(Config)
+Signal.trap("SIGWINCH") { Interface.tui_redraw() }	# Redraw TUI when window is resized
 Interface.run(Config)
 
 #====================================================================================================
