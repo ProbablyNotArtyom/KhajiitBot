@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2021 Carson Herrington
+# Copyright (c) 2024 Carson Herrington
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
 # SOFTWARE.
 
 #====================================================================================================
-# KhajiitBot - NotArtyom - 2021
+# KhajiitBot - NotArtyom - 2024
 # ----------------------------------------
 # A Discord bot written in ruby
 #====================================================================================================
@@ -111,7 +111,7 @@ $boottime = Time.new							# Save to time the bot was started. used in uptime
 puts('Current time: ' + $boottime.ctime)
 puts('KhajiitBot Starting...')
 
-#====================================================================================================
+#========================================== Global Functions =======================================
 
 $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
 	target = "<@208140167536574464>"							# Parse the target name and get back a formatted ID
@@ -151,7 +151,7 @@ Signal.trap("WINCH") do
 	Interface.tui_redraw()
 end
 
-#====================================================================================================
+#=========================================== Main ==================================================
 
 $bot.mode = :normal
 
