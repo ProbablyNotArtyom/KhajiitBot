@@ -427,8 +427,8 @@ class PilotInterface
 			RuTui::ScreenManager.draw
 		end
 
-		print RuTui::Ansi.clear_color + RuTui::Ansi.clear	# Were shutting down now, clear the screen
-		print "\033[?25h"									# Make sure the cursor is visible
+		# Execution should never get here, but exit just in case
+		exit
 	end
 
 	protected :clense

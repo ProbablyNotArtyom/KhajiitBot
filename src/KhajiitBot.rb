@@ -117,6 +117,17 @@ def debug_puts(str)
 	puts(str) if (DEBUG == true)
 end
 
+# End gracefully when killed or ended
+at_exit do
+	print RuTui::Ansi.clear_color + RuTui::Ansi.clear	# Were shutting down now, clear the screen
+	print "\033[?25h"									# Make sure the cursor is visible
+end
+
+# Redraw TUI when window is resized
+Signal.trap("WINCH") do
+	Interface.tui_redraw()
+end
+
 #====================================================================================================
 
 $bot.mode = :normal
@@ -145,7 +156,6 @@ while (DEBUG) do; end
 
 # Startup the TUI interface
 Interface = PilotInterface.new(Config)
-Signal.trap("SIGWINCH") { Interface.tui_redraw() }	# Redraw TUI when window is resized
 Interface.run(Config)
 
 #====================================================================================================

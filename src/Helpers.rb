@@ -157,7 +157,7 @@ module Parser							# PARSE module for parsing user names and nicknames
 		return nil if server.nil?
 		return server if (server.is_a?(Discordrb::Server))	# Idiot gaurd
 
-		if (server.is_a?(Fixnum)) then return $bot.servers.values.detect {|srv| srv.id == server}
+		if (server.is_a?(Integer)) then return $bot.servers.values.detect {|srv| srv.id == server}
 		else return $bot.servers.values.detect {|srv| srv.name.downcase.include?(server.to_s.downcase)} end
 	end
 	
@@ -167,7 +167,7 @@ module Parser							# PARSE module for parsing user names and nicknames
 		channel = channel.join(' ') if channel.is_a?(Array)
 
 		if (server != nil && server.is_a?(Discordrb::Server)) then channelList = server.channels
-		elsif (server != nil && server.is_a?(Fixnum)) then channelList = get_server(server).channels
+		elsif (server != nil && server.is_a?(Integer)) then channelList = get_server(server).channels
 		else channelList = $bot.servers.values.collect_concat {|srv| srv.channels} end
 
 		if (channel.to_i >= 100000000000000000) then return $bot.parse_mention("<\##{channel}>", server)
