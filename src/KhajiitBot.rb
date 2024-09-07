@@ -113,8 +113,22 @@ $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
 	end
 end
 
+# Emoji responder (free nitro!)
+# Match any message containing : or \
+$bot.message(start_with: /[\\:]/) do |event|
+	str = event.content
+	next if (str[0] != ':') 					# Do nothing if the message doesnt begin with the emoji formatter
+	str = str.strip.gsub(/[\\]/, '')				# Remove escape characters
+	str = str.delete_prefix(':').delete_suffix(':')	# Remove leading/trailing formatting if present
+
+	emoji = Parser.get_emoji(str)					# Try to match an emoji name
+	if (emoji.is_a?(Discordrb::Emoji))				# Respond with the emoji if its valid
+		event.respond "#{emoji.mention}"
+	end
+end
+
 def debug_puts(str)
-	puts(str) if (DEBUG == true)
+	cli_puts("[DEBUG] #{str}", Parser::Color::RED) if (DEBUG == true)
 end
 
 # End gracefully when killed or ended
@@ -150,9 +164,6 @@ end
 # Notify bot being active
 puts('Bot Active')							
 puts('Awaiting user activity...')
-
-# If DEBUG is enabled, then hault here instead of starting the CMD shell
-while (DEBUG) do; end						
 
 # Startup the TUI interface
 Interface = PilotInterface.new(Config)

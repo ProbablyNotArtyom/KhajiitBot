@@ -28,8 +28,27 @@
 #====================================================================================================
 
 class PilotInterface
+	# Color constants
+	module Color
+		BLACK			= 0
+		RED				= 1
+		GREEN			= 2
+		YELLOW			= 3
+		BLUE			= 4
+		PURPLE			= 5
+		CYAN			= 6
+		WHITE			= 7
+		BRIGHTBLACK		= 8
+		BRIGHT_RED		= 9
+		BRIGHT_GREEN	= 10
+		BRIGHT_YELLOW	= 11
+		BRIGHT_BLUE		= 12
+		BRIGHT_PURPLE	= 13
+		BRIGHT_CYAN		= 14
+		BRIGHT_WHITE	= 15
+	end
+
 	# Hardcoded values for positioning the TUI elements. Yes, i know its egregious
-	
 	HEAD_HEIGHT			= 1
 	PROMPT_HEIGHT		= 3
 	CHAT_OFFSET			= HEAD_HEIGHT + PROMPT_HEIGHT
@@ -68,7 +87,7 @@ class PilotInterface
 		# Update the chat text as discordrb detects new messages
 		$bot.message() do |e|
 			if (e.message.channel == @open_channel_id) then
-				chat_puts(@kbcli, @screen, "#{e.message.author.display_name} : #{e.message.content}", 7)
+				chat_puts("#{e.message.author.display_name} : #{e.message.content}", Color::WHITE)
 			end
 		end
 		
@@ -181,26 +200,26 @@ class PilotInterface
 	end
 
 	# Print string scrolling chat
-	def chat_scroll(screen, array, string, color=15)
+	def chat_scroll(string, color=15)
 		# Split string into multiple lines based on the max lign length
 		numLines = (string.size / RuTui::Screen.size[1])
 
 		# For each new line, add it to the screen
 		numLines.downto(0) do |x|
-			screen.delete(array[x])
-			array.push(RuTui::Text.new({ :x => 0, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT-1-x, :text => string[0..RuTui::Screen.size[1]], :foreground => color }))
+			@kbcli.delete(@screen[x])
+			@screen.push(RuTui::Text.new({ :x => 0, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT-1-x, :text => string[0..RuTui::Screen.size[1]], :foreground => color }))
 			string = string[RuTui::Screen.size[1]-1..-1]
 			
 			# Configure each new line
-			array.last.max_width = RuTui::Screen.size[1]
-			array.last.pixel = @pixel_chat
-			array.last.create
+			@screen.last.max_width = RuTui::Screen.size[1]
+			@screen.last.pixel = @pixel_chat
+			@screen.last.create
 			
 			# Add it to the screen
-			screen.add(array.last)
+			@kbcli.add(@screen.last)
 		end
-		array.shift(numLines+1)
-		(0..(array.length-numLines-2)).each {|i| array[i].move(0, -(numLines+1))} 	# ???
+		@screen.shift(numLines+1)
+		(0..(@screen.length-numLines-2)).each {|i| @screen[i].move(0, -(numLines+1))} 	# ???
 		RuTui::ScreenManager.draw
 	end
 
@@ -244,7 +263,7 @@ class PilotInterface
 	end
 
 	# Prints a string to the chat, handling all internals like scrolling and widget placement
-	def chat_puts(screen, array, string, color=nil)
+	def chat_puts(string, color=nil)
 		# Create a buffer that aligns the wrapped ligns vertically with the ':' seperator in the first line
 		buffer = string[/^.+?(?=:)/]
 		buffer = "" if (buffer.nil?)
@@ -254,17 +273,19 @@ class PilotInterface
 		string.each_line.with_index do |str, index|
 			str = str.strip
 			str = (buffer + ": " + str) if (index > 0)
-			chat_scroll(screen, array, str, color)
+			chat_scroll(str, color)
 		end
+		return nil
 	end
 	
 	# Same as chat_puts, but for use by the CLI instead of messages
-	def cli_puts(screen, array, string, color=nil)
+	def cli_puts(string, color=nil)
 		string = clense(string)		# Remove unicode
 		string.each_line do |str|
 			str = str.strip
-			chat_scroll(screen, array, str, color)
+			chat_scroll(str, color)
 		end
+		return nil
 	end
 
 	def run(config_obj)
@@ -279,7 +300,7 @@ class PilotInterface
 					cmd_name = cmd_name.downcase
 					case cmd_name
 						when "help"
-							cli_puts(@kbcli, @screen, HELP_MESSAGE, 10)
+							cli_puts(HELP_MESSAGE, 10)
 						when "go"
 							cmd_args = cmd_args.join(" ")
 							parent_server_id = nil
@@ -296,7 +317,7 @@ class PilotInterface
 									@open_server_id = Parser.get_server(cmd_args).id
 									@open_channel_id = nil
 								else
-									cli_puts(@kbcli, @screen, "Server/Channel not found", 1)
+									cli_puts("Server/Channel not found", 1)
 								end
 
 								if (config_obj.is_a?(Setting))
@@ -313,14 +334,14 @@ class PilotInterface
 							stat = cmd_args.delete_at(1)		# Delete the command
 							if stat == "online"
 								$bot.online
-								cli_puts(@kbcli, @screen, "KhajiitBot now online", 5)
+								cli_puts("KhajiitBot now online", Color::PURPLE)
 							elsif stat == "idle"
 								$bot.idle
-								cli_puts(@kbcli, @screen, "KhajiitBot now idle", 5)
+								cli_puts("KhajiitBot now idle", Color::PURPLE)
 							elsif stat == "invisible"
 								$bot.invisible
-								cli_puts(@kbcli, @screen, "KhajiitBot now invisible", 5)
-							else cli_puts(@kbcli, @screen, "Invalid status", 1)
+								cli_puts("KhajiitBot now invisible", Color::PURPLE)
+							else cli_puts("Invalid status", Color::RED)
 							end
 						when "play"
 							msg = cmd_args.join(" ")				# Get desired string
@@ -341,7 +362,7 @@ class PilotInterface
 							if (Parser.get_channel(@open_channel_id))
 								$bot.send_message(@open_channel_id, msg)	# Send the message
 							else
-								cli_puts(@kbcli, @screen, "Invalid Server/Channel", 1)
+								cli_puts("Invalid Server/Channel", Color::RED)
 							end
 						when "embed"
 							msg = cmd_args.join(" ")						# Joint the rest of the input, as it is our message
@@ -349,7 +370,7 @@ class PilotInterface
 								{"description" => msg, "color" => EMBED_MSG_COLOR})
 						when "rm"
 							if (@open_channel_id == nil)
-								cli_puts(@kbcli, @screen, "No open channel", 1)
+								cli_puts("No open channel", Color::RED)
 							else
 								msg = Parser.get_channel(@open_channel_id).history(10).collect { _1.author.id }	# Make id table
 								@i = 0
@@ -360,7 +381,7 @@ class PilotInterface
 							id = cmd_args.delete_at(1).to_i			# Delete the server ID into id
 							$bot.servers.each_value {				# Scan the list of servers to find a match, then leave that server
 								if _1.id == id
-									cli_puts(@kbcli, @screen, "Left #{_1.name}", 5)
+									cli_puts("Left #{_1.name}", Color::PURPLE)
 									_1.leave
 									break 2
 								end
@@ -371,18 +392,18 @@ class PilotInterface
 							$bot.user(uid.to_i).pm(msg)
 						when "uid"
 							uname = Parser.get_user(cmd_args.join(" "))
-							cli_puts(@kbcli, @screen, (uname)? uname.id.to_s : "Invalid User", 1)
+							cli_puts((uname)? uname.id.to_s : "Invalid User", Color::RED)
 						when "sid"
 							sname = Parser.get_server(cmd_args.join(" "))
-							cli_puts(@kbcli, @screen, (sname)? sname.id.to_s : "Invalid Server", 1)
+							cli_puts((sname)? sname.id.to_s : "Invalid Server", Color::RED)
 						when "cid"
 							cname = Parser.get_channel(cmd_args.join(" "))
-							cli_puts(@kbcli, @screen, (cname)? cname.id.to_s : "Invalid Channel", 1)
+							cli_puts((cname)? cname.id.to_s : "Invalid Channel", Color::RED)
 						when "servers"
-							$bot.servers.each_value {cli_puts(@kbcli, @screen, "#{(_1).name} : #{_1.id}", 11)}
+							$bot.servers.each_value {cli_puts("#{(_1).name} : #{_1.id}", Color::BRIGHT_YELLOW)}
 						when "channels"
 							if (@open_server_id == nil)
-								cli_puts(@kbcli, @screen, "No open server", 1)
+								cli_puts("No open server", 1)
 							else
 								if (cmd_args.empty?)
 									srv = Parser.get_server(@open_server_id) 			# If no servername argument is passed, use the current channel's parent server
@@ -390,25 +411,25 @@ class PilotInterface
 									srv = Parser.get_server(cmd_args.delete_at(0))		# If it is, then get the matching server object
 								end
 								if (srv.nil?)
-									then cli_puts(@kbcli, @screen, "Invalid Server", 1)
+									then cli_puts("Invalid Server", 1)
 								else
-									srv.channels.each {cli_puts(@kbcli, @screen, "#{(_1).name} : #{_1.id}", 11)}
+									srv.channels.each {cli_puts("#{(_1).name} : #{_1.id}", Color::BRIGHT_YELLOW)}
 								end
 							end
 						when "update"
 							tui_redraw()
 						when "eval"
-							cmd_args = cmd_args.join(" ")										# Flatten the array into a string
-							cli_puts(@kbcli, @screen, "#{cmd_args}", 13)
-							cmd_args.gsub!("puts", "cli_puts @kbcli, @screen, ")				# Replace puts with the custom one so the output is written to the chat TUI element
-							cmd_args.gsub!("puts(", "cli_puts(@kbcli, @screen, ")
+							cmd_args = cmd_args.join(" ")						# Flatten the array into a string
+							cli_puts("#{cmd_args}", 13)
+							cmd_args.gsub!("puts", "cli_puts")					# Replace puts with the custom one so the output is written to the chat TUI element
+							cmd_args.gsub!("puts(", "cli_puts(")
 							begin
-								cli_puts(@kbcli, @screen, "==> #{eval(cmd_args).to_s}")			# Run the string as ruby code and display the return value
-							rescue StandardError => err
-								cli_puts(@kbcli, @screen, "ERROR: #{err.message}", 1)			# If the code generates an exception, display that too
+								cli_puts("==> #{eval(cmd_args).to_s}", Color::BRIGHT_CYAN)	# Run the string as ruby code and display the return value
+							rescue Exception => err
+								cli_puts("ERROR: #{err.message}", Color::RED)				# If the code generates an exception, display that too
 							end
 						else
-							cli_puts(@kbcli, @screen, "Invalid Command", 1)
+							cli_puts("Invalid Command", Color::RED)
 					end
 				end
 				@cli_field.set_text("")

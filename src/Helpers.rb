@@ -103,21 +103,21 @@ class Permit																		# Permit checking class
 		return
 	end
 	
-	def add(user, level)																		# ADD method. Adds a user to the permits
+	def add(user, level)																	# ADD method. Adds a user to the permits
 		@@permits.store(user.to_s, level.to_i)													# add the ID to the permits array
 		update_json("./ext/sys/permissions", @@permits)											# Update the saved permits
 		return true
 	end
 	
-	def is_exist(user)																			# IS_EXIST method. Checks if a user is in the permits
+	def is_exist(user)																		# IS_EXIST method. Checks if a user is in the permits
 		return @@permits.fetch(user.to_s, nil) != nil											# If the user is in the permits, then return true
 	end
 	
-	def query(user, level)																		# QUERY method. Checks if a user is a specific access level (0 = none, 1=usage, 2=admin)
+	def query(user, level)																	# QUERY method. Checks if a user is a specific access level (0 = none, 1=usage, 2=admin)
 		return @@permits.fetch(user.to_s, 0) >= level.to_i										# Check the user's access level and return false if not equal
 	end
 	
-	def list(svevent)																			# LIST method. Lists the current permits
+	def list(svevent)																		# LIST method. Lists the current permits
 		i = 0
 		out = ""																				# Setup list buffer
 		userlist = svevent.server.members														# Get the member arrays of all members
@@ -143,9 +143,11 @@ end
 module Parser							# PARSE module for parsing user names and nicknames
 	extend self
 	
-	def get_user(user, event=nil)
-		user = user.join(' ') if user.is_a?(Array)
-		user = user.downcase
+	def get_user(user, event=nil)				# GET_USER method. Inputs a partial username and a message event. returns a user object
+		return nil if user.nil?
+		return nil if (user.is_a?(Array) && user.length == 0)	# Idiot guard
+		user = user.join(' ') if user.is_a?(Array)				# Stringify
+		user = user.downcase									# Ensure lowercase so we can ignore case when matching
 
 		if (event != nil && event.is_a?(Discordrb::Events::Event)) then memberList = event.server.members
 		else memberList = $bot.servers.values.collect_concat {|srv| srv.members} end
@@ -153,18 +155,18 @@ module Parser							# PARSE module for parsing user names and nicknames
 		return memberList.detect {|x| x.username.downcase.include?(user) || x.display_name.downcase.include?(user)}
 	end
 	
-	def get_server(server)					# GET_SERVER method. Inputs a partial server name and returns the server object
+	def get_server(server)						# GET_SERVER method. Inputs a partial server name. returns the server object
 		return nil if server.nil?
-		return server if (server.is_a?(Discordrb::Server))	# Idiot gaurd
+		return server if (server.is_a?(Discordrb::Server))		# Idiot guard
 
 		if (server.is_a?(Integer)) then return $bot.servers.values.detect {|srv| srv.id == server}
 		else return $bot.servers.values.detect {|srv| srv.name.downcase.include?(server.to_s.downcase)} end
 	end
 	
-	def get_channel(channel, server=nil)	# GET_CHANNEL method. Inputs a partial channel name and returns the channel object
+	def get_channel(channel, server=nil)		# GET_CHANNEL method. Inputs a partial channel name and a server object. returns the channel object
 		return nil if channel.nil?
-		return channel if (channel.is_a?(Discordrb::Channel))	# Idiot gaurd
-		channel = channel.join(' ') if channel.is_a?(Array)
+		return channel if (channel.is_a?(Discordrb::Channel))	# Idiot guard
+		channel = channel.join(' ') if channel.is_a?(Array)		# Stringify
 
 		if (server != nil && server.is_a?(Discordrb::Server)) then channelList = server.channels
 		elsif (server != nil && server.is_a?(Integer)) then channelList = get_server(server).channels
@@ -173,26 +175,44 @@ module Parser							# PARSE module for parsing user names and nicknames
 		if (channel.to_i >= 100000000000000000) then return $bot.parse_mention("<\##{channel}>", server)
 		else return channelList.detect {|x| x.name.downcase.include?(channel)} end
 	end
+
+	def get_emoji(emoji)						# GET_EMOJI method. Inputs a full emoji name. returns the emoji object
+		return nil if emoji.nil?
+		return emoji if (emoji.is_a?(Discordrb::Emoji))			# Idiot guard
+		emoji = emoji.join(' ') if emoji.is_a?(Array)			# Stringify
+		emoji = emoji.downcase									# Ensure lowercase so we can ignore case when matching
+
+		emojilist = []
+		$bot.servers.values.each do |x|
+			emojilist += x.emoji.values
+		end
+
+		return emojilist.detect do |x|
+			x.name == emoji
+		end
+		return nil
+	end
 	
 	public :get_user
 	public :get_server
 	public :get_channel
+	public :get_emoji
 end
 
-class Setting													# SETTING class for storing persistent data
+class Setting							# SETTING class for storing persistent data
 	def initialize()
-		@@persistent = {}											# Create a new empty array to house the settings
+		@@persistent = {}											# Create a new empty array to store the settings
 		File.open("./ext/sys/persistent", 'w+') {|f| f.write(JSON.generate(@@persistent)) } unless valid_json?(IO.read("./ext/sys/persistent"))
 		@@persistent = JSON.load IO.read("./ext/sys/persistent")	# If the persistence file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
 	end
 	
-	def save(name, val)												# SAVE method. saves a piece of data with a name
+	def save(name, val)											# SAVE method. saves a piece of data with a name
 		@@persistent.store(name, val)								# Store the data itself
 		update_json("./ext/sys/persistent", @@persistent)			# Update the JSON file
 		return true													# Return the all-good
 	end
 	
-	def get(name)													# GET method. returns the data piece associated with a name, or nil if DNE
+	def get(name)												# GET method. returns the data piece associated with a name, or nil if DNE
 		ret = @@persistent.fetch(name, nil)							# Attempt to fetch the value
 		return ret if (ret != nil)									# if its nil, then return nil
 	end
@@ -245,7 +265,7 @@ module ImageMod
 			return nil
 		end
 	end
-	
+
 	public :load_tmp
 	public :return_img
 	public :write_img

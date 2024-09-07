@@ -27,7 +27,7 @@
 # Command functions
 #====================================================================================================
 
-$bot.command :help do |event, *type|			# Help command
+$bot.command(:help) do |event, *type|			# Help command
 	type = type.join(" ")
 
 	return event.send_embed do |embed|				# Send embedded help message
@@ -186,7 +186,7 @@ $bot.command(:a) do |event, *user|											# A Command
 	event.channel.send_message(user.avatar_url.gsub(".webp", ".png"))			# Respond with the URL of the user's avatar
 end
 
-$bot.command :uptime do |event|												# UPTIME Command
+$bot.command(:uptime) do |event|												# UPTIME Command
 	seconds = (Time.now - $boottime).to_i										# Compute total seconds since program start
 	days = Time.at(seconds).utc.strftime("%j").to_i - 1
 	return event.channel.send_embed do |embed|									# Return embed with formatted time string
@@ -195,7 +195,7 @@ $bot.command :uptime do |event|												# UPTIME Command
 	end
 end
 
-$bot.command :'define' do |event, *words|		# DEFINE Command
+$bot.command(:define) do |event, *words|		# DEFINE Command
 	pOS = ""										# Part of speech
 	synonyms = ""
 	definition = ""
@@ -241,7 +241,7 @@ $bot.command :'define' do |event, *words|		# DEFINE Command
 	end
 end
 
-$bot.command :'urban' do |event, *words|									# URBAN Command
+$bot.command(:urban) do |event, *words|									# URBAN Command
 	pOS = ""																	# Part of speech
 	synonyms = ""
 	definition = ""
@@ -275,19 +275,19 @@ end
 
 #============================================= ACTIONS ==============================================
 
-$bot.command :yiff do |event, *target| action(target, event, "yiff") end
-$bot.command :hug do |event, *target| action(target, event, "hug") end
-$bot.command :kiss do |event, *target| action(target, event, "kiss") end
-$bot.command :stab do |event, *target| action(target, event, "stab") end
-$bot.command :shoot do |event, *target| action(target, event, "shoot") end
-$bot.command :pet do |event, *target| action(target, event, "pet") end
-$bot.command :bless do |event, *target| action(target, event, "bless") end
-$bot.command :f do |event, *target| action(target, event, "respects") end
-$bot.command :nuke do |event, *target| action(target, event, "nuke") end
-$bot.command :meow do |event, *target| action(target, event, "meow") end
-$bot.command :grope do |event, *target| action(target, event, "grope") end
-$bot.command :vore do |event, *target| action(target, event, "vore") end
-$bot.command :boof do |event, *target| action(target, event, "boof") end
+$bot.command(:yiff) do |event, *target| action(target, event, "yiff") end
+$bot.command(:hug) do |event, *target| action(target, event, "hug") end
+$bot.command(:kiss) do |event, *target| action(target, event, "kiss") end
+$bot.command(:stab) do |event, *target| action(target, event, "stab") end
+$bot.command(:shoot) do |event, *target| action(target, event, "shoot") end
+$bot.command(:pet) do |event, *target| action(target, event, "pet") end
+$bot.command(:bless) do |event, *target| action(target, event, "bless") end
+$bot.command(:f) do |event, *target| action(target, event, "respects") end
+$bot.command(:nuke) do |event, *target| action(target, event, "nuke") end
+$bot.command(:meow) do |event, *target| action(target, event, "meow") end
+$bot.command(:grope) do |event, *target| action(target, event, "grope") end
+$bot.command(:vore) do |event, *target| action(target, event, "vore") end
+$bot.command(:boof) do |event, *target| action(target, event, "boof") end
 
 #=========================================== E621 FETCHING ==========================================
 
@@ -347,12 +347,12 @@ def command_e621_e926(event, tags, site_url, blacklist)
 	end
 end
 
-$bot.command :e6 do |event, *tags|											# E6 Command
+$bot.command(:e6) do |event, *tags|											# E6 Command
 	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
 	command_e621_e926(event, tags, "https://e621.net", Blacklist_E621)
 end
 
-$bot.command :e9 do |event, *tags|											# E9 Command
+$bot.command(:e9) do |event, *tags|											# E9 Command
 	command_e621_e926(event, tags, "https://e926.net", Blacklist_E926)
 end
 
@@ -414,11 +414,11 @@ def command_blacklist_e621_e926(event, action, tags, blacklist)
 	end
 end
 
-$bot.command :'e6.blacklist' do |event, action, *tags|
+$bot.command(:'e6.blacklist') do |event, action, *tags|
 	command_blacklist_e621_e926(event, action, tags, Blacklist_E621)
 end
 
-$bot.command :'e9.blacklist' do |event, action, *tags|
+$bot.command(:'e9.blacklist') do |event, action, *tags|
 	command_blacklist_e621_e926(event, action, tags, Blacklist_E926)
 end
 
@@ -449,3 +449,13 @@ $bot.command(:listmod, max_args: 0) do |event|									# LISTMOD Command
 end
 
 #====================================================================================================
+
+$bot.command(:et) do |event, *str|
+	str = str.join(' ') if str.is_a?(Array)			# Stringify
+	str = str.strip.gsub(/[\\]/, '')				# Remove escape characters
+	str = str.delete_prefix(':').delete_suffix(':')	# Remove leading/trailing formatting if present
+
+	emoji = Parser.get_emoji(str)
+	if (emoji.is_a?(Discordrb::Emoji)) then return "#{emoji.name}"
+	else return "test" end
+end
