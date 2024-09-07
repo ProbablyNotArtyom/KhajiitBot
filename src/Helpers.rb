@@ -57,15 +57,15 @@ def get_file_input(event)
 		chan_hist = event.channel.history(50)
 		chan_hist.each do |msg|
 			if (!msg.attachments.empty?)
-				debug_puts(msg.attachments[0].url)
+				DEBUG_PUTS(msg.attachments[0].url)
 				return msg.attachments[0].url
 			elsif (!msg.embeds.empty?)
-				debug_puts(msg.embeds[0].url)
+				DEBUG_PUTS(msg.embeds[0].url)
 				return msg.embeds[0].url
 			end
 		end
 	else
-		debug_puts(event.message.attachments[0].url)
+		DEBUG_PUTS(event.message.attachments[0].url)
 		return event.message.attachments[0].url
 	end
 	return nil

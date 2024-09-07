@@ -289,7 +289,7 @@ class PilotInterface
 	end
 
 	def run(config_obj)
-		debug_puts("Debug mode enabled")
+		DEBUG_PUTS("Debug mode enabled")
 		RuTui::ScreenManager.loop({ :autodraw => false }) do |key|
 			break if key == :ctrl_c
 			@cli_field.set_focus

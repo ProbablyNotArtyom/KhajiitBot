@@ -136,7 +136,7 @@ $bot.message(start_with: /[\\:]/) do |event|
 	end
 end
 
-def debug_puts(str)
+def DEBUG_PUTS(str)
 	Interface.cli_puts("[DEBUG] #{str}", PilotInterface::Color::RED) if ($debug == true)
 end
 

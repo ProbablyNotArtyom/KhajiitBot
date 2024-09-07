@@ -256,7 +256,7 @@ $bot.command(:urban) do |event, *words|									# URBAN Command
 	result = URI.open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}")
 	result = JSON.parse(result.read)
 
-	debug_puts(result.inspect)
+	DEBUG_PUTS(result.inspect)
 
 	if (result['list'].empty?)													# Error out if the list is empty
 		return event.channel.send_embed do |embed|								# This means that no definitions were found on either site
@@ -297,6 +297,7 @@ $bot.command(:boof) do |event, *target| action(target, event, "boof") end
 #=========================================== E621 FETCHING ==========================================
 
 # Handles searching for both sites
+E6_REQUEST_SIZE = 25
 def command_e621_e926(event, tags, site_url, blacklist)
 	# Enforce tag limit
 	if (tags.count > 5)														
@@ -306,47 +307,64 @@ def command_e621_e926(event, tags, site_url, blacklist)
 			embed.color = EMBED_ERROR_COLOR
 		end
 	end
-	
-	url = URI.parse("#{site_url}/posts.json")									# Parse base URI
-	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')		# Create new HTTP request
-	request.body = { limit: 1, tags: "order:random " + tags.join(" ") }.to_json	# Form the request
-	request.add_field('User-Agent', 'Ruby')										# Add USER AGENT field to the request. E6 gets pissy if this field is blank
-	# Perform the actual HTTP GET
-	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') {|http| http.request(request)}
-	
-	post = nil													# Will hold the selected post
-	posts = JSON.parse(result.body)['posts']					# Array of all posts recieved
-	posts.each_with_index do |x, i|								# Iterate over the first 5 posts to try and find one that isn't blacklisted
-		break if (i >= 5)										# Give up after 5 tries
-		taglist = []
-		x['tags'].each_value {|y| taglist = taglist + y}
-		blacklisted = blacklist.check_tags(taglist)		# Check for blacklisted tags
-		if (blacklisted.empty?) 								# Found something with no blacklist hits
-			post = x
-			break
+
+	# Dont bother if a blacklisted tag is searched
+	invalid = blacklist.check_tags(tags)
+	unless (invalid.empty?)
+		return event.channel.send_embed do |embed|
+			embed.title = "Error"
+			embed.description = "Search contained a blacklisted tag: **#{invalid.join(", ")}**"
+			embed.color = EMBED_ERROR_COLOR
 		end
 	end
 	
-	if (post)																	# Proceed only if the post is populated with elements
-		return event.channel.send_embed do |embed|								# Construct the returning embed
-			embed.title = "Tags: " + tags.join(" ")
-			embed.description = "Score: **#{post['score']['total']}**" +
-				"  |  Favourites: **#{post['fav_count']}**" +
-				"  |  [Post](#{site_url}/post/show/#{post['id']})"
-			embed.image = Discordrb::Webhooks::EmbedImage.new(url: post['file']['url'])
-			embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: post['tags']['artist'].join(", "), icon_url: "#{site_url}/favicon.ico")
-			embed.color = EMBED_MSG_COLOR
+	url = URI.parse("#{site_url}/posts.json")										# Parse base URI
+	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')			# Create new HTTP request
+	request.body = { limit: E6_REQUEST_SIZE, tags: "order:random " + tags.join(" ") }.to_json
+	request.add_field('User-Agent', 'Ruby')											# Add USER AGENT field to the request. E6 gets pissy if this field is blank
+	# Perform the actual HTTP GET
+	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') {|http| http.request(request)}
+	response = JSON.parse(result.body)
+	if (result.is_a?(Net::HTTPSuccess))
+		posts = response['posts']		# Create array of all posts recieved
+		if (posts[0] == nil)			# No posts found matching the query
+			return event.channel.send_embed do |embed|
+				embed.title = "Error"
+				embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
+				embed.color = EMBED_ERROR_COLOR
+			end
 		end
-	elsif (posts[0] == nil)			# No posts found matching the query
+
+		if (posts != nil)
+			DEBUG_PUTS("e621 page length: #{posts.length}")
+			posts.each_with_index do |x, i|								# Iterate over posts to try and find one that isn't blacklisted
+				taglist = []
+				x['tags'].each_value {|y| taglist = taglist + y}
+				blacklisted = blacklist.check_tags(taglist)				# Check for blacklisted tags
+				if (blacklisted.empty?) 								# Found something with no blacklist hits
+					return event.channel.send_embed do |embed|				# Construct the returning embed
+						embed.title = "Tags: " + tags.join(" ")
+						embed.description = "Score: **#{x['score']['total']}**" +
+							"  |  Favourites: **#{x['fav_count']}**" +
+							"  |  [Post](#{site_url}/post/show/#{x['id']})"
+						embed.image = Discordrb::Webhooks::EmbedImage.new(url: x['file']['url'])
+						embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: x['tags']['artist'].join(", "), icon_url: "#{site_url}/favicon.ico")
+						embed.color = EMBED_MSG_COLOR
+					end
+				end
+			end
+		end
+
+		# Either no posts matched, or couldnt find a post without blacklsited tags
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
-			embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
+			embed.description = "Could not find a non blacklisted post within #{E6_REQUEST_SIZE} tries. Try again"
 			embed.color = EMBED_ERROR_COLOR
 		end
-	else 							# Could only find blacklisted posts within 5 tries
+	else
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
-			embed.description = "Could not find a non blacklisted post within 5 tries. Try again"
+			embed.description = "#{response['reason']}"
 			embed.color = EMBED_ERROR_COLOR
 		end
 	end
