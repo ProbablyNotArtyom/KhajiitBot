@@ -120,7 +120,7 @@ $bot.command(:'8ball') do |event, *rest|									# 8BALL Command
 end
 
 $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
-	user = Parser.get_user(target, event)									# Parse the target into a discord markup for IDs
+	user = Parser.get_user(target, event)										# Parse the target into a discord markup for IDs
 	target = (user.nil?)? target.join(" ") : user.mention
 	num = Random.new(target.sum).rand(11).to_s									# Generate a random number 0-10
 	return event.channel.send_embed do |embed|									# Return the message
@@ -164,7 +164,7 @@ $bot.command(:scp) do |event, query|										# SCP Command
 end
 
 $bot.command(:e) do |event|													# E Command
-	if (event.message.emoji?)												# Error out if the message doesn't have any emotes
+	if (event.message.emoji?)													# Error out if the message doesn't have any emotes
 		return event.channel.send_embed do |embed|								# Return error message
 			embed.title = "Error"
 			embed.description = "Message did not contain any valid emotes."
@@ -175,7 +175,12 @@ $bot.command(:e) do |event|													# E Command
 end
 
 $bot.command(:a) do |event, *user|											# A Command
-	user = Parser.get_user(user, event)										# Get a user object from a username fragment
+	if (user.empty?)
+		user = event.message.author												# Act on self if input is empty
+	else
+		user = Parser.get_user(user, event)										# Get a user object from a username fragment
+	end
+
 	unless (user != nil)														# Error out if the user reference is invalid
 		return event.channel.send_embed do |embed|								# Return error message
 			embed.title = "Error"
@@ -186,7 +191,7 @@ $bot.command(:a) do |event, *user|											# A Command
 	event.channel.send_message(user.avatar_url.gsub(".webp", ".png"))			# Respond with the URL of the user's avatar
 end
 
-$bot.command(:uptime) do |event|												# UPTIME Command
+$bot.command(:uptime) do |event|											# UPTIME Command
 	seconds = (Time.now - $boottime).to_i										# Compute total seconds since program start
 	days = Time.at(seconds).utc.strftime("%j").to_i - 1
 	return event.channel.send_embed do |embed|									# Return embed with formatted time string
@@ -449,13 +454,3 @@ $bot.command(:listmod, max_args: 0) do |event|									# LISTMOD Command
 end
 
 #====================================================================================================
-
-$bot.command(:et) do |event, *str|
-	str = str.join(' ') if str.is_a?(Array)			# Stringify
-	str = str.strip.gsub(/[\\]/, '')				# Remove escape characters
-	str = str.delete_prefix(':').delete_suffix(':')	# Remove leading/trailing formatting if present
-
-	emoji = Parser.get_emoji(str)
-	if (emoji.is_a?(Discordrb::Emoji)) then return "#{emoji.name}"
-	else return "test" end
-end
