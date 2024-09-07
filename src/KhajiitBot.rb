@@ -31,6 +31,7 @@
 ENV['SSL_CERT_FILE'] = '/etc/ssl/certs/cacert.pem'
 # Workaround for OpenSSL's broken ass certs
 
+require 'optparse'
 require 'discordrb'
 require 'openssl'
 require 'json'
@@ -42,22 +43,30 @@ require 'mini_magick'
 require 'rutui'
 require 'io/console'
 
-#=========================================== Constants ==============================================
+#============================================= Globals ==============================================
+
+$boottime = 0										# Holds the time of the last boot
+$debug = false										# Enable to display debug info for commands that write to the debug stream
+
+#========================================= Argument Parsing =========================================
+
+parser = OptionParser.new do |act|
+	act.on("-d", "--debug", "Enables debug mode for increased verbosity") { |x| $debug = true }
+end
+
+parser.parse!
+
+#============================================ Constants =============================================
 
 CLIENT_ID = File.read("./ext/sys/client").chomp		# KhajiitBot Client ID (put it here, this one isn't valid!)
 TOKEN = File.read("./ext/sys/token").chomp			# shh secrets (Put your token in this file too...)
 E621_KEY = File.read("./ext/sys/e621").chomp		# ssh more secrets (Put your e621 account's API key here)
 
-DEBUG = false										# Enable to display debug info for commands that write to the debug stream
 
 EMBED_MSG_COLOR = 0xf5367c							# Sets the default embed color used by bot embeds
 EMBED_ERROR_COLOR = 0xe62f2f						# Sets the embed color used for error messages
 
-#============================================= Globals ==============================================
-
-$boottime = 0										# Holds the time of the last boot
-
-#=============================================== Main ===============================================
+#=============================================== Main ==============================================
 
 $bot = Discordrb::Commands::CommandBot.new(
 	token: TOKEN,
@@ -128,7 +137,7 @@ $bot.message(start_with: /[\\:]/) do |event|
 end
 
 def debug_puts(str)
-	cli_puts("[DEBUG] #{str}", Parser::Color::RED) if (DEBUG == true)
+	Interface.cli_puts("[DEBUG] #{str}", PilotInterface::Color::RED) if ($debug == true)
 end
 
 # End gracefully when killed or ended
