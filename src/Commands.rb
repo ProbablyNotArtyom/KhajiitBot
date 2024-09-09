@@ -27,6 +27,8 @@
 # Command functions
 #====================================================================================================
 
+# TODO: replace all event.send_message and event.send_embed with proper event.respond
+
 $bot.command(:help) do |event, *type|			# Help command
 	type = type.join(" ")
 
@@ -300,7 +302,7 @@ $bot.command(:boof) do |event, *target| action(target, event, "boof") end
 E6_REQUEST_SIZE = 25
 def command_e621_e926(event, tags, site_url, blacklist)
 	# Enforce tag limit
-	if (tags.count > 5)														
+	if (tags.count > 5)
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"
 			embed.description = "Request had too many tags. Maximum number of tags is **5**"
@@ -317,7 +319,7 @@ def command_e621_e926(event, tags, site_url, blacklist)
 			embed.color = EMBED_ERROR_COLOR
 		end
 	end
-	
+
 	url = URI.parse("#{site_url}/posts.json")										# Parse base URI
 	request = Net::HTTP::Get.new(url, 'Content-Type' => 'application/json')			# Create new HTTP request
 	request.body = { limit: E6_REQUEST_SIZE, tags: "order:random " + tags.join(" ") }.to_json
@@ -388,7 +390,7 @@ def command_blacklist_e621_e926(event, action, tags, blacklist)
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
-	
+
 	if (action == "clear")
 		blacklist.clear()
 		return event.channel.send_embed do |embed|
@@ -397,7 +399,7 @@ def command_blacklist_e621_e926(event, action, tags, blacklist)
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
-	
+
 	if (action == "help" || action == nil)
 		return event.channel.send_embed do |embed|
 			embed.title = "Available options"
@@ -407,11 +409,11 @@ def command_blacklist_e621_e926(event, action, tags, blacklist)
 				"remove <tags> : Removes tags from the blacklist\n" +
 				"\n" +
 				"<tags> is a list of tags seperated by spaces"
-			
+
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
-	
+
 	if (tags[0].nil?)
 		return event.channel.send_embed do |embed|
 			embed.title = "Error"

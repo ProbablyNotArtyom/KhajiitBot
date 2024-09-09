@@ -113,6 +113,10 @@ puts('KhajiitBot Starting...')
 
 #========================================== Global Functions =======================================
 
+def DEBUG_PUTS(str)
+	Interface.cli_puts("[DEBUG] #{str}", PilotInterface::Color::RED) if ($debug == true)
+end
+
 $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
 	target = "<@208140167536574464>"							# Parse the target name and get back a formatted ID
 	line = rand(IO.readlines("./ext/hug.action").size-3)+3		# If the target exists then get the number of lines in the string file
@@ -124,20 +128,18 @@ end
 
 # Emoji responder (free nitro!)
 # Match any message containing : or \
-$bot.message(start_with: /[\\:]/) do |event|
+$bot.message(start_with: /(\\:|:)/) do |event|
+	DEBUG_PUTS("attempting emote parsing")
 	str = event.content
-	next if (str[0] != ':') 					# Do nothing if the message doesnt begin with the emoji formatter
 	str = str.strip.gsub(/[\\]/, '')				# Remove escape characters
 	str = str.delete_prefix(':').delete_suffix(':')	# Remove leading/trailing formatting if present
 
 	emoji = Parser.get_emoji(str)					# Try to match an emoji name
+	DEBUG_PUTS("    detected emoji name: #{str}")
 	if (emoji.is_a?(Discordrb::Emoji))				# Respond with the emoji if its valid
+		DEBUG_PUTS("    matched with emoji: #{emoji.name}")
 		event.respond "#{emoji.mention}"
 	end
-end
-
-def DEBUG_PUTS(str)
-	Interface.cli_puts("[DEBUG] #{str}", PilotInterface::Color::RED) if ($debug == true)
 end
 
 # End gracefully when killed or ended
