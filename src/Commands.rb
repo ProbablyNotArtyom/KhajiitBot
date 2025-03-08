@@ -280,6 +280,34 @@ $bot.command(:urban) do |event, *words|									# URBAN Command
 	end
 end
 
+#============================================== QUOTE ===============================================
+
+$bot.command(:time) do |event, *words|		# TIME Command
+	TimeQuotes = [
+    	"I am wiser than any god or scientist, for I have squared the circle and cubed Earth's sphere, thus I have created 4 simultaneous separate 24 hour days within a 4-corner (as in a 4-corner classroom) rotation of Earth. See for yourself the absolute proof.",
+    	"Tis Time to kill any educator who does not teach Cubicism above cubelessness. To save humanity from extinction, like prior civilizations perished, youth must redirect self teachers, or destroy them. … It is not immoral for students to kill all educators who ignore Nature's Harmonic Time Cube or suppress free speech rights to debate Time Cube Creation Principle.",
+    	"You have not the mental freedom to comprehend Nature's Higher Order Wisdom of the Harmonic Simultaneous 4-Day Time Cube Creation Principle within 1 Earth Rotation.",
+    	"There is \'absolute proof\' that You are personified pyramid.",
+    	"The academia created 1 day greenwich time is bastardly queer and dooms future youth and nature to a hell.",
+    	"4 quadrants resemble circle, but doesn't constitute circle. Earth more Cubic than orb.",
+    	"Truth about Santa Claus debunks Santa God. God evolves from Santa.",
+    	"ONEism is demonic Death Math.",
+    	"I have so much to teach you, but you ignore me you evil asses.",
+    	"Anyone saying that Jesus and his Jewish father had something to do with my birth, is a damn evil liar.",
+    	"You will recognize 4 corner Days or incur Easter Island Ending.",
+    	"Ignorant of Nature's Harmonic 4 Day Time Cube Creation, the Americans are Dumb, Educated Singularity Stupid and Evil. It's not immoral to kill Americans who IGNORE their OPPOSITE sex parents who Created them, but instead worship a queer jew who claims to make people out of dirt — when the body is 90 percent water.",
+    	"Belly-Button Logic© Works. When Does Teenager Die? Adults Eat Teenagers Alive, No Record Of Their Death.",
+    	"I used to believe in circles.",
+    	"My wisdom so antiquates known knowledge, that a psychiatrist examining my behavior, eccentric by his academic single corner knowledge, knows no course other than to judge me schizoprenic. In today's society of greed, men of word illusion are elected to lead and wise men are condemned. You must establish a Chair of Wisdom to empower Wise Men over the stupid intelligentsia, or perish."
+	]
+
+	return event.channel.send_embed do |embed|
+		embed.title = "Gene Ray:"
+		embed.description = "\"*#{TimeQuotes.sample}*\""
+		embed.color = EMBED_MSG_COLOR
+	end
+end
+
 #============================================= ACTIONS ==============================================
 
 $bot.command(:yiff) do |event, *target| action(target, event, "yiff") end
