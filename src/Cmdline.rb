@@ -78,6 +78,7 @@ class PilotInterface
 		"servers  | Prints a list of servers KhajiitBot is in.\n" +
 		"channels | Prints a list of all channels from every server KhajiitBot is in.\n" +
 		"update   | Forces the command UI to be redrawn.\n" +
+		"cls      | Clears the screen of all messages or commands.\n" +
 		"eval     | Evaluates ruby code. USED ONLY FOR DEBUGGING. args: [ruby code]"
 
 	# Note: RuTui::Screen.size returns the size in the form [y,x], not [x,y]. wtf???
@@ -146,7 +147,7 @@ class PilotInterface
 		@cli_field.allow = CLI_ALLOWED_CHARS
 		@kbcli.add(@cli_field)
 		
-		@screen = init_chat(@kbcli)			# Init the text array used by the chat
+		@chat = init_chat(@kbcli)			# Init the text array used by the chat
 		@size = RuTui::Screen.size			# Store unrefreshed screen size
 		@HBuff = CommandHistory.new(50)		# Create object that handles cli command history
 
@@ -172,7 +173,7 @@ class PilotInterface
 		else													# Screen grew
 			# Create new text widgets for each new line
 			(0..(diff-1)).each do |x|								
-				array.insert(x, RuTui::Text.new({ :x => 0, :y => HEAD_HEIGHT+x, :text => " ", :foreground => 15 }))
+				array.insert(x, RuTui::Text.new({ :x => 0, :y => HEAD_HEIGHT+x, :text => ' ' * RuTui::Screen.size[1], :foreground => 15 }))
 				array[x].max_width = size[1]
 				array[x].pixel = @pixel_chat
 			end
@@ -186,7 +187,7 @@ class PilotInterface
 	def init_chat(screen)
 		# Create array of text widgets, one for each line
 		array = Array.new(RuTui::Screen.size[0]-CHAT_OFFSET) {
-			RuTui::Text.new({ :x => 0, :y => HEAD_HEIGHT, :text => " ", :foreground => 15 })
+			RuTui::Text.new({ :x => 0, :y => HEAD_HEIGHT, :text => ' ' * RuTui::Screen.size[1], :foreground => 15 })
 		}
 		
 		# Configure each text line
@@ -206,21 +207,27 @@ class PilotInterface
 
 		# For each new line, add it to the screen
 		numLines.downto(0) do |x|
-			@kbcli.delete(@screen[x])
-			@screen.push(RuTui::Text.new({ :x => 0, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT-1-x, :text => string[0..RuTui::Screen.size[1]], :foreground => color }))
+			@kbcli.delete(@chat[x])
+			@chat.push(RuTui::Text.new({ :x => 0, :y => RuTui::Screen.size[0]-PROMPT_HEIGHT-1-x, :text => string[0..RuTui::Screen.size[1]], :foreground => color }))
 			string = string[RuTui::Screen.size[1]-1..-1]
 			
 			# Configure each new line
-			@screen.last.max_width = RuTui::Screen.size[1]
-			@screen.last.pixel = @pixel_chat
-			@screen.last.create
+			@chat.last.max_width = RuTui::Screen.size[1]
+			@chat.last.pixel = @pixel_chat
+			@chat.last.create
 			
 			# Add it to the screen
-			@kbcli.add(@screen.last)
+			@kbcli.add(@chat.last)
 		end
-		@screen.shift(numLines+1)
-		(0..(@screen.length-numLines-2)).each {|i| @screen[i].move(0, -(numLines+1))} 	# ???
+		@chat.shift(numLines+1)
+		(0..(@chat.length-numLines-2)).each {|i| @chat[i].move(0, -(numLines+1))} 	# ???
 		RuTui::ScreenManager.draw
+	end
+
+	# Clear the chat
+	def chat_clear()
+		@chat.each { |x| @kbcli.delete(x) }		# Delete all current text elements from the toplevel screen
+		@chat = init_chat(@kbcli)				# Replace the current text array with a new empty one
 	end
 
 	# Redraw the TUI while updating the layout to fit the current terminal window
@@ -242,7 +249,7 @@ class PilotInterface
 		@box_cli.move(0, new_size[0] - @size[0])
 		
 		# Create a new line array
-		@screen = new_textarray(@screen, new_size[0] - @size[0], @size)
+		@chat = new_textarray(@chat, new_size[0] - @size[0], @size)
 	
 		# Reinit the TUI widgets with their new positions
 		@box_head.create
@@ -419,6 +426,8 @@ class PilotInterface
 							end
 						when "update"
 							tui_redraw()
+						when "cls"
+							chat_clear()
 						when "eval"
 							cmd_args = cmd_args.join(" ")						# Flatten the array into a string
 							cli_puts("#{cmd_args}", 13)
@@ -454,9 +463,9 @@ class PilotInterface
 	end
 
 	protected :clense
-	protected :new_textarray
 	protected :init_chat
 	protected :chat_scroll
+	protected :chat_clear
 	protected :tui_get_location
 	protected :tui_redraw
 	protected :chat_scroll

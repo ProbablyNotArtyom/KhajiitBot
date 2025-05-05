@@ -29,10 +29,12 @@
 
 # TODO: replace all event.send_message and event.send_embed with proper event.respond
 
-$bot.command(:help) do |event, *type|			# Help command
+# Help command
+$bot.command(:help) do |event, *type|
 	type = type.join(" ")
 
-	return event.send_embed do |embed|				# Send embedded help message
+	# Send embedded help message
+	return event.send_embed do |embed|
 		embed.thumbnail = Discordrb::Webhooks::EmbedImage.new(url: 'http://i.imgur.com/pG3L2RP.png')
 		embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: 'KhajiitBot', url: 'https://discordapp.com/oauth2/authorize?client_id=452660556990644225&scope=bot&permissions=0', icon_url: 'http://i.imgur.com/pG3L2RP.png')
 		if (type.empty?)
@@ -50,16 +52,18 @@ end
 
 #=============================================== POOLS ==============================================
 
-TRADE_WARES = "This one is displeased with your lack of wares..."				# Error message for when no image is given
-TRADE_TYPE = "This one does not think that your wares are of proper type..."	# Error message for when the input file isn't an image
+TRADE_WARES = "This one is displeased with your lack of wares..."						# Error message for when no image is given
+TRADE_INVALID_TYPE = "This one does not think that your wares are of proper type..."	# Error message for when the input file isn't an image
 
-$bot.command(:image) do |event|												# IMAGE command
+# IMAGE command
+$bot.command(:image) do |event|
 	numItems = File.read("./ext/meme/max").to_i									# Get the current image count
 	output = Dir.glob("./ext/meme/" + rand(numItems + 1).to_s + ".*")			# Pick a random image
 	event.attach_file(File.open(output[0], 'r'))								# Return the randomly chosen image
 end
 
-$bot.command(:arouse) do |event|											# AROUSE Command
+# AROUSE Command
+$bot.command(:arouse) do |event|
 	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
 
 	numItems = File.read("./ext/lewd/max").to_i									# Get the current image count
@@ -67,10 +71,11 @@ $bot.command(:arouse) do |event|											# AROUSE Command
 	event.attach_file(File.open(output[0], 'r'))								# Return the randomly chosen image
 end
 
-$bot.command(:trade) do |event|												# TRADE Command
+# TRADE Command
+$bot.command(:trade) do |event|
 	return TRADE_WARES if (event.message.attachments.empty?)					# If there are no images attached then respond accordingly
 	input = event.message.attachments											# Get the attached image
-	return TRADE_TYPE unless (input[0].image?)									# If the attached file isn't an image, then respond accordingly
+	return TRADE_INVALID_TYPE unless (input[0].image?)							# If the attached file isn't an image, then respond accordingly
 
 	numItems = File.read("./ext/meme/max").to_i									# Get the current image count
 	output = Dir.glob("./ext/meme/" + rand(numItems + 1).to_s + ".*")			# Pick a random image
@@ -83,12 +88,13 @@ $bot.command(:trade) do |event|												# TRADE Command
 	event.attach_file(File.open(output[0], 'r'))								# Return the randomly chosen image
 end
 
-$bot.command(:lewd) do |event|												# LEWD command
+# LEWD command
+$bot.command(:lewd) do |event|
 	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
 
 	return TRADE_WARES if (event.message.attachments.empty?)					# If there are no images attached then respond accordingly
 	input = event.message.attachments											# Get the attached image
-	return TRADE_TYPE unless (input[0].image?)									# If the attached file isn't an image, then respond accordingly
+	return TRADE_INVALID_TYPE unless (input[0].image?)							# If the attached file isn't an image, then respond accordingly
 
 	numItems = File.read("./ext/lewd/max").to_i									# Get the current image count
 	output = Dir.glob("./ext/lewd/" + rand(numItems + 1).to_s + ".*")			# Pick a random image
@@ -103,7 +109,8 @@ end
 
 #============================================== GENERAL =============================================
 
-$bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Command
+# RANDOM Command
+$bot.command(:random, max_args: 1, min_args: 0) do |event, max|
 	max = '10' unless (max)														# If no max is specified, then use 10
 	max = max.to_i
 
@@ -113,7 +120,8 @@ $bot.command(:random, max_args: 1, min_args: 0) do |event, max|				# RANDOM Comm
 	end
 end
 
-$bot.command(:'8ball') do |event, *rest|									# 8BALL Command
+# 8BALL Command
+$bot.command(:'8ball') do |event, *rest|
 	lines = IO.readlines("./ext/8ball.strings") 								# Get the strings
 	return event.channel.send_embed do |embed|									# Return the message
 		embed.description = "**" + lines[rand(lines.size)].strip + " **" + "<@#{event.user.id}>"
@@ -121,7 +129,8 @@ $bot.command(:'8ball') do |event, *rest|									# 8BALL Command
 	end
 end
 
-$bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
+# RATE Command
+$bot.command(:rate, min_args: 1) do |event, *target|
 	user = Parser.get_user(target, event)										# Parse the target into a discord markup for IDs
 	target = (user.nil?)? target.join(" ") : user.mention
 	num = Random.new(target.sum).rand(11).to_s									# Generate a random number 0-10
@@ -131,14 +140,16 @@ $bot.command(:rate, min_args: 1) do |event, *target|						# RATE Command
 	end
 end
 
-$bot.command(:katia) do |event, num|										# KATIA Command
+# KATIA Command
+$bot.command(:katia) do |event, num|
 	num = rand(1036).to_s unless (num)											# Supply a random index if no params are given
 	index = num.to_i															# The item count is hard-coded here because images dont get added often
 	output = Dir.glob("./ext/kat/#{index}.*")									# Pick a random image
 	event.attach_file(File.open(output[0], 'r'))								# Send it
 end
 
-$bot.command(:chance, min_args: 1) do |event, *query|						# CHANCE Command
+# CHANCE Command
+$bot.command(:chance, min_args: 1) do |event, *query|
 	query = query.join(" ")														# Stringify the globbed input params
 	num = rand(11).to_s															# Generate a random number 0-10
 	return event.channel.send_embed do |embed|									# Return the message
@@ -147,66 +158,71 @@ $bot.command(:chance, min_args: 1) do |event, *query|						# CHANCE Command
 	end
 end
 
-$bot.command(:scp) do |event, query|										# SCP Command
-	query = query.to_i															# Interpret the input as an int
-	if (query < 0 || query > 5999)												# Check for invalid SCPs
+# SCP Command
+$bot.command(:scp) do |event, query|
+	query = query.to_i												# Interpret the input as an int
+	if (query < 0 || query > 5999)									# Check for invalid SCPs
 		return event.channel.send_embed do |embed|
 			embed.title = "Invalid SCP!"
 			embed.color = EMBED_MSG_COLOR
 		end
 	else
 		entry = query.to_s
-		entry = entry.rjust(3, "0") if (query < 1000)							# For SCPs under 1-999, the number must be 3 digits long and right aligned
+		entry = entry.rjust(3, "0") if (query < 1000)				# For SCPs under 1-999, the number must be 3 digits long and right aligned
 
-		return event.channel.send_embed do |embed|								# Return an embedded message
-			embed.title = "http://www.scp-wiki.net/scp-#{entry}"				# Create the formatted URL
+		return event.channel.send_embed do |embed|					# Return an embedded message
+			embed.title = "http://www.scp-wiki.net/scp-#{entry}"	# Create the formatted URL
 			embed.color = EMBED_MSG_COLOR
 		end
 	end
 end
 
-$bot.command(:e) do |event|													# E Command
-	if (event.message.emoji?)													# Error out if the message doesn't have any emotes
-		return event.channel.send_embed do |embed|								# Return error message
+# E Command
+$bot.command(:e) do |event|
+	if (event.message.emoji?)							# Error out if the message doesn't have any emotes
+		return event.channel.send_embed do |embed|		# Return error message
 			embed.title = "Error"
 			embed.description = "Message did not contain any valid emotes."
-			embed.color = EMBED_MSG_COLOR
+			embed.color = EMBED_ERROR_COLOR
 		end
 	end
 	event.channel.send_message(event.message.emoji[0].icon_url.gsub(".webp", ".png"))	# Respond with the URL of the first emote found
 end
 
-$bot.command(:a) do |event, *user|											# A Command
+# A Command
+$bot.command(:a) do |event, *user|
 	if (user.empty?)
-		user = event.message.author												# Act on self if input is empty
+		user = event.message.author						# Act on self if input is empty
 	else
-		user = Parser.get_user(user, event)										# Get a user object from a username fragment
+		user = Parser.get_user(user, event)				# Get a user object from a username fragment
 	end
 
-	unless (user != nil)														# Error out if the user reference is invalid
-		return event.channel.send_embed do |embed|								# Return error message
+	unless (user != nil)								# Error out if the user reference is invalid
+		return event.channel.send_embed do |embed|		# Return error message
 			embed.title = "Error"
 			embed.description = "Invalid user."
-			embed.color = EMBED_MSG_COLOR
+			embed.color = EMBED_ERROR_COLOR
 		end
 	end
-	event.channel.send_message(user.avatar_url.gsub(".webp", ".png"))			# Respond with the URL of the user's avatar
+	event.channel.send_message(user.avatar_url.gsub(".webp", ".png"))		# Respond with the URL of the user's avatar
 end
 
-$bot.command(:uptime) do |event|											# UPTIME Command
-	seconds = (Time.now - $boottime).to_i										# Compute total seconds since program start
+# UPTIME Command
+$bot.command(:uptime) do |event|
+	seconds = (Time.now - $boottime).to_i											# Compute total seconds since program start
 	days = Time.at(seconds).utc.strftime("%j").to_i - 1
-	return event.channel.send_embed do |embed|									# Return embed with formatted time string
-		embed.title = days.to_s + Time.at(seconds).utc.strftime(" days, %H:%M:%S")		# Format seconds into a human friendly string
+	return event.channel.send_embed do |embed|										# Return embed with formatted time string
+		embed.title = days.to_s + Time.at(seconds).utc.strftime(" days, %H:%M:%S")	# Format seconds into a human friendly string
 		embed.color = EMBED_MSG_COLOR
 	end
 end
 
-$bot.command(:define) do |event, *words|		# DEFINE Command
-	pOS = ""										# Part of speech
-	synonyms = ""
-	definition = ""
-	pnunce = ""										# Pronunciation
+# DEFINE Command
+$bot.command(:define) do |event, *words|
+	pOS = ""			# Part of speech
+	synonyms = ""		# Synonyms
+	pnunce = ""			# Pronunciation
+	definition = ""		# Definition
 	fmtwords = words.join(' ')
 
 	begin
@@ -231,7 +247,7 @@ $bot.command(:define) do |event, *words|		# DEFINE Command
 			return event.channel.send_embed do |embed|
 				embed.title = "Error"
 				embed.description = "No definitions were found for:\n**#{words.join(" ")}**"
-				embed.color = EMBED_MSG_COLOR
+				embed.color = EMBED_ERROR_COLOR
 			end
 		end
 
@@ -248,11 +264,12 @@ $bot.command(:define) do |event, *words|		# DEFINE Command
 	end
 end
 
-$bot.command(:urban) do |event, *words|									# URBAN Command
-	pOS = ""																	# Part of speech
-	synonyms = ""
-	definition = ""
-	pnunce = ""																	# Pronunciation
+# URBAN Command
+$bot.command(:urban) do |event, *words|
+	pOS = "?"			# Part of speech
+	synonyms = "?"		# Synonyms
+	pnunce = "?"		# Pronunciation
+	definition = ""		# Definition
 	fmtwords = words.join(' ')
 
 	result = URI.open("http://api.urbandictionary.com/v0/define?term=#{fmtwords}")
@@ -260,18 +277,15 @@ $bot.command(:urban) do |event, *words|									# URBAN Command
 
 	DEBUG_PUTS(result.inspect)
 
-	if (result['list'].empty?)													# Error out if the list is empty
-		return event.channel.send_embed do |embed|								# This means that no definitions were found on either site
+	if (result['list'].empty?)							# Error out if the list is empty
+		return event.channel.send_embed do |embed|		# This means that no definitions were found on either site
 			embed.title = "Error"
 			embed.description = "No definitions were found for:\n**#{words.join(" ")}**"
-			embed.color = EMBED_MSG_COLOR
+			embed.color = EMBED_ERROR_COLOR
 		end
 	end
 
-	synonyms = "?"
-	pOS = "?"
-	pnunce = "?"
-	definition = result['list'].sample['definition']
+	definition = result['list'].sample['definition']	# Extract definition
 
 	return event.channel.send_embed do |embed|
 		embed.title = "#{words.join(" ")}   |   #{pnunce}   |   #{pOS}"
@@ -282,9 +296,10 @@ end
 
 #============================================== QUOTE ===============================================
 
-$bot.command(:time) do |event, *words|									# TIME Command
+# TIME Command
+$bot.command(:time) do |event, *words|
 	lines = IO.readlines("./ext/timecube.strings")							# Get the quote strings
-	return event.channel.send_embed do |embed|
+	return event.channel.send_embed do |embed|								# Pick a random one and respond
 		embed.title = "Gene Ray:"
 		embed.description = "\"*#{lines[rand(lines.size)].strip}*\""
 		embed.color = EMBED_MSG_COLOR
@@ -293,19 +308,19 @@ end
 
 #============================================= ACTIONS ==============================================
 
-$bot.command(:yiff) do |event, *target| action(target, event, "yiff") end
-$bot.command(:hug) do |event, *target| action(target, event, "hug") end
-$bot.command(:kiss) do |event, *target| action(target, event, "kiss") end
-$bot.command(:stab) do |event, *target| action(target, event, "stab") end
-$bot.command(:shoot) do |event, *target| action(target, event, "shoot") end
-$bot.command(:pet) do |event, *target| action(target, event, "pet") end
-$bot.command(:bless) do |event, *target| action(target, event, "bless") end
-$bot.command(:f) do |event, *target| action(target, event, "respects") end
-$bot.command(:nuke) do |event, *target| action(target, event, "nuke") end
-$bot.command(:meow) do |event, *target| action(target, event, "meow") end
-$bot.command(:grope) do |event, *target| action(target, event, "grope") end
-$bot.command(:vore) do |event, *target| action(target, event, "vore") end
-$bot.command(:boof) do |event, *target| action(target, event, "boof") end
+$bot.command(:yiff) do |event, *target| action(target, event, "yiff") end		# YIFF action command
+$bot.command(:hug) do |event, *target| action(target, event, "hug") end			# HUG action command
+$bot.command(:kiss) do |event, *target| action(target, event, "kiss") end		# KISS action command
+$bot.command(:stab) do |event, *target| action(target, event, "stab") end		# STAB action command
+$bot.command(:shoot) do |event, *target| action(target, event, "shoot") end		# SHOOT action command
+$bot.command(:pet) do |event, *target| action(target, event, "pet") end			# PET action command
+$bot.command(:bless) do |event, *target| action(target, event, "bless") end		# BLESS action command
+$bot.command(:f) do |event, *target| action(target, event, "respects") end		# F action command
+$bot.command(:nuke) do |event, *target| action(target, event, "nuke") end		# NUKE action command
+$bot.command(:meow) do |event, *target| action(target, event, "meow") end		# MEOW action command
+$bot.command(:grope) do |event, *target| action(target, event, "grope") end		# GROPE action command
+$bot.command(:vore) do |event, *target| action(target, event, "vore") end		# VORE action command
+$bot.command(:boof) do |event, *target| action(target, event, "boof") end		# BOOF action command
 
 #=========================================== E621 FETCHING ==========================================
 
@@ -339,8 +354,8 @@ def command_e621_e926(event, tags, site_url, blacklist)
 	result = Net::HTTP.start(url.host, url.port, :use_ssl => url.scheme == 'https') {|http| http.request(request)}
 	response = JSON.parse(result.body)
 	if (result.is_a?(Net::HTTPSuccess))
-		posts = response['posts']		# Create array of all posts recieved
-		if (posts[0] == nil)			# No posts found matching the query
+		posts = response['posts']										# Create array of all posts recieved
+		if (posts[0] == nil)											# No posts found matching the query
 			return event.channel.send_embed do |embed|
 				embed.title = "Error"
 				embed.description = "No posts matched your search:\n**#{tags.join(" ")}**"
@@ -355,7 +370,7 @@ def command_e621_e926(event, tags, site_url, blacklist)
 				x['tags'].each_value {|y| taglist = taglist + y}
 				blacklisted = blacklist.check_tags(taglist)				# Check for blacklisted tags
 				if (blacklisted.empty?) 								# Found something with no blacklist hits
-					return event.channel.send_embed do |embed|				# Construct the returning embed
+					return event.channel.send_embed do |embed|			# Construct the returning embed
 						embed.title = "Tags: " + tags.join(" ")
 						embed.description = "Score: **#{x['score']['total']}**" +
 							"  |  Favourites: **#{x['fav_count']}**" +
@@ -383,12 +398,14 @@ def command_e621_e926(event, tags, site_url, blacklist)
 	end
 end
 
-$bot.command(:e6) do |event, *tags|											# E6 Command
-	return nil if (require_nsfw(event)) 										# Make sure the channel is marked as NSFW
+# E6 Command
+$bot.command(:e6) do |event, *tags|
+	return nil if (require_nsfw(event))		# Make sure the channel is marked as NSFW
 	command_e621_e926(event, tags, "https://e621.net", Blacklist_E621)
 end
 
-$bot.command(:e9) do |event, *tags|											# E9 Command
+# E9 Command
+$bot.command(:e9) do |event, *tags|
 	command_e621_e926(event, tags, "https://e926.net", Blacklist_E926)
 end
 
@@ -450,38 +467,14 @@ def command_blacklist_e621_e926(event, action, tags, blacklist)
 	end
 end
 
-$bot.command(:'e6.blacklist') do |event, action, *tags|
+$bot.command(:'e6.blacklist', {:required_permissions => [:manage_channels]}) do |event, action, *tags|
+	return if (event.channel.type == Discordrb::Channel::TYPES[:dm])	# Ignore use in DMs
 	command_blacklist_e621_e926(event, action, tags, Blacklist_E621)
 end
 
 $bot.command(:'e9.blacklist') do |event, action, *tags|
+	return if (event.channel.type == Discordrb::Channel::TYPES[:dm])	# Ignore use in DMs
 	command_blacklist_e621_e926(event, action, tags, Blacklist_E926)
-end
-
-#============================================ INTERNAL ==============================================
-
-$bot.command(:usermod, max_args: 2, min_args: 2) do |event, target, level|		# USERMOD Command
-	target = Parser.get_user(target).id
-	return nil if (target.nil?)
-	return "Naughty! You are not an administrator." unless PList.query(event.user.id, 2)
-	return "User is already on list." if (PList.add(target, level).nil?)
-	return "User permissions updated."
-end
-
-$bot.command(:servermod, max_args: 0, min_args: 0) do |event|					# SERVERMOD Command
-	return "Naughty! You are not an administrator." unless PList.query(event.user.id, 2)
-
-	i = 0
-	while event.server.members[i] != nil do
-		PList.add(event.server.members[i].id, 1) unless PList.is_exist(event.server.members[i].id)
-		i += 1
-	end
-	return "User permissions updated."
-end
-
-$bot.command(:listmod, max_args: 0) do |event|									# LISTMOD Command
-	PList.list(event)
-	return nil
 end
 
 #====================================================================================================

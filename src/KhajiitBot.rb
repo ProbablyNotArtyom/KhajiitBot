@@ -96,14 +96,41 @@ $bot = Discordrb::Commands::CommandBot.new(
 
 $bot.should_parse_self = true
 
+
+# Setting: stores persistent data
+class Setting
+	def initialize()
+		@@persistent = {}											# Create a new empty array to store the settings
+		File.open("./ext/sys/persistent", 'w+') {					# If the persistence file is not valid JSON (could be empty) then generate a new JSON enclosure and write it out
+			|f| f.write(JSON.generate(@@persistent))
+		} unless valid_json?(IO.read("./ext/sys/persistent"))
+		@@persistent = JSON.load IO.read("./ext/sys/persistent")
+	end
+
+	# SAVE: saves a piece of data with a name
+	def save(name, val)
+		@@persistent.store(name, val)								# Store the data itself
+		update_json("./ext/sys/persistent", @@persistent)			# Update the JSON file
+		return true													# Return the all-good
+	end
+
+	# GET: returns the data piece associated with a name, or nil if DNE
+	def get(name)
+		ret = @@persistent.fetch(name, nil)							# Attempt to fetch the value
+		return ret if (ret != nil)									# if its nil, then return nil
+	end
+
+	public :initialize
+	public :save
+	public :get
+end
+
 require_relative 'Helpers.rb'				# Abstractions
 require_relative 'Commands.rb'				# Bot commands
 require_relative 'Image.rb'					# Image manipulation
 require_relative 'Cmdline.rb'				# Internal shell
 
-PList = Permit.new()												# Create a permit list
 Config = Setting.new()												# Set up persistence class
-
 Blacklist_E926 = E621_blacklist.new(Config, "e926_blacklist")		# Set up e926 blacklist handler
 Blacklist_E621 = E621_blacklist.new(Config, "e621_blacklist")		# Set up e621 blacklist handler
 
@@ -111,11 +138,13 @@ $boottime = Time.new							# Save to time the bot was started. used in uptime
 puts('Current time: ' + $boottime.ctime)
 puts('KhajiitBot Starting...')
 
-#========================================== Global Functions =======================================
+#========================================== Debug Functions ========================================
 
 def DEBUG_PUTS(str)
 	Interface.cli_puts("[DEBUG] #{str}", PilotInterface::Color::RED) if ($debug == true)
 end
+
+#========================================== Global Functions =======================================
 
 $bot.message(with_text: "k.hydrate", in: 569337203248070656) do |event|
 	target = "<@208140167536574464>"							# Parse the target name and get back a formatted ID
@@ -131,12 +160,12 @@ end
 $bot.message(start_with: /(\\:|:)/) do |event|
 	DEBUG_PUTS("attempting emote parsing")
 	str = event.content
-	str = str.strip.gsub(/[\\]/, '')				# Remove escape characters
-	str = str.delete_prefix(':').delete_suffix(':')	# Remove leading/trailing formatting if present
+	str = str.strip.gsub(/[\\]/, '')					# Remove escape characters
+	str = str.delete_prefix(':').delete_suffix(':')		# Remove leading/trailing formatting if present
 
-	emoji = Parser.get_emoji(str)					# Try to match an emoji name
+	emoji = Parser.get_emoji(str)						# Try to match an emoji name
 	DEBUG_PUTS("    detected emoji name: #{str}")
-	if (emoji.is_a?(Discordrb::Emoji))				# Respond with the emoji if its valid
+	if (emoji.is_a?(Discordrb::Emoji))					# Respond with the emoji if its valid
 		DEBUG_PUTS("    matched with emoji: #{emoji.name}")
 		event.respond "#{emoji.mention}"
 	end

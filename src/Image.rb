@@ -27,6 +27,7 @@
 # Image Manipulation
 #====================================================================================================
 
+# CONTRAST Command
 $bot.command :contrast do |event, *level|
 	level = level.join("").to_f
 	image = ImageMod.load_tmp(event)
@@ -40,6 +41,7 @@ $bot.command :contrast do |event, *level|
 	return nil
 end
 
+# SHARPEN Command
 $bot.command :sharpen do |event, *level|
 	level = level.join("").to_f
 	image = ImageMod.load_tmp(event)
@@ -48,6 +50,7 @@ $bot.command :sharpen do |event, *level|
 	return nil
 end
 
+# HUE Command
 $bot.command :hue do |event, *degrees|
 	image = ImageMod.load_tmp(event)
 	image.modulate("100, 100, #{( degrees.join("").to_f * 100/180 ) + 100}")
@@ -55,6 +58,7 @@ $bot.command :hue do |event, *degrees|
 	return nil
 end
 
+# SATURATION Command
 $bot.command :saturation do |event, *level|
 	image = ImageMod.load_tmp(event)
 	image.modulate("100, #{level.join("")}, 300")
@@ -62,6 +66,7 @@ $bot.command :saturation do |event, *level|
 	return nil
 end
 
+# BRIGHT Command
 $bot.command :bright do |event, *level|
 	image = ImageMod.load_tmp(event)
 	image.modulate(level.join(""))
@@ -69,6 +74,7 @@ $bot.command :bright do |event, *level|
 	return nil
 end
 
+# ROTATE Command
 $bot.command :rotate do |event, *degrees|
 	image = ImageMod.load_tmp(event)
 	image.rotate(degrees.join(""))
@@ -76,6 +82,7 @@ $bot.command :rotate do |event, *degrees|
 	return nil
 end
 
+# BW Command
 $bot.command :bw do |event|
 	image = ImageMod.load_tmp(event)
 	image.colorspace("Gray")
@@ -83,6 +90,7 @@ $bot.command :bw do |event|
 	return nil
 end
 
+# I Command
 $bot.command :i do |event|
 	image = ImageMod.load_tmp(event)
 	image.combine_options do |x|
@@ -93,6 +101,7 @@ $bot.command :i do |event|
 	return nil
 end
 
+# FUZZ Command
 $bot.command :fuzz do |event, *level|
 	image = ImageMod.load_tmp(event)
 	image = image.spread(level.join(""))
@@ -100,6 +109,7 @@ $bot.command :fuzz do |event, *level|
 	return nil
 end
 
+# HAAH Command
 $bot.command :haah do |event|
 	image_left = ImageMod.load_tmp(event)
 	image_right = ImageMod.load_tmp(event)
@@ -124,6 +134,7 @@ $bot.command :haah do |event|
 	return nil
 end
 
+# HOOH Command
 $bot.command :hooh do |event|
 	image_lower = ImageMod.load_tmp(event)
 	image_upper = ImageMod.load_tmp(event)
@@ -148,6 +159,7 @@ $bot.command :hooh do |event|
 	return nil
 end
 
+# WAAW Command
 $bot.command :waaw do |event|
 	image_left = ImageMod.load_tmp(event)
 	image_right = ImageMod.load_tmp(event)
@@ -172,6 +184,7 @@ $bot.command :waaw do |event|
 	return nil
 end
 
+# WOOW Command
 $bot.command :woow do |event|
 	image_lower = ImageMod.load_tmp(event)
 	image_upper = ImageMod.load_tmp(event)
