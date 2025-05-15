@@ -157,19 +157,19 @@ end
 
 # Emoji responder (free nitro!)
 # Match any message containing : or \
-$bot.message(start_with: /(\\:|:)/) do |event|
-	DEBUG_PUTS("attempting emote parsing")
-	str = event.content
-	str = str.strip.gsub(/[\\]/, '')					# Remove escape characters
-	str = str.delete_prefix(':').delete_suffix(':')		# Remove leading/trailing formatting if present
-
-	emoji = Parser.get_emoji(str)						# Try to match an emoji name
-	DEBUG_PUTS("    detected emoji name: #{str}")
-	if (emoji.is_a?(Discordrb::Emoji))					# Respond with the emoji if its valid
-		DEBUG_PUTS("    matched with emoji: #{emoji.name}")
-		event.respond "#{emoji.mention}"
-	end
-end
+# $bot.message(start_with: /(\\:|:)/) do |event|
+# 	DEBUG_PUTS("attempting emote parsing")
+# 	str = event.content
+# 	str = str.strip.gsub(/[\\]/, '')					# Remove escape characters
+# 	str = str.delete_prefix(':').delete_suffix(':')		# Remove leading/trailing formatting if present
+#
+# 	emoji = Parser.get_emoji(str)						# Try to match an emoji name
+# 	DEBUG_PUTS("    detected emoji name: #{str}")
+# 	if (emoji.is_a?(Discordrb::Emoji))					# Respond with the emoji if its valid
+# 		DEBUG_PUTS("    matched with emoji: #{emoji.name}")
+# 		event.respond "#{emoji.mention}"
+# 	end
+# end
 
 # End gracefully when killed or ended
 at_exit do

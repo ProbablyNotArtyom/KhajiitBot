@@ -29,6 +29,23 @@
 
 # TODO: replace all event.send_message and event.send_embed with proper event.respond
 
+KIRL_ID=435552638604673025
+
+module Application
+	class Bot < Discordrb::Bot
+		def slash_command(name, description)
+			$bot.register_application_command(name, description, KIRL_ID)
+			return $bot.application_command(name)
+		end
+
+		def slash_unregister_all()
+			$bot.get_application_commands().each do |x|
+				$bot.delete_application_command(x.id)
+			end
+		end
+	end
+end
+
 # Help command
 $bot.command(:help) do |event, *type|
 	type = type.join(" ")
@@ -476,5 +493,18 @@ $bot.command(:'e9.blacklist') do |event, action, *tags|
 	return if (event.channel.type == Discordrb::Channel::TYPES[:dm])	# Ignore use in DMs
 	command_blacklist_e621_e926(event, action, tags, Blacklist_E926)
 end
+
+#====================================================================================================
+
+$bot.command(:prune, {:required_permissions => [:manage_channels]}) do |event, number="1"|
+	number = number.to_i
+	pins = event.channel.pins
+	for i in 1..number do
+		DEBUG_PUTS "#{i}"
+		pins[-i].unpin
+	end
+	return nil
+end
+
 
 #====================================================================================================
