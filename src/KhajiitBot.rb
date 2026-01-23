@@ -28,6 +28,8 @@
 # A Discord bot written in ruby
 #====================================================================================================
 
+require 'bundler/setup'
+
 ENV['SSL_CERT_FILE'] = '/etc/ssl/certs/cacert.pem'
 # Workaround for OpenSSL's broken ass certs
 

@@ -1,0 +1,10 @@
+source 'https://rubygems.org' do
+	gem 'rutui'
+	gem 'discordrb', '>=3.2.1'
+	gem 'mini_magick', '>=5.0.0'
+	gem 'tempfile'
+	gem 'resolv-replace'
+	gem 'json'
+	gem 'openssl'
+	gem 'optparse'
+end
