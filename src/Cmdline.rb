@@ -421,7 +421,9 @@ class PilotInterface
 								if (srv.nil?)
 									then cli_puts("Invalid Server", 1)
 								else
-									srv.channels.each {cli_puts("#{(_1).name} : #{_1.id}", Color::BRIGHT_YELLOW)}
+									sorted = srv.channels.delete_if { |chan| chan.type != 0 }	# Ignore non text channels
+									sorted = srv.channels.sort { |a, b| Parser.get_channel(a.parent_id).name <=> Parser.get_channel(b.parent_id).name }
+									sorted.each { |chan| cli_puts("#{Parser.get_channel(chan.parent_id).name} / #{chan.name} : #{chan.id}", Color::BRIGHT_YELLOW) }
 								end
 							end
 						when "update"
