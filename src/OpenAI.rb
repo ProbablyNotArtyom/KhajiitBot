@@ -75,7 +75,7 @@ $bot.command(:'ask') do |event, *prompt|
 	indicator_thread.kill	# Stop the typing indicator now that we have a response
 
 	return event.channel.send_embed do |embed|
-		embed.description = response.choices[0].message.content
+		embed.description = response.choices[0].message.content[0..4095]	# Make sure response will fit into a discord message
 		embed.color = EMBED_MSG_COLOR
 	end
 end
