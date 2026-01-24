@@ -41,7 +41,7 @@ gpt_client = OpenAI::Client.new(
 OPENAI_TEMPERATURE = 1.0  			# 0 to 2, higher number means more random
 OPENAI_TEXT_MODEL = "gpt-5-nano"	# Text model name
 OPENAI_TEXT_PROMPT_MAX = 75			# Maximum input words for text prompts
-OPENAI_IMAGE_MODEL = "dalle-e-2"	# Image model name
+OPENAI_IMAGE_MODEL = "dall-e-3"	# Image model name
 OPENAI_IMAGE_PROMPT_MAX = 150		# Maximum input words for image prompts
 
 # ASK Command
@@ -103,7 +103,8 @@ $bot.command(:'dalle') do |event, *prompt|
 	# Query the API with the prompt
 	response = gpt_client.images.generate(
 		prompt: prompt.join(" "),
-		model: "dall-e-2",
+		model: OPENAI_IMAGE_MODEL,
+		quality: "standard",
 		size: "1024x1024"
 	)
 
