@@ -176,9 +176,15 @@ $bot.command(:chance, min_args: 1) do |event, *query|
 end
 
 # SCP Command
-$bot.command(:scp) do |event, query|
-	query = query.to_i												# Interpret the input as an int
-	if (query < 0 || query > 5999)									# Check for invalid SCPs
+SCP_MAX = 9999
+$bot.command(:scp) do |event, *query|
+	if (query.empty?)
+		query = rand(SCP_MAX+1)										# No input, so generate a random SCP entry
+	else
+		query = query.join("").to_i									# Interpret the input as an int
+	end
+
+	if (query < 0 || query > SCP_MAX)								# Check for invalid SCPs
 		return event.channel.send_embed do |embed|
 			embed.title = "Invalid SCP!"
 			embed.color = EMBED_MSG_COLOR
