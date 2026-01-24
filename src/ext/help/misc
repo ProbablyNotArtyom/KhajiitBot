@@ -6,3 +6,5 @@
 ​ ​ ​ ​ ​ ​ ​ ​ ​ links the SCP wiki entry for the requested SCP number.
 **`k.define [word]`**
 ​ ​ ​ ​ ​ ​ ​ ​ ​ reports the definition, along with any possible synonyms of a word
+**`k.ask [prompt]`**
+​ ​ ​ ​ ​ ​ ​ ​ ​ asks ChatGPT a question. doesnt keep state or remember.

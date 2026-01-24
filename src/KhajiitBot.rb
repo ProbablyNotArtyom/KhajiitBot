@@ -64,9 +64,14 @@ CLIENT_ID = File.read("./ext/sys/client").chomp		# KhajiitBot Client ID (put it 
 TOKEN = File.read("./ext/sys/token").chomp			# shh secrets (Put your token in this file too...)
 E621_KEY = File.read("./ext/sys/e621").chomp		# ssh more secrets (Put your e621 account's API key here)
 
-
 EMBED_MSG_COLOR = 0xf5367c							# Sets the default embed color used by bot embeds
 EMBED_ERROR_COLOR = 0xe62f2f						# Sets the embed color used for error messages
+
+#========================================== Debug Functions ========================================
+
+def DEBUG_PUTS(str)
+	Interface.cli_puts("[DEBUG] #{str}", PilotInterface::Color::RED) if ($debug == true)
+end
 
 #=============================================== Main ==============================================
 
@@ -131,6 +136,7 @@ require_relative 'Helpers.rb'				# Abstractions
 require_relative 'Commands.rb'				# Bot commands
 require_relative 'Image.rb'					# Image manipulation
 require_relative 'Cmdline.rb'				# Internal shell
+require_relative 'OpenAI.rb'				# OpenAI commands
 
 Config = Setting.new()												# Set up persistence class
 Blacklist_E926 = E621_blacklist.new(Config, "e926_blacklist")		# Set up e926 blacklist handler
@@ -139,12 +145,6 @@ Blacklist_E621 = E621_blacklist.new(Config, "e621_blacklist")		# Set up e621 bla
 $boottime = Time.new							# Save to time the bot was started. used in uptime
 puts('Current time: ' + $boottime.ctime)
 puts('KhajiitBot Starting...')
-
-#========================================== Debug Functions ========================================
-
-def DEBUG_PUTS(str)
-	Interface.cli_puts("[DEBUG] #{str}", PilotInterface::Color::RED) if ($debug == true)
-end
 
 #========================================== Global Functions =======================================
 
