@@ -68,7 +68,8 @@ $bot.command(:'ask') do |event, *prompt|
 	response = gpt_client.chat.completions.create(
 		model: OPENAI_TEXT_MODEL,
 		messages: [{ role: "user", content: prompt.join(" ")}],
-		temperature: OPENAI_TEMPERATURE
+		temperature: OPENAI_TEMPERATURE,
+		user: event.message.author.id.to_s
 	)
 
 	indicator_thread.kill	# Stop the typing indicator now that we have a response
