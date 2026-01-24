@@ -1,4 +1,5 @@
 source 'https://rubygems.org' do
+	gem 'erb'
 	gem 'rutui'
 	gem 'discordrb', '>=3.2.1'
 	gem 'mini_magick', '>=5.0.0'
