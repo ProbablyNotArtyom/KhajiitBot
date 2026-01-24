@@ -71,6 +71,15 @@ def get_file_input(event)
 	return nil
 end
 
+# Get the last emoji posted within a channel
+def get_last_emote(channel)
+	chan_hist = channel.history(50)
+		chan_hist.each do |msg|
+			DEBUG_PUTS "emote backsearch: #{msg.content} > msg.emoji? = #{msg.emoji?}"
+			return msg.emoji[0] if (! msg.emoji?)
+		end
+end
+
 # Generates a filename that is hopefully uniqe
 def generate_uniqe_name(file_type)
 	charset = Array('A'..'Z') + Array('a'..'z')

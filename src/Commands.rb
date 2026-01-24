@@ -202,14 +202,15 @@ end
 
 # E Command
 $bot.command(:e) do |event|
-	if (event.message.emoji?)							# Error out if the message doesn't have any emotes
+	emote = get_last_emote(event.channel)
+	if (! emote)							# Error out if the message doesn't have any emotes
 		return event.channel.send_embed do |embed|		# Return error message
 			embed.title = "Error"
-			embed.description = "Message did not contain any valid emotes."
+			embed.description = "Could not find any valid emotes."
 			embed.color = EMBED_ERROR_COLOR
 		end
 	end
-	event.channel.send_message(event.message.emoji[0].icon_url.gsub(".webp", ".png"))	# Respond with the URL of the first emote found
+	event.channel.send_message(emote.icon_url.gsub(".webp", ".png"))	# Respond with the URL of the first emote found
 end
 
 # A Command
