@@ -106,7 +106,7 @@ module Parser
 		if (event != nil && event.is_a?(Discordrb::Events::Event)) then memberList = event.server.members
 		else memberList = $bot.servers.values.collect_concat { |srv| srv.members } end
 		return $bot.parse_mention(user, event.server) if user.start_with?("<")
-		return memberList.detect { |x| x.username.downcase.include?(user) || x.display_name.downcase.include?(user) }
+		return memberList.detect { |x| x.username.downcase.include?(user.to_s.downcase) || x.display_name.downcase.include?(user.to_s.downcase) }
 	end
 	
 	# GET_SERVER: Inputs a partial server name. returns the server object
@@ -129,7 +129,11 @@ module Parser
 		else channelList = $bot.servers.values.collect_concat { |srv| srv.channels } end
 
 		if (channel.to_i >= 100000000000000000) then return $bot.parse_mention("<\##{channel}>", server)
-		else return channelList.detect { |x| x.name.downcase.include?(channel) } end
+		else
+			result = channelList.detect { |x| x.name.downcase == channel.to_s.downcase }
+			return result if result
+			return channelList.detect { |x| x.name.downcase.include?(channel.to_s.downcase) }
+		end
 	end
 
 	# GET_EMOJI: Inputs a full emoji name. returns the emoji object
