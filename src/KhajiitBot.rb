@@ -41,7 +41,6 @@ require 'resolv-replace'
 require 'net/http'
 require 'net/https'
 require 'tempfile'
-require 'mini_magick'
 require 'rutui'
 require 'io/console'
 
