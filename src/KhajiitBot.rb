@@ -62,6 +62,7 @@ parser.parse!
 CLIENT_ID = File.read("./ext/sys/client").chomp		# KhajiitBot Client ID (put it here, this one isn't valid!)
 TOKEN = File.read("./ext/sys/token").chomp			# shh secrets (Put your token in this file too...)
 E621_KEY = File.read("./ext/sys/e621").chomp		# ssh more secrets (Put your e621 account's API key here)
+E6AI_KEY = File.read("./ext/sys/e6ai").chomp		# ssh even more secrets (Put your e6ai account's API key here)
 
 EMBED_MSG_COLOR = 0xf5367c							# Sets the default embed color used by bot embeds
 EMBED_ERROR_COLOR = 0xe62f2f						# Sets the embed color used for error messages

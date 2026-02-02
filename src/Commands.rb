@@ -392,6 +392,11 @@ def command_e621_e926(event, tags, site_url, blacklist)
 			posts.each_with_index do |x, i|								# Iterate over posts to try and find one that isn't blacklisted
 				taglist = []
 				x['tags'].each_value {|y| taglist = taglist + y}
+				if (x['tags']['artist'].nil?)
+					artist = x['tags']['director']						# Patch e6ai calling them "directors" lmao
+				else
+					artist = x['tags']['artist']
+				end
 				blacklisted = blacklist.check_tags(taglist)				# Check for blacklisted tags
 				if (blacklisted.empty?) 								# Found something with no blacklist hits
 					return event.channel.send_embed do |embed|			# Construct the returning embed
@@ -400,7 +405,7 @@ def command_e621_e926(event, tags, site_url, blacklist)
 							"  |  Favourites: **#{x['fav_count']}**" +
 							"  |  [Post](#{site_url}/post/show/#{x['id']})"
 						embed.image = Discordrb::Webhooks::EmbedImage.new(url: x['file']['url'])
-						embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: x['tags']['artist'].join(", "), icon_url: "#{site_url}/favicon.ico")
+						embed.author = Discordrb::Webhooks::EmbedAuthor.new(name: artist.join(", "), icon_url: "#{site_url}/favicon.ico")
 						embed.color = EMBED_MSG_COLOR
 					end
 				end
@@ -426,6 +431,12 @@ end
 $bot.command(:e6) do |event, *tags|
 	return nil if (require_nsfw(event))		# Make sure the channel is marked as NSFW
 	command_e621_e926(event, tags, "https://e621.net", Blacklist_E621)
+end
+
+# E6AI Command
+$bot.command(:e6ai) do |event, *tags|
+	return nil if (require_nsfw(event))		# Make sure the channel is marked as NSFW
+	command_e621_e926(event, tags, "https://e6ai.net", Blacklist_E621)
 end
 
 # E9 Command
